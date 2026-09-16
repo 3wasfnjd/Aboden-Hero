@@ -1,0 +1,228 @@
+/* Aboden Hero — armored neon controls inspired by the approved UI board. */
+#controls{
+  position:relative;
+  padding:24px 4px 32px;
+  gap:18px;
+}
+#controls::before{
+  content:"";
+  position:absolute;
+  inset:8px -10px 10px;
+  z-index:-1;
+  background:linear-gradient(180deg,rgba(10,20,32,.15),rgba(5,12,20,.48));
+  border-top:1px solid rgba(120,149,179,.14);
+  pointer-events:none;
+}
+#controls>div{gap:22px}
+
+#controls button[data-action]{
+  position:relative;
+  width:88px;
+  height:88px;
+  padding:0;
+  border-radius:50%;
+  border:4px solid #52657a;
+  outline:2px solid #070d15;
+  background:
+    radial-gradient(circle at 50% 44%,rgba(255,58,62,.18) 0 22%,rgba(142,9,18,.97) 48%,#43070d 70%,#19070b 100%);
+  color:#f5f7f8;
+  font-family:Arial,Tahoma,sans-serif;
+  font-size:34px;
+  font-weight:900;
+  line-height:1;
+  text-shadow:0 0 8px rgba(255,255,255,.4),0 2px 3px #000;
+  box-shadow:
+    inset 0 0 0 3px #0a111c,
+    inset 0 0 0 7px #2b3b4d,
+    inset 0 0 18px rgba(255,20,34,.82),
+    inset 0 -10px 17px rgba(0,0,0,.52),
+    0 0 0 2px #05090f,
+    0 0 18px rgba(222,20,31,.56),
+    0 8px 17px rgba(0,0,0,.65);
+  transform:none;
+  transition:transform .08s ease,filter .08s ease,box-shadow .08s ease;
+  overflow:visible;
+}
+#controls button[data-action]::before{
+  content:"";
+  position:absolute;
+  inset:9px;
+  border:2px solid #ff2e37;
+  border-radius:50%;
+  box-shadow:0 0 9px #ef1826,inset 0 0 10px rgba(255,42,50,.45);
+  pointer-events:none;
+}
+#controls button[data-action]::after{
+  content:"";
+  position:absolute;
+  top:5px;
+  left:34%;
+  width:32%;
+  height:5px;
+  border-radius:5px;
+  background:linear-gradient(90deg,#7e0b12,#ff4048 45%,#fff2e7 50%,#ff4048 55%,#7e0b12);
+  box-shadow:0 0 8px #ff1d2b;
+  pointer-events:none;
+}
+#controls button[data-action] small{
+  position:absolute;
+  left:50%;
+  bottom:-25px;
+  min-width:78px;
+  padding:4px 9px 5px;
+  transform:translateX(-50%);
+  border:2px solid #52657a;
+  outline:1px solid #070d15;
+  border-radius:4px;
+  background:linear-gradient(#233246,#0c1521 55%,#131f2d);
+  color:#f2f4f4;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.5px;
+  line-height:1;
+  text-shadow:0 1px 2px #000;
+  box-shadow:inset 0 1px #8191a2,0 3px 5px #0008;
+  white-space:nowrap;
+  pointer-events:none;
+}
+#controls button[data-action]:hover{
+  filter:brightness(1.13) saturate(1.08);
+}
+#controls button[data-action]:active,
+#controls button[data-action].held{
+  transform:translateY(3px) scale(.95);
+  filter:brightness(1.28) saturate(1.2);
+  box-shadow:
+    inset 0 0 0 3px #0a111c,
+    inset 0 0 0 7px #33475c,
+    inset 0 0 25px rgba(255,27,39,.98),
+    0 0 0 2px #05090f,
+    0 0 25px rgba(255,27,39,.8),
+    0 4px 9px rgba(0,0,0,.72);
+}
+#controls button[data-action]:focus-visible{
+  outline:3px solid #ffb548;
+  outline-offset:5px;
+}
+
+/* Distinct action accents while staying in the approved red/steel family. */
+#controls .jump,
+#controls .shoot,
+#controls .dash{
+  width:88px;
+  height:88px;
+  background:
+    radial-gradient(circle at 50% 44%,rgba(255,70,56,.2) 0 22%,rgba(151,10,18,.98) 48%,#48070d 70%,#1b070b 100%);
+  color:#fff;
+}
+#controls .jump{font-size:39px}
+#controls .shoot{font-size:34px}
+#controls .dash{font-size:41px}
+.control-hint{
+  color:#74879a;
+  font-size:10px;
+  letter-spacing:1.2px;
+  text-transform:uppercase;
+}
+
+/* Header utility controls use the same armored ring at a smaller scale. */
+.tools{gap:10px}
+.tools button{
+  position:relative;
+  width:44px;
+  height:44px;
+  padding:0;
+  border-radius:50%;
+  border:3px solid #4f6277;
+  outline:1px solid #070d15;
+  background:radial-gradient(circle,#ab111b 0 43%,#45090f 64%,#111b29 66% 100%);
+  color:#f7f7f5;
+  font-size:19px;
+  font-weight:900;
+  line-height:1;
+  box-shadow:inset 0 0 0 3px #111b28,inset 0 0 11px #ff2535,0 0 10px #d8162455,0 5px 10px #0008;
+  text-shadow:0 0 5px #fff6;
+}
+.tools button::after{
+  content:"";
+  position:absolute;
+  top:3px;
+  left:34%;
+  width:32%;
+  height:3px;
+  border-radius:3px;
+  background:#ff4a52;
+  box-shadow:0 0 5px #ff2535;
+}
+.tools button:active{
+  transform:translateY(2px) scale(.95);
+  box-shadow:inset 0 0 0 3px #111b28,inset 0 0 15px #ff2535,0 0 14px #d81624aa,0 2px 5px #0008;
+}
+
+/* Start button follows the long red mission-button treatment from the same board. */
+.primary{
+  position:relative;
+  min-width:235px;
+  border:2px solid #69798b;
+  outline:2px solid #080d15;
+  border-radius:8px;
+  background:linear-gradient(180deg,#d62530,#980f19 58%,#580b12);
+  color:#fff;
+  box-shadow:inset 0 0 0 3px #1a2532,inset 0 0 18px rgba(255,44,50,.55),0 0 14px rgba(215,24,34,.35),0 7px 15px #0008;
+  text-shadow:0 2px 2px #63080e;
+  letter-spacing:.3px;
+  transform:none;
+}
+.primary::before,
+.primary::after{
+  content:"";
+  position:absolute;
+  top:6px;
+  bottom:6px;
+  width:5px;
+  border-radius:4px;
+  background:#ff8a38;
+  box-shadow:0 0 8px #ff3d2f;
+}
+.primary::before{left:7px}.primary::after{right:7px}
+.primary:active{transform:translateY(2px) scale(.985)}
+
+@media(max-width:650px){
+  #controls{padding:18px 0 27px;gap:8px}
+  #controls>div{gap:10px}
+  #controls button[data-action],
+  #controls .jump,#controls .shoot,#controls .dash{
+    width:64px;
+    height:64px;
+    font-size:28px;
+    border-width:3px;
+  }
+  #controls .jump{font-size:31px}
+  #controls .dash{font-size:33px}
+  #controls button[data-action]::before{inset:7px}
+  #controls button[data-action] small{
+    bottom:-20px;
+    min-width:58px;
+    padding:3px 5px;
+    font-size:7px;
+  }
+  .tools button{width:40px;height:40px;font-size:17px}
+}
+
+@media(orientation:landscape) and (max-height:600px){
+  #controls{
+    inset:auto max(18px,env(safe-area-inset-right)) max(15px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));
+  }
+  #controls>div{gap:12px}
+  #controls button[data-action],
+  #controls .jump,#controls .shoot,#controls .dash{
+    width:62px;
+    height:62px;
+    opacity:.91;
+    font-size:27px;
+  }
+  #controls .jump{font-size:30px}
+  #controls .dash{font-size:32px}
+  #controls button[data-action] small{display:none}
+  .tools button{width:38px;height:38px;background:radial-gradient(circle,#a9111b 0 43%,#45090f 64%,#111b29 66% 100%)}
+}
