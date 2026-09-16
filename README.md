@@ -47,5 +47,7 @@ intentionally temporary; no final character design is implied.
 ## Validation
 `npm test` runs dependency-free Node tests for acceleration, braking, variable
 jump height, coyote time, buffered jumps, no double jump, one-way platforms and
-all mandatory gaps. Browser smoke checklist: start, move/jump/shoot, pause,
+all mandatory gaps. A headless DOM adapter also tests simultaneous pointer input,
+pointer cancellation, shooting, collection, pause, respawn, checkpoints and replay.
+This adapter is not a real mobile browser. Browser smoke checklist: start, move/jump/shoot, pause,
 resume, checkpoint respawn, goal/replay, pointer cancellation, phone rotation.
