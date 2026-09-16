@@ -1,7 +1,7 @@
 import {createArt as createCharacterArt} from './art.js?v=20260917-guards-3-base';
 
-const STAGE_URL='./assets/backgrounds/stage1_rooftop.jpg';
-const BOSS_BG_URL='./assets/backgrounds/stage1_boss.jpg';
+const CITY_URL='./assets/backgrounds/stage1-city.png';
+const WALKWAY_URL='./assets/backgrounds/stage1-walkway.png';
 
 function loadImage(url){
  const img=new Image();
@@ -13,23 +13,51 @@ function loadImage(url){
  return state;
 }
 
-const stageAsset=loadImage(STAGE_URL);
-const bossBgAsset=loadImage(BOSS_BG_URL);
-const clamp01=v=>Math.max(0,Math.min(1,v));
-const smoothstep=(a,b,v)=>{const t=clamp01((v-a)/(b-a));return t*t*(3-2*t);};
+const cityAsset=loadImage(CITY_URL);
+const walkwayAsset=loadImage(WALKWAY_URL);
 
-function drawStageImage(ctx,asset,camera,alpha=1){
- if(!asset.ready)return false;
- const W=ctx.canvas.width||960;
- // The artwork is prepared at 1280x720. Drawing it at 720px high aligns the
- // illustrated rooftop deck closely with the real gameplay ground at y=440.
- const drawW=1280,drawH=720;
- const travel=Math.max(0,drawW-W);
- const progress=clamp01(camera/(6600-W));
- const offset=travel*progress;
+function drawCity(ctx){
+ if(!cityAsset.ready)return false;
+ const W=ctx.canvas.width||960,H=ctx.canvas.height||540;
  ctx.save();
- ctx.globalAlpha=alpha;
- ctx.drawImage(asset.img,-offset,0,drawW,drawH);
+ ctx.imageSmoothingEnabled=true;
+ ctx.imageSmoothingQuality='high';
+ // The city artwork is 16:9, exactly matching the game canvas ratio.
+ // Keep it locked to the screen so the skyline stays fixed behind gameplay.
+ ctx.drawImage(cityAsset.img,0,0,W,H);
+ ctx.restore();
+ return true;
+}
+
+function drawGroundWalkway(ctx,s){
+ if(!walkwayAsset.ready)return false;
+ const img=walkwayAsset.img;
+ const sourceSurfaceY=img.naturalHeight*.235;
+ const usableBelow=Math.max(1,img.naturalHeight-sourceSurfaceY);
+ const scale=s.h/usableBelow;
+ const tileW=img.naturalWidth*scale;
+ const tileH=img.naturalHeight*scale;
+ const drawY=s.y-sourceSurfaceY*scale;
+
+ ctx.save();
+ // Each physical ground section remains clipped to its real collision width,
+ // while the railing is allowed to rise above y=440.
+ ctx.beginPath();
+ ctx.rect(s.x,drawY-2,s.w,tileH+4);
+ ctx.clip();
+
+ // Dark backing prevents tiny transparent seams between repeated PNG tiles.
+ ctx.fillStyle='#111a27';
+ ctx.fillRect(s.x,s.y,s.w,s.h+4);
+
+ ctx.imageSmoothingEnabled=true;
+ ctx.imageSmoothingQuality='high';
+ const step=Math.max(1,tileW-1);
+ let start=Math.floor(s.x/step)*step;
+ while(start>s.x)start-=step;
+ for(let x=start;x<s.x+s.w+tileW;x+=step){
+  ctx.drawImage(img,x,drawY,tileW,tileH);
+ }
  ctx.restore();
  return true;
 }
@@ -38,31 +66,33 @@ export function createArt(ctx){
  const base=createCharacterArt(ctx);
  const fallbackBackground=base.background;
  const fallbackScenery=base.scenery;
+ const fallbackPlatform=base.platform;
 
  function background(camera,time){
-  if(!stageAsset.ready){fallbackBackground(camera,time);return;}
+  if(!drawCity(ctx)){fallbackBackground(camera,time);return;}
+
+  // Light separation only around the gameplay plane. The city remains crisp,
+  // but the red/black sprites keep readable silhouettes.
   const W=ctx.canvas.width||960,H=ctx.canvas.height||540;
-  ctx.fillStyle='#071321';ctx.fillRect(0,0,W,H);
-  drawStageImage(ctx,stageAsset,camera,1);
-
-  // The final approach gradually shifts toward red emergency lighting.
-  const bossMix=smoothstep(4550,5600,camera);
-  if(bossMix>0&&bossBgAsset.ready)drawStageImage(ctx,bossBgAsset,camera,bossMix*.92);
-
-  // Subtle cool veil separates the red/black characters from the detailed scene.
-  const haze=ctx.createLinearGradient(0,210,0,540);
-  haze.addColorStop(0,'rgba(110,145,172,0)');
-  haze.addColorStop(.50,'rgba(118,151,174,.055)');
-  haze.addColorStop(.78,'rgba(126,151,168,.09)');
-  haze.addColorStop(1,'rgba(5,12,20,.18)');
-  ctx.fillStyle=haze;ctx.fillRect(0,190,W,350);
+  const haze=ctx.createLinearGradient(0,300,0,H);
+  haze.addColorStop(0,'rgba(92,123,151,0)');
+  haze.addColorStop(.48,'rgba(108,139,164,.035)');
+  haze.addColorStop(.74,'rgba(9,19,31,.07)');
+  haze.addColorStop(1,'rgba(4,10,18,.18)');
+  ctx.fillStyle=haze;
+  ctx.fillRect(0,280,W,H-280);
  }
 
  function scenery(camera){
-  // The painted rooftop already contains the industrial scenery. Drawing the old
-  // procedural buildings on top would create duplicate silhouettes and visual noise.
-  if(!stageAsset.ready)fallbackScenery(camera);
+  // The city is now a dedicated fixed backdrop. Do not draw the old procedural
+  // rooftop scenery over it.
+  if(!cityAsset.ready)fallbackScenery(camera);
  }
 
- return {...base,background,scenery};
+ function platform(s){
+  if(s.ground&&drawGroundWalkway(ctx,s))return;
+  fallbackPlatform(s);
+ }
+
+ return {...base,background,scenery,platform};
 }
