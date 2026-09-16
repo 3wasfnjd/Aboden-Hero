@@ -1,228 +1,143 @@
-/* Aboden Hero — armored neon controls inspired by the approved UI board. */
+/* Exact control artwork cropped from the approved ABODEN HERO UI board.
+   No re-drawn buttons and no replacement labels. */
+:root{
+  --control-atlas:url('../assets/ui/controls-exact.webp');
+  --start-art:url('../assets/ui/start-mission-exact.webp');
+}
+
 #controls{
   position:relative;
-  padding:24px 4px 32px;
+  padding:18px 4px 22px;
   gap:18px;
+  background:transparent;
 }
-#controls::before{
-  content:"";
-  position:absolute;
-  inset:8px -10px 10px;
-  z-index:-1;
-  background:linear-gradient(180deg,rgba(10,20,32,.15),rgba(5,12,20,.48));
-  border-top:1px solid rgba(120,149,179,.14);
-  pointer-events:none;
-}
-#controls>div{gap:22px}
+#controls::before{display:none!important}
+#controls>div{display:flex;gap:16px;align-items:center}
+.control-hint{display:none!important}
 
 #controls button[data-action]{
-  position:relative;
-  width:88px;
-  height:88px;
+  width:96px;
+  height:96px;
+  min-width:96px;
   padding:0;
-  border-radius:50%;
-  border:4px solid #52657a;
-  outline:2px solid #070d15;
-  background:
-    radial-gradient(circle at 50% 44%,rgba(255,58,62,.18) 0 22%,rgba(142,9,18,.97) 48%,#43070d 70%,#19070b 100%);
-  color:#f5f7f8;
-  font-family:Arial,Tahoma,sans-serif;
-  font-size:34px;
-  font-weight:900;
-  line-height:1;
-  text-shadow:0 0 8px rgba(255,255,255,.4),0 2px 3px #000;
-  box-shadow:
-    inset 0 0 0 3px #0a111c,
-    inset 0 0 0 7px #2b3b4d,
-    inset 0 0 18px rgba(255,20,34,.82),
-    inset 0 -10px 17px rgba(0,0,0,.52),
-    0 0 0 2px #05090f,
-    0 0 18px rgba(222,20,31,.56),
-    0 8px 17px rgba(0,0,0,.65);
-  transform:none;
-  transition:transform .08s ease,filter .08s ease,box-shadow .08s ease;
+  border:0!important;
+  outline:0;
+  border-radius:0;
+  background-color:transparent!important;
+  background-image:var(--control-atlas)!important;
+  background-repeat:no-repeat!important;
+  background-size:500% 200%!important;
+  color:transparent!important;
+  font-size:0!important;
+  line-height:0;
+  text-shadow:none!important;
+  box-shadow:none!important;
+  transform:none!important;
   overflow:visible;
+  filter:none;
+  transition:transform .07s ease,filter .07s ease;
 }
-#controls button[data-action]::before{
-  content:"";
-  position:absolute;
-  inset:9px;
-  border:2px solid #ff2e37;
-  border-radius:50%;
-  box-shadow:0 0 9px #ef1826,inset 0 0 10px rgba(255,42,50,.45);
-  pointer-events:none;
-}
-#controls button[data-action]::after{
-  content:"";
-  position:absolute;
-  top:5px;
-  left:34%;
-  width:32%;
-  height:5px;
-  border-radius:5px;
-  background:linear-gradient(90deg,#7e0b12,#ff4048 45%,#fff2e7 50%,#ff4048 55%,#7e0b12);
-  box-shadow:0 0 8px #ff1d2b;
-  pointer-events:none;
-}
-#controls button[data-action] small{
-  position:absolute;
-  left:50%;
-  bottom:-25px;
-  min-width:78px;
-  padding:4px 9px 5px;
-  transform:translateX(-50%);
-  border:2px solid #52657a;
-  outline:1px solid #070d15;
-  border-radius:4px;
-  background:linear-gradient(#233246,#0c1521 55%,#131f2d);
-  color:#f2f4f4;
-  font-size:9px;
-  font-weight:900;
-  letter-spacing:.5px;
-  line-height:1;
-  text-shadow:0 1px 2px #000;
-  box-shadow:inset 0 1px #8191a2,0 3px 5px #0008;
-  white-space:nowrap;
-  pointer-events:none;
-}
-#controls button[data-action]:hover{
-  filter:brightness(1.13) saturate(1.08);
-}
+#controls button[data-action]::before,
+#controls button[data-action]::after,
+#controls button[data-action] small{display:none!important}
+
+#controls button[data-action="left"]{background-position:0% 0%!important}
+#controls button[data-action="right"]{background-position:25% 0%!important}
+#controls button[data-action="jump"]{background-position:50% 0%!important}
+#controls button[data-action="shoot"]{background-position:75% 0%!important}
+#controls button[data-action="dash"]{background-position:100% 0%!important}
+
+#controls button[data-action]:hover{filter:brightness(1.05)}
 #controls button[data-action]:active,
 #controls button[data-action].held{
-  transform:translateY(3px) scale(.95);
-  filter:brightness(1.28) saturate(1.2);
-  box-shadow:
-    inset 0 0 0 3px #0a111c,
-    inset 0 0 0 7px #33475c,
-    inset 0 0 25px rgba(255,27,39,.98),
-    0 0 0 2px #05090f,
-    0 0 25px rgba(255,27,39,.8),
-    0 4px 9px rgba(0,0,0,.72);
+  transform:translateY(2px) scale(.95)!important;
+  filter:brightness(1.16) saturate(1.08);
 }
 #controls button[data-action]:focus-visible{
-  outline:3px solid #ffb548;
-  outline-offset:5px;
+  outline:2px solid #fff!important;
+  outline-offset:2px;
 }
 
-/* Distinct action accents while staying in the approved red/steel family. */
-#controls .jump,
-#controls .shoot,
-#controls .dash{
-  width:88px;
-  height:88px;
-  background:
-    radial-gradient(circle at 50% 44%,rgba(255,70,56,.2) 0 22%,rgba(151,10,18,.98) 48%,#48070d 70%,#1b070b 100%);
-  color:#fff;
-}
-#controls .jump{font-size:39px}
-#controls .shoot{font-size:34px}
-#controls .dash{font-size:41px}
-.control-hint{
-  color:#74879a;
-  font-size:10px;
-  letter-spacing:1.2px;
-  text-transform:uppercase;
-}
-
-/* Header utility controls use the same armored ring at a smaller scale. */
-.tools{gap:10px}
+/* Header utility controls are also cut directly from the supplied board. */
+.tools{gap:7px}
 .tools button{
-  position:relative;
-  width:44px;
-  height:44px;
-  padding:0;
-  border-radius:50%;
-  border:3px solid #4f6277;
-  outline:1px solid #070d15;
-  background:radial-gradient(circle,#ab111b 0 43%,#45090f 64%,#111b29 66% 100%);
-  color:#f7f7f5;
-  font-size:19px;
-  font-weight:900;
-  line-height:1;
-  box-shadow:inset 0 0 0 3px #111b28,inset 0 0 11px #ff2535,0 0 10px #d8162455,0 5px 10px #0008;
-  text-shadow:0 0 5px #fff6;
+  width:50px!important;
+  height:50px!important;
+  min-width:50px;
+  padding:0!important;
+  border:0!important;
+  outline:0;
+  border-radius:0!important;
+  background-color:transparent!important;
+  background-image:var(--control-atlas)!important;
+  background-repeat:no-repeat!important;
+  background-size:500% 200%!important;
+  color:transparent!important;
+  font-size:0!important;
+  text-shadow:none!important;
+  box-shadow:none!important;
+  transform:none!important;
+  transition:transform .07s ease,filter .07s ease;
 }
-.tools button::after{
-  content:"";
-  position:absolute;
-  top:3px;
-  left:34%;
-  width:32%;
-  height:3px;
-  border-radius:3px;
-  background:#ff4a52;
-  box-shadow:0 0 5px #ff2535;
-}
-.tools button:active{
-  transform:translateY(2px) scale(.95);
-  box-shadow:inset 0 0 0 3px #111b28,inset 0 0 15px #ff2535,0 0 14px #d81624aa,0 2px 5px #0008;
-}
+.tools button::before,.tools button::after{display:none!important}
+#pause{background-position:0% 100%!important}
+#sound{background-position:25% 100%!important}
+#fullscreen{background-position:50% 100%!important}
+.tools button:hover{filter:brightness(1.06)}
+.tools button:active{transform:translateY(1px) scale(.95)!important;filter:brightness(1.15)}
+.tools button:focus-visible{outline:2px solid #fff!important;outline-offset:2px}
 
-/* Start button follows the long red mission-button treatment from the same board. */
+/* Use the exact START MISSION artwork from the same supplied board. */
 .primary{
-  position:relative;
-  min-width:235px;
-  border:2px solid #69798b;
-  outline:2px solid #080d15;
-  border-radius:8px;
-  background:linear-gradient(180deg,#d62530,#980f19 58%,#580b12);
-  color:#fff;
-  box-shadow:inset 0 0 0 3px #1a2532,inset 0 0 18px rgba(255,44,50,.55),0 0 14px rgba(215,24,34,.35),0 7px 15px #0008;
-  text-shadow:0 2px 2px #63080e;
-  letter-spacing:.3px;
-  transform:none;
+  width:290px!important;
+  height:78px!important;
+  min-width:0!important;
+  padding:0!important;
+  border:0!important;
+  outline:0;
+  border-radius:0!important;
+  background-color:transparent!important;
+  background-image:var(--start-art)!important;
+  background-repeat:no-repeat!important;
+  background-position:center!important;
+  background-size:contain!important;
+  color:transparent!important;
+  font-size:0!important;
+  text-shadow:none!important;
+  box-shadow:none!important;
+  transform:none!important;
 }
-.primary::before,
-.primary::after{
-  content:"";
-  position:absolute;
-  top:6px;
-  bottom:6px;
-  width:5px;
-  border-radius:4px;
-  background:#ff8a38;
-  box-shadow:0 0 8px #ff3d2f;
-}
-.primary::before{left:7px}.primary::after{right:7px}
-.primary:active{transform:translateY(2px) scale(.985)}
+.primary::before,.primary::after,.primary span{display:none!important}
+.primary:hover{filter:brightness(1.06)}
+.primary:active{transform:translateY(2px) scale(.985)!important;filter:brightness(1.13)}
+.primary:focus-visible{outline:2px solid #fff!important;outline-offset:2px}
 
 @media(max-width:650px){
-  #controls{padding:18px 0 27px;gap:8px}
-  #controls>div{gap:10px}
-  #controls button[data-action],
-  #controls .jump,#controls .shoot,#controls .dash{
-    width:64px;
-    height:64px;
-    font-size:28px;
-    border-width:3px;
-  }
-  #controls .jump{font-size:31px}
-  #controls .dash{font-size:33px}
-  #controls button[data-action]::before{inset:7px}
-  #controls button[data-action] small{
-    bottom:-20px;
-    min-width:58px;
-    padding:3px 5px;
-    font-size:7px;
-  }
-  .tools button{width:40px;height:40px;font-size:17px}
+  #controls{padding:12px 0 14px;gap:8px}
+  #controls>div{gap:6px}
+  #controls button[data-action]{width:70px;height:70px;min-width:70px}
+  .tools button{width:43px!important;height:43px!important;min-width:43px}
+  .primary{width:250px!important;height:67px!important}
+}
+
+@media(max-width:430px){
+  #controls button[data-action]{width:62px;height:62px;min-width:62px}
+  #controls>div{gap:3px}
+  .primary{width:225px!important;height:61px!important}
 }
 
 @media(orientation:landscape) and (max-height:600px){
   #controls{
-    inset:auto max(18px,env(safe-area-inset-right)) max(15px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));
+    inset:auto max(14px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));
+    padding:0;
   }
-  #controls>div{gap:12px}
-  #controls button[data-action],
-  #controls .jump,#controls .shoot,#controls .dash{
-    width:62px;
-    height:62px;
-    opacity:.91;
-    font-size:27px;
+  #controls>div{gap:5px}
+  #controls button[data-action]{
+    width:66px;
+    height:66px;
+    min-width:66px;
+    opacity:.88;
+    pointer-events:auto;
   }
-  #controls .jump{font-size:30px}
-  #controls .dash{font-size:32px}
-  #controls button[data-action] small{display:none}
-  .tools button{width:38px;height:38px;background:radial-gradient(circle,#a9111b 0 43%,#45090f 64%,#111b29 66% 100%)}
+  .tools button{width:42px!important;height:42px!important;min-width:42px}
 }
