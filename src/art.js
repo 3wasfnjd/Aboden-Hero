@@ -1,4 +1,4 @@
-import {createArt as createBaseArt} from './art-base.js?v=20260917-sprites-2';
+import {createArt as createBaseArt} from './art-base.js?v=20260917-guards-3';
 
 const MOVEMENT_URL='./assets/aboden-hero-movement.png';
 const BOSS_URL='./assets/Gatekeeper.png';
@@ -38,26 +38,39 @@ const BOSS_FRAMES={
  death:[[127,1110,125,129],[255,1113,125,126],[382,1124,117,115],[498,1134,129,105],[622,1139,152,100],[770,1150,142,89],[915,1144,167,95],[1084,1143,157,94]]
 };
 
+// Corrected guard sheets are 1122x1402 transparent PNGs.
+// Rectangles deliberately keep a little transparent padding so animation frames
+// stay a consistent size and no neighboring sprite leaks into the crop.
+const ENEMY_BASE_W=1122,ENEMY_BASE_H=1402;
+
 const CITY_FRAMES={
- idle:[[100,66,145,250],[245,66,145,250],[390,66,145,250],[535,66,145,250]],
- run:[[105,348,175,218],[280,348,180,218],[470,348,185,218]],
- aim:[[850,66,170,250],[1020,66,180,250],[1200,66,175,250]],
- charge:[[105,348,175,218],[280,348,180,218],[470,348,185,218]],
- fire:[[790,348,200,220],[985,348,200,220],[1175,348,195,220],[1350,348,186,220]],
- hit:[[95,590,215,220],[315,590,205,220]],
- enraged:[[840,590,215,220],[1050,590,215,220],[1260,590,210,220]],
- death:[[95,825,175,178],[265,825,180,178],[445,825,185,178],[625,825,185,178],[810,825,190,178],[995,825,190,178],[1180,825,185,178],[1360,825,176,178]]
+ idle:[[42,25,145,250],[226,25,151,250],[408,25,146,250],[584,25,138,250]],
+ run:[[42,25,145,250],[226,25,151,250],[408,25,146,250],[584,25,138,250]],
+ aim:[[34,292,165,210],[215,292,186,210],[404,292,205,210]],
+ charge:[[45,500,190,230],[278,500,215,230],[520,500,245,230]],
+ fire:[[40,742,171,175],[240,742,218,175],[464,742,216,175],[675,742,180,175]],
+ hit:[[45,940,162,165],[235,940,148,165]],
+ enraged:[[115,1095,205,150],[318,1095,158,150],[500,1095,180,150]]
+};
+
+const HEAVY_FRAMES={
+ idle:[[30,20,178,270],[216,20,176,270],[399,20,171,270],[583,20,178,270]],
+ run:[[30,20,178,270],[216,20,176,270],[399,20,171,270],[583,20,178,270]],
+ aim:[[16,292,226,212],[226,292,222,212],[421,292,248,212]],
+ charge:[[25,495,210,220],[244,495,230,220],[469,495,292,220]],
+ fire:[[18,720,214,220],[238,720,332,220],[565,720,230,220],[825,720,279,220]],
+ hit:[[18,945,224,250],[230,945,180,250]],
+ enraged:[[438,945,224,250],[638,945,218,250],[830,945,276,250]]
 };
 
 const SNIPER_FRAMES={
- idle:[[100,69,130,122],[230,69,130,122],[360,69,130,122],[490,69,145,122]],
- run:[[100,198,150,122],[250,198,165,122],[415,198,150,122],[565,198,165,122],[730,198,150,122],[880,198,165,122],[1045,198,165,122],[1210,198,195,122]],
- aim:[[100,455,175,122],[275,455,180,122],[455,455,190,122]],
- charge:[[875,455,185,122],[1060,455,180,122],[1240,455,175,122]],
- fire:[[100,585,220,135],[320,585,225,135],[545,585,250,135],[545,585,250,135]],
- hit:[[915,585,200,135],[1115,585,195,135]],
- enraged:[[125,730,200,128],[325,730,200,128],[525,730,200,128]],
- death:[[100,862,170,130],[270,862,165,130],[435,862,170,130],[605,862,160,130],[765,862,170,130],[935,862,170,130],[1105,862,165,130],[1270,862,245,130]]
+ idle:[[255,15,165,240],[416,15,165,240],[574,15,165,240],[734,15,176,240]],
+ run:[[255,15,165,240],[416,15,165,240],[574,15,165,240],[734,15,176,240]],
+ aim:[[220,258,236,225],[438,258,256,225],[671,258,277,225]],
+ charge:[[188,468,244,222],[434,468,240,222],[666,468,260,222]],
+ fire:[[48,690,265,210],[282,690,318,210],[582,690,267,210],[830,690,275,210]],
+ hit:[[70,900,205,230],[70,900,205,230]],
+ enraged:[[310,900,265,230],[560,900,326,230]]
 };
 
 function drawSprite(ctx,img,frame,x,y,facing,displayH,alpha=1){
@@ -74,6 +87,12 @@ function drawSprite(ctx,img,frame,x,y,facing,displayH,alpha=1){
 function scaledFrames(frames,img,baseW,baseH){
  const sx=img.naturalWidth/baseW,sy=img.naturalHeight/baseH;
  return frames.map(([x,y,w,h])=>[x*sx,y*sy,w*sx,h*sy]);
+}
+
+function enemyKind(e){
+ if(e.kind)return e.kind;
+ const slot=Math.floor(((e.min??e.x)+250)/900)%3;
+ return slot===0?'city':slot===1?'sniper':'heavy';
 }
 
 const bossDeathStart=new WeakMap();
@@ -113,29 +132,30 @@ export function createArt(ctx){
  }
 
  function enemy(e,time){
-  const slot=Math.floor(((e.min??e.x)+250)/900)%3;
-  const type=slot===0?'city':slot===1?'sniper':'heavy';
+  const type=enemyKind(e);
   const asset=type==='city'?cityAsset:type==='sniper'?sniperAsset:heavyAsset;
+  const frames=type==='city'?CITY_FRAMES:type==='sniper'?SNIPER_FRAMES:HEAVY_FRAMES;
   if(!asset.ready){baseEnemy(e,time);return;}
-  const img=asset.img;
-  let frames;
-  if(type==='sniper')frames=SNIPER_FRAMES;
-  else if(type==='heavy'&&img.naturalWidth/img.naturalHeight<1.2)frames=BOSS_FRAMES;
-  else frames=CITY_FRAMES;
 
-  const baseW=frames===SNIPER_FRAMES||frames===CITY_FRAMES?1536:1254;
-  const baseH=frames===SNIPER_FRAMES||frames===CITY_FRAMES?1024:1254;
-  let state='idle',rate=4,displayH=type==='heavy'?82:72;
+  const img=asset.img;
+  let state='idle',rate=4,displayH=type==='heavy'?88:type==='sniper'?80:76;
   if(e.hit>0){state='hit';rate=12;}
   else if(e.windup>0){state=e.windup>.20?'aim':'charge';rate=10;}
   else if(e.fire>1.52){state='fire';rate=18;}
-  else if(Math.abs(e.vx)>5){state='run';rate=type==='sniper'?11:8;}
+  else if(Math.abs(e.vx)>5){state='run';rate=4.5;}
+
   const set=frames[state]||frames.idle;
-  const scaled=scaledFrames(set,img,baseW,baseH);
-  const i=Math.floor(time*rate+e.x*.01)%scaled.length;
-  const facing=(e.windup>0?e.aimX<e.x:e.vx<0)?-1:1;
-  ctx.save();ctx.globalAlpha=.24;ctx.fillStyle='#071220';ctx.beginPath();ctx.ellipse(e.x+e.w/2,e.y+e.h+2,type==='heavy'?25:20,4,0,0,Math.PI*2);ctx.fill();ctx.restore();
-  drawSprite(ctx,img,scaled[i],e.x+e.w/2,e.y+e.h,facing,displayH);
+  const scaled=scaledFrames(set,img,ENEMY_BASE_W,ENEMY_BASE_H);
+  const i=Math.floor(time*rate+e.x*.006)%scaled.length;
+  const center=e.x+e.w/2;
+  const facing=e.windup>0&&e.aimX?e.aimX<center?-1:1:e.vx<0?-1:1;
+
+  ctx.save();
+  ctx.globalAlpha=.24;
+  ctx.fillStyle='#071220';
+  ctx.beginPath();ctx.ellipse(center,e.y+e.h+2,type==='heavy'?27:21,4,0,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  drawSprite(ctx,img,scaled[i],center,e.y+e.h,facing,displayH);
  }
 
  function boss(b,time){
