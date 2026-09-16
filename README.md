@@ -1,53 +1,55 @@
-# Aboden Hero — وادي العجائب
+# Aboden Hero — عملية منتصف الليل
 
-Original side-scrolling cartoon platformer. Play: https://3wasfnjd.github.io/Aboden-Hero/
+Play: https://3wasfnjd.github.io/Aboden-Hero/
 
-## Chapter 01
-A 6,600-unit forest trail with ink-outlined trees, mushroom cottages, paper grain,
-parallax hills, collectible stars, patrolling guards, three checkpoints, health
-pickups, gaps, hazards and an exit gate. The warm vintage-cartoon art direction
-is inspired by the supplied references; scenery and placeholder hero are drawn
-from original Canvas paths. No reference screenshots or licensed character art
-are shipped.
+A side-scrolling action platformer set in a comic-book night city. The user-supplied
+poster appears on the title screen and defines the red jacket, copper highlights,
+steel-blue shadows and dark outlines. The playable hero is an original procedural
+approximation; the poster is not presented as an animated spritesheet.
+
+## Mission 01
+- A 6,600-unit route through industrial streets, rooftops and warehouses.
+- Armed patrols with a visible aim warning before each projectile.
+- Automatic fire while holding the shoot button; unlimited ammunition.
+- Short invulnerable dash (0.17 seconds), with a 1.35-second cooldown.
+- Four checkpoints, health pickups, collectible energy stars and forgiving jumps.
+- A gatekeeper with 24 health, three-projectile volleys and faster attacks below
+  half health. Defeating it unlocks the extraction gate and mission results.
+- Checkpoints restore health. A failed boss attempt resets its health and clears
+  hostile projectiles. Progress lasts for the current run, not a page reload.
 
 ## Controls
 - Move: arrows or A / D.
-- Jump: Up or K. Tap for a short jump; hold for a higher jump.
-- Shoot: J or Space; holding repeats fire.
+- Jump: Up or K; tap for a short jump, hold for a high jump.
+- Shoot: J or Space; hold for repeated fire.
+- Dash: L or either Shift key; tap again after the cooldown.
 - Pause/resume: Escape or the pause button.
-- Touch: independent pointer controls support move + jump + shoot together.
-- Sound: optional synthesized effects, enabled with the music-note button.
+- Touch: independent movement, jump, fire and dash pointer buttons.
+- Sound: optional synthesized effects; enable with the music-note button.
 - Landscape is recommended on phones; portrait remains usable.
 
-Movement uses acceleration, braking, 120 ms coyote time, a 140 ms jump buffer,
-and a fixed 120 Hz simulation. Falling or losing five hearts returns you to the
-latest checkpoint. Checkpoints and collected stars persist during that run,
-not across page reloads. Completing the stage shows results and a replay button.
-Switching apps or losing focus pauses and clears held input.
-
 ## Run / deploy
-Serve the repository root over HTTP, e.g. `python3 -m http.server 8000`.
-There is no build step, CDN dependency, package install or external art download.
-GitHub Pages serves `index.html` and relative `src/` files from the main branch.
-The existing Pages deployment setup is retained; `.nojekyll` allows static serving.
+Serve the repository root over HTTP: `python3 -m http.server 8000`.
+No package installation, bundler or CDN is required. GitHub Pages serves the main
+branch root through its existing deployment. Versioned module and CSS URLs avoid
+mixing cached files between releases.
 
-## Files
-- `src/world.js`: level geometry and pure movement/collision functions.
-- `src/art.js`: original scenery and placeholder character rendering.
-- `src/main.js`: game loop, state transitions, controls, effects and audio.
-- `src/style.css`: Arabic responsive menu, HUD and controls.
+## Source
+- `src/world.js`: level geometry, fixed-step movement, collision, dash timing.
+- `src/combat.js`: guard warnings, aiming and hostile projectile simulation.
+- `src/art.js`: code-drawn city, temporary red-jacket hero, guards and gatekeeper.
+- `src/main.js`: game loop, UI state, input, player bullets, pickups, audio.
+- `src/style.css`: responsive Arabic interface.
+- `assets/aboden-poster.jpeg`: user-supplied poster, copied without modification.
 
-## Replace the hero
-Replace `hero(p, time)` in `src/art.js` with your spritesheet drawing. Coordinates
-are anchored at `(p.x + p.w / 2, p.y + p.h)` (feet); the default collision box is
-30 × 44 world units. Keep this hitbox independent of the visual sprite size.
-Suggested animations: idle, run, jump, fall, shoot, hurt. The current hero is
-intentionally temporary; no final character design is implied.
+## Replace the player art
+Replace `hero(p, time)` in `src/art.js` with a spritesheet renderer. Feet are
+anchored at `(p.x + p.w / 2, p.y + p.h)`; keep the 30 × 44 collision box independent
+of artwork. Recommended frames: idle, run, jump, fall, fire, dash and hurt.
 
 ## Validation
-`npm test` runs dependency-free Node tests for acceleration, braking, variable
-jump height, coyote time, buffered jumps, no double jump, one-way platforms and
-all mandatory gaps. A headless DOM adapter also tests simultaneous pointer input,
-pointer cancellation, shooting, collection, pause, respawn, checkpoints and replay.
-This adapter is not a real mobile browser. Browser smoke checklist: start, move/jump/shoot, pause,
-resume, checkpoint respawn, goal/replay, pointer cancellation, phone rotation.
+`npm test` runs 14 Node tests for movement, jump timing, gaps, dash cooldown,
+telegraphed fire, boss projectiles, simultaneous input, collection, pause, respawn,
+boss defeat, locked exit and replay. Integration tests use a minimal DOM adapter,
+not a real mobile device. Browser checks cover the live menu, poster, launch,
+movement and pause/resume; physical iPhone testing remains separate.

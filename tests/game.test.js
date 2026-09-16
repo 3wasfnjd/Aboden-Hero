@@ -9,7 +9,7 @@ class Element {
  getContext(){return context;}
 }
 const context=new Proxy({createImageData:(w,h)=>({data:new Uint8ClampedArray(w*h*4)}),createLinearGradient:()=>({addColorStop(){}}),createRadialGradient:()=>({addColorStop(){}}),createPattern:()=>({})},{get:(o,k)=>o[k]??(()=>{})});
-const els=new Map(),buttons=['left','right','jump','shoot'].map(action=>{const b=new Element();b.dataset.action=action;return b;});
+const els=new Map(),buttons=['left','right','jump','shoot','dash'].map(action=>{const b=new Element();b.dataset.action=action;return b;});
 globalThis.document={getElementById:id=>{if(!els.has(id))els.set(id,new Element());return els.get(id);},querySelectorAll:()=>buttons,createElement:()=>new Element(),addEventListener(){}};
 globalThis.window=new Element();globalThis.location={search:'?test'};globalThis.matchMedia=()=>({matches:true});globalThis.requestAnimationFrame=()=>{};globalThis.HTMLButtonElement=Element;globalThis.Path2D=class{};
 await import('../src/main.js');const g=window.__game,dt=1/120;
@@ -21,6 +21,19 @@ test('movement, collecting, simultaneous controls, cancellation, pause, checkpoi
  buttons[2].emit('pointercancel',{pointerId:2});assert(!g.input.jump&&g.input.right&&g.input.shoot);
  g.pause();assert.equal(g.state,'paused');assert(!g.input.right&&!g.input.shoot);const x=g.player.x;steps(120);assert.equal(g.player.x,x);g.play();
  g.player.x=1650;g.player.y=396;g.player.vy=0;g.player.vx=0;g.player.grounded=true;steps(1);assert.equal(g.checkpoint,1650);g.player.y=700;steps(1);assert.equal(g.player.x,1650);assert.equal(g.player.hp,5);assert.equal(g.stats.deaths,1);
- g.player.x=6415;g.player.y=396;steps(1);assert.equal(g.state,'won');g.play();assert.equal(g.state,'playing');assert.equal(g.stats.collected,0);assert.equal(g.checkpoint,110);assert.equal(g.stats.deaths,0);
+ g.player.x=6415;g.player.y=396;steps(1);assert.equal(g.state,'playing','exit stays locked while boss lives');g.level.boss.hp=0;steps(1);assert.equal(g.state,'won');g.play();assert.equal(g.state,'playing');assert.equal(g.stats.collected,0);assert.equal(g.checkpoint,110);assert.equal(g.stats.deaths,0);
  g.draw();
+});
+
+test('boss can be defeated with shots and enemy shots are cleared',()=>{
+ g.reset();g.play();g.player.x=5830;g.player.y=396;g.player.invulnerable=30;
+ g.level.enemies.forEach(e=>e.hp=0);key('KeyJ',true);steps(900);key('KeyJ',false);
+ assert(g.level.boss.hp<=0);assert.equal(g.stats.kills,1);assert.equal(g.enemyShots.length,0);
+ g.player.x=6420;steps(1);assert.equal(g.state,'won');
+});
+test('dash evades hostile projectiles, normal contact costs health',()=>{
+ g.reset();g.play();steps(60);g.player.invulnerable=0;
+ g.enemyShots.push({x:g.player.x+12,y:g.player.y+10,w:10,h:7,vx:0,vy:0,life:1});
+ key('KeyL',true);steps(1);key('KeyL',false);assert(g.player.dashTime>0);assert.equal(g.player.hp,5);
+ steps(30);g.enemyShots.push({x:g.player.x+12,y:g.player.y+10,w:10,h:7,vx:0,vy:0,life:1});steps(1);assert.equal(g.player.hp,4);
 });
