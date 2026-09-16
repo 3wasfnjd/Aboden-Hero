@@ -1,5 +1,5 @@
-import {WORLD_WIDTH,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js';
-import {createArt} from './art.js';
+import {WORLD_WIDTH,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260916-2';
+import {createArt} from './art.js?v=20260916-2';
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx);
 const W=960,H=540,STEP=1/120;
 const keys=new Set(),touch=new Map(),buttons=[...document.querySelectorAll('[data-action]')];
