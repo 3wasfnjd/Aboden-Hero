@@ -1,7 +1,7 @@
 import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260917-muzzle-1';
 import {stepCombat} from './combat.js?v=20260917-muzzle-2';
 import {WORLD_WIDTH,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260916-action-1';
-import {createArt} from './art-bg.js?v=20260917-hud-3';
+import {createArt} from './art-bg.js?v=20260917-bullets-1';
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx);
 // Portrait canvas for mobile: the original 960x540 landscape frame is preserved
 // unscaled and anchored to the bottom via GROUND_SHIFT, so world.js/combat.js
@@ -44,7 +44,7 @@ function tick(dt){if(state!=='playing')return;time+=dt;elapsed+=dt;const control
  for(const event of stepCombat(level,player,enemyShots,dt,(e,isBoss)=>art.enemyMuzzle(e,time,isBoss))){if(event==='hit')hurt();if(event==='boss')toast('حارس البوابة — تفادَ النيران بالاندفاع!');}
  enemyShots=enemyShots.filter(s=>s.life>0);
  if(level.boss.hp>0&&overlaps(player,level.boss))hurt();
- for(const b of bullets){b.x+=b.vx*dt;b.life-=dt;if(level.solids.some(s=>overlaps(b,s)))b.life=0;if(b.life<=0)continue;
+ for(const b of bullets){b.x+=b.vx*dt;b.life-=dt;if(b.life<=0)continue;
   for(const e of [...level.enemies,level.boss]){if(e.hp>0&&overlaps(b,bulletTargetBounds(e))){b.life=0;e.hp--;e.hit=.12;burst(b.x,b.y,'#e6c878',5);if(e.hp<=0){kills++;burst(e.x+17,e.y+16,'#dc844e',e===level.boss?45:14);if(e===level.boss){enemyShots=[];toast('سقط الحارس — توجّه إلى نقطة الإخلاء!');sound(100,.5,'sawtooth',.04);}}break;}}
  }
  bullets=bullets.filter(b=>b.life>0);
