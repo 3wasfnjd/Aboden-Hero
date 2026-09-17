@@ -19,14 +19,31 @@ const walkwayAsset=loadImage(WALKWAY_URL);
 function drawCity(ctx){
  if(!cityAsset.ready)return false;
  const img=cityAsset.img,W=ctx.canvas.width||960,H=ctx.canvas.height||540;
- // The portrait artwork is natively ~9:16, matching the canvas: cover-fit the
- // whole frame (moon, skyline and water all the way down) with no split bands.
  ctx.save();
  ctx.imageSmoothingEnabled=true;
  ctx.imageSmoothingQuality='high';
- const scale=Math.max(W/img.naturalWidth,H/img.naturalHeight);
- const iw=img.naturalWidth*scale,ih=img.naturalHeight*scale;
- ctx.drawImage(img,(W-iw)/2,(H-ih)/2,iw,ih);
+ // The artwork is natively ~9:16, near enough to the canvas that a plain cover-fit
+ // leaves the moon and skyline sitting right at the very top of the canvas. Real
+ // phones display this canvas through object-fit:cover too, and when the browser
+ // toolbar is visible that second crop comes from the top (see index.html) to keep
+ // the ground/hero safe — which was cutting the moon off. Trim the least useful
+ // bottom slice of the source (closest foreground water) and anchor the rest to
+ // the canvas bottom instead, so the skyline sits lower with real headroom above
+ // it; fill that headroom with more of the same night sky instead of a hard edge.
+ const KEEP=.78;
+ const cropH=img.naturalHeight*KEEP;
+ const scale=W/img.naturalWidth;
+ const dh=cropH*scale,dy=H-dh;
+ if(dy>0){
+  const sky=ctx.createLinearGradient(0,0,0,dy);
+  sky.addColorStop(0,'#0a1120');sky.addColorStop(1,'#111d30');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,dy);
+  for(let i=0;i<Math.round(dy/14);i++){
+   ctx.fillStyle=i%5?'#c7d2df55':'#e9eef3aa';
+   ctx.fillRect((i*151+41)%W,(i*89+13)%dy,1.6,1.6);
+  }
+ }
+ ctx.drawImage(img,0,0,img.naturalWidth,cropH,0,dy,W,dh);
  ctx.restore();
  return true;
 }
