@@ -1,9 +1,12 @@
 import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260917-muzzle-1';
 import {stepCombat} from './combat.js?v=20260917-muzzle-2';
 import {WORLD_WIDTH,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260916-action-1';
-import {createArt} from './art-bg.js?v=20260917-muzzle-2';
+import {createArt} from './art-bg.js?v=20260917-portrait-2';
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx);
-const W=960,H=540,STEP=1/120;
+// Portrait canvas for mobile: the original 960x540 landscape frame is preserved
+// unscaled and anchored to the bottom via GROUND_SHIFT, so world.js/combat.js
+// coordinates stay untouched; only the extra vertical space above it is new sky.
+const W=720,H=1280,STEP=1/120,GROUND_SHIFT=H-540,LOOKAHEAD=210;
 const keys=new Set(),touch=new Map(),buttons=[...document.querySelectorAll('[data-action]')];
 let level,player,state='menu',camera=0,time=0,elapsed=0,collected=0,kills=0,deaths=0,checkpoint=110,bullets=[],enemyShots=[],particles=[],toastTime=0,accumulator=0,last=0,muted=true,audio=null;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -51,11 +54,11 @@ function tick(dt){if(state!=='playing')return;time+=dt;elapsed+=dt;const control
  for(const s of level.spikes)if(overlaps(player,s))hurt();
  if(level.boss.hp<=0&&overlaps(player,level.goal)){burst(player.x,player.y,'#efcf7e',25);sound(1100,.4);showOverlay('won');}
  for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=180*dt;p.life-=dt;}particles=particles.filter(p=>p.life>0);
- camera+=(clamp(player.x-280,0,WORLD_WIDTH-W)-camera)*(1-Math.exp(-7*dt));
+ camera+=(clamp(player.x-LOOKAHEAD,0,WORLD_WIDTH-W)-camera)*(1-Math.exp(-7*dt));
  if(toastTime>0){toastTime-=dt;if(toastTime<=0)$('toast').classList.remove('show');}
  updateHUD();updateCombatHUD();
 }
-function draw(){ctx.clearRect(0,0,W,H);art.background(camera,reducedMotion?0:time);art.scenery(camera);ctx.save();ctx.translate(-camera,0);
+function draw(){ctx.clearRect(0,0,W,H);art.background(camera,reducedMotion?0:time);art.scenery(camera);ctx.save();ctx.translate(-camera,GROUND_SHIFT);
  const visible=(x,w=100)=>x+w>camera-100&&x<camera+W+100;
  for(const cp of level.checkpoints)if(visible(cp.x))art.checkpoint(cp,time);
  art.sign(260,'J إطلاق • L اندفاع');art.sign(1350,'اقفز عبر الفجوة');art.sign(2830,'احذر نيران الحراس');art.sign(5530,'حارس البوابة أمامك');
@@ -73,7 +76,8 @@ function draw(){ctx.clearRect(0,0,W,H);art.background(camera,reducedMotion?0:tim
  for(const p of particles){ctx.globalAlpha=p.life/p.max;art.ellipse(p.x,p.y,3,3,p.color,null);}ctx.globalAlpha=1;ctx.restore();
  // Texture sits over the painted world, never on interactive HTML text.
  ctx.fillStyle=paperPattern;ctx.fillRect(0,0,W,H);
- const vignette=ctx.createRadialGradient(480,240,180,480,270,580);vignette.addColorStop(0,'#342b1c00');vignette.addColorStop(1,'#342b1c2e');ctx.fillStyle=vignette;ctx.fillRect(0,0,W,H);
+ const halfDiag=Math.hypot(W/2,H/2);
+ const vignette=ctx.createRadialGradient(W/2,H/2-30,halfDiag*.33,W/2,H/2,halfDiag*1.05);vignette.addColorStop(0,'#342b1c00');vignette.addColorStop(1,'#342b1c2e');ctx.fillStyle=vignette;ctx.fillRect(0,0,W,H);
 }
 function frame(now){if(!last)last=now;const dt=Math.min((now-last)/1000,.1);last=now;if(state==='playing'){accumulator+=dt;while(accumulator>=STEP){tick(STEP);accumulator-=STEP;}}else if(state==='menu'&&!reducedMotion)time+=dt;draw();requestAnimationFrame(frame);}
 const mapped=new Set(['ArrowLeft','ArrowRight','ArrowUp','KeyA','KeyD','KeyK','KeyJ','Space','KeyL','ShiftLeft','ShiftRight']);

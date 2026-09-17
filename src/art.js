@@ -1,6 +1,6 @@
 import {BOSS_FRAMES,CITY_FRAMES,HEAVY_FRAMES,SNIPER_FRAMES,enemyKind,enemyAttackPose,fallbackEnemyMuzzle} from './enemy-weapon.js?v=20260917-muzzle-2';
 import {enemyDisplayHeight} from './hero-weapon.js?v=20260917-muzzle-1';
-import {createArt as createBaseArt} from './art-base.js?v=20260917-muzzle-2';
+import {createArt as createBaseArt} from './art-base.js?v=20260917-portrait-2';
 
 const MOVEMENT_URL='./assets/aboden-hero-movement.png';
 const BOSS_URL='./assets/Gatekeeper.png';

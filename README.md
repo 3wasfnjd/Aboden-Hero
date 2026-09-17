@@ -26,7 +26,10 @@ approximation; the poster is not presented as an animated spritesheet.
 - Pause/resume: Escape or the pause button.
 - Touch: independent movement, jump, fire and dash pointer buttons.
 - Sound: optional synthesized effects; enable with the music-note button.
-- Landscape is recommended on phones; portrait remains usable.
+- Portrait is the primary orientation, built for phones held upright. The canvas
+  renders at 720×1280; the original 960×540 side-scrolling frame is unscaled and
+  anchored to the bottom, with the extra height above it filled by sky. Rotating
+  to landscape on a short viewport shows a rotate-back prompt instead of gameplay.
 
 ## Run / deploy
 Serve the repository root over HTTP: `python3 -m http.server 8000`.
