@@ -1,4 +1,5 @@
-import {createArt as createBaseArt} from './art-base.js?v=20260917-guards-3';
+import {enemyDisplayHeight} from './hero-weapon.js?v=20260917-muzzle-1';
+import {createArt as createBaseArt} from './art-base.js?v=20260917-muzzle-1';
 
 const MOVEMENT_URL='./assets/aboden-hero-movement.png';
 const BOSS_URL='./assets/Gatekeeper.png';
@@ -138,7 +139,7 @@ export function createArt(ctx){
   if(!asset.ready){baseEnemy(e,time);return;}
 
   const img=asset.img;
-  let state='idle',rate=4,displayH=type==='heavy'?88:type==='sniper'?80:76;
+  let state='idle',rate=4,displayH=enemyDisplayHeight(e);
   if(e.hit>0){state='hit';rate=12;}
   else if(e.windup>0){state=e.windup>.20?'aim':'charge';rate=10;}
   else if(e.fire>1.52){state='fire';rate=18;}
@@ -187,3 +188,4 @@ export function createArt(ctx){
 
  return {...base,hero,enemy,boss};
 }
+

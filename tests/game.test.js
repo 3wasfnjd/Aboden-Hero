@@ -8,10 +8,11 @@ class Element {
  emit(t,extra={}){this.listeners[t]?.({preventDefault(){},target:this,...extra});}
  getContext(){return context;}
 }
-const context=new Proxy({createImageData:(w,h)=>({data:new Uint8ClampedArray(w*h*4)}),createLinearGradient:()=>({addColorStop(){}}),createRadialGradient:()=>({addColorStop(){}}),createPattern:()=>({})},{get:(o,k)=>o[k]??(()=>{})});
+const context=new Proxy({canvas:{width:960,height:540},getImageData:()=>({data:new Uint8ClampedArray(4)}),createImageData:(w,h)=>({data:new Uint8ClampedArray(w*h*4)}),createLinearGradient:()=>({addColorStop(){}}),createRadialGradient:()=>({addColorStop(){}}),createPattern:()=>({})},{get:(o,k)=>o[k]??(()=>{})});
 const els=new Map(),buttons=['left','right','jump','shoot','dash'].map(action=>{const b=new Element();b.dataset.action=action;return b;});
 globalThis.document={getElementById:id=>{if(!els.has(id))els.set(id,new Element());return els.get(id);},querySelectorAll:()=>buttons,createElement:()=>new Element(),addEventListener(){}};
 globalThis.window=new Element();globalThis.location={search:'?test'};globalThis.matchMedia=()=>({matches:true});globalThis.requestAnimationFrame=()=>{};globalThis.HTMLButtonElement=Element;globalThis.Path2D=class{};
+globalThis.Image=class{constructor(){this.listeners={};this.naturalWidth=1254;this.naturalHeight=1254;}addEventListener(t,fn){this.listeners[t]=fn;}set src(url){if(url.includes('hero-spritesheet'))queueMicrotask(()=>this.listeners.load?.());}};
 await import('../src/main.js');const g=window.__game,dt=1/120;
 const steps=n=>{for(let i=0;i<n;i++)g.tick(dt);};
 const key=(code,down)=>window.emit(down?'keydown':'keyup',{code,target:{}});
@@ -36,4 +37,14 @@ test('dash evades hostile projectiles, normal contact costs health',()=>{
  g.enemyShots.push({x:g.player.x+12,y:g.player.y+10,w:10,h:7,vx:0,vy:0,life:1});
  key('KeyL',true);steps(1);key('KeyL',false);assert(g.player.dashTime>0);assert.equal(g.player.hp,5);
  steps(30);g.enemyShots.push({x:g.player.x+12,y:g.player.y+10,w:10,h:7,vx:0,vy:0,life:1});steps(1);assert.equal(g.player.hp,4);
+});
+
+
+test('new sprite muzzle shots damage guards in both facing directions',()=>{
+ for(const facing of [1,-1]){
+  g.reset();g.play();steps(60);g.player.x=700;g.player.facing=facing;
+  const e=g.level.enemies[0];e.x=facing===1?810:580;e.min=e.x;e.max=e.x+e.w;e.vx=0;e.fire=100;e.hp=3;
+  key('KeyJ',true);steps(22);key('KeyJ',false);
+  assert(e.hp<3,`facing ${facing} hits at sprite weapon height`);
+ }
 });

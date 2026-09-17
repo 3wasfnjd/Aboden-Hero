@@ -1,6 +1,7 @@
+import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260917-muzzle-1';
 import {stepCombat} from './combat.js?v=20260916-action-1';
 import {WORLD_WIDTH,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260916-action-1';
-import {createArt} from './art.js?v=20260916-action-1';
+import {createArt} from './art-bg.js?v=20260917-muzzle-1';
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx);
 const W=960,H=540,STEP=1/120;
 const keys=new Set(),touch=new Map(),buttons=[...document.querySelectorAll('[data-action]')];
@@ -33,7 +34,7 @@ function tick(dt){if(state!=='playing')return;time+=dt;elapsed+=dt;const control
  const {jumped,landed}=stepPlayer(player,controls,level.solids,dt);if(jumped){burst(player.x+15,player.y+44,'#ddd1a4',5);sound(510,.12,'triangle');}if(landed)burst(player.x+15,player.y+44,'#ddd1a4',5);
  if(player.dashTime>0){burst(player.x+15,player.y+22,'#6c9eaf',2);if(!wasDashing)sound(260,.13,'sawtooth',.018);}
  if(player.y>620){respawn();return;}
- if(controls.shoot&&player.shot<=0){player.shot=.14;bullets.push({x:player.x+15+player.facing*24,y:player.y+7,w:13,h:8,vx:player.facing*620,life:1});sound(660,.055,'triangle',.025);}
+ if(controls.shoot&&player.shot<=0){player.shot=SHOT_INTERVAL;bullets.push(makeHeroBullet(art.heroMuzzle(player,time),player.facing));sound(660,.055,'triangle',.025);}
  for(const e of level.enemies){if(e.hp<=0)continue;if(e.windup<=0)e.x+=e.vx*dt;e.hit=Math.max(0,e.hit-dt);if(e.x<e.min){e.x=e.min;e.vx=Math.abs(e.vx);}if(e.x+e.w>e.max){e.x=e.max-e.w;e.vx=-Math.abs(e.vx);}
   if(overlaps(player,e)){if(player.vy>70&&previousBottom<=e.y+10){e.hp=0;kills++;player.vy=-390;player.coyote=0;burst(e.x+17,e.y+16,'#e0b164',12);sound(280,.12,'triangle');}else hurt();}
  }
@@ -41,7 +42,7 @@ function tick(dt){if(state!=='playing')return;time+=dt;elapsed+=dt;const control
  enemyShots=enemyShots.filter(s=>s.life>0);
  if(level.boss.hp>0&&overlaps(player,level.boss))hurt();
  for(const b of bullets){b.x+=b.vx*dt;b.life-=dt;if(level.solids.some(s=>overlaps(b,s)))b.life=0;if(b.life<=0)continue;
-  for(const e of [...level.enemies,level.boss]){if(e.hp>0&&overlaps(b,e)){b.life=0;e.hp--;e.hit=.12;burst(b.x,b.y,'#e6c878',5);if(e.hp<=0){kills++;burst(e.x+17,e.y+16,'#dc844e',e===level.boss?45:14);if(e===level.boss){enemyShots=[];toast('سقط الحارس — توجّه إلى نقطة الإخلاء!');sound(100,.5,'sawtooth',.04);}}break;}}
+  for(const e of [...level.enemies,level.boss]){if(e.hp>0&&overlaps(b,bulletTargetBounds(e))){b.life=0;e.hp--;e.hit=.12;burst(b.x,b.y,'#e6c878',5);if(e.hp<=0){kills++;burst(e.x+17,e.y+16,'#dc844e',e===level.boss?45:14);if(e===level.boss){enemyShots=[];toast('سقط الحارس — توجّه إلى نقطة الإخلاء!');sound(100,.5,'sawtooth',.04);}}break;}}
  }
  bullets=bullets.filter(b=>b.life>0);
  for(const coin of level.coins)if(!coin.taken&&overlaps(player,{x:coin.x-12,y:coin.y-12,w:24,h:24})){coin.taken=true;collected++;burst(coin.x,coin.y,'#eed089',6);sound(850+collected%4*110,.08);updateHUD();}
@@ -67,8 +68,8 @@ function draw(){ctx.clearRect(0,0,W,H);art.background(camera,reducedMotion?0:tim
  art.boss(level.boss,time);art.goal(level.goal,time,level.boss.hp>0);
  for(const e of [...level.enemies,level.boss])if(e.hp>0&&e.windup>0&&visible(e.x)){ctx.globalAlpha=.4;art.line(e.x+e.w/2,e.y+14,e.aimX,e.aimY,'#edb273',1);ctx.globalAlpha=1;art.ellipse(e.aimX,e.aimY,10,10,'#f2a45815','#e5ac66',1);}
  for(const b of enemyShots){art.ellipse(b.x+5,b.y+3,6,4,'#e66b48','#f4bf7d',1);art.line(b.x-b.vx/35,b.y-b.vy/35,b.x,b.y,'#a0483f',2);}
- for(const b of bullets){art.ellipse(b.x+6,b.y+4,9,5,'#f2dc92','#7e6843',2);art.line(b.x-b.vx/90,b.y+4,b.x,b.y+4,'#e6d3a0',3);}
- if(player.invulnerable===0||Math.floor(time*14)%2===0){art.hero(player,time);if(player.shot>.10){const x=player.x+15+player.facing*47;art.star(x,player.y+7,10,'#ffce7b',time*30);}}
+ for(const b of bullets){const cx=b.x+b.w/2,cy=b.y+b.h/2;art.ellipse(cx,cy,9,5,'#f2dc92','#7e6843',2);art.line(cx-b.vx/90,cy,cx,cy,'#e6d3a0',3);}
+ if(player.invulnerable===0||Math.floor(time*14)%2===0){art.hero(player,time);if(player.shot>.10){const muzzle=art.heroMuzzle(player,time);art.star(muzzle.x,muzzle.y,10,'#ffce7b',time*30);}}
  for(const p of particles){ctx.globalAlpha=p.life/p.max;art.ellipse(p.x,p.y,3,3,p.color,null);}ctx.globalAlpha=1;ctx.restore();
  // Texture sits over the painted world, never on interactive HTML text.
  ctx.fillStyle=paperPattern;ctx.fillRect(0,0,W,H);
@@ -88,3 +89,4 @@ $('fullscreen').addEventListener('click',async()=>{try{if(document.fullscreenEle
 reset();updateCombatHUD();requestAnimationFrame(frame);
 // Opt-in local test harness; absent from normal game sessions.
 if(new URLSearchParams(location.search).has('test'))window.__game={get player(){return player;},get level(){return level;},get state(){return state;},get checkpoint(){return checkpoint;},get enemyShots(){return enemyShots;},get bullets(){return bullets;},get input(){return input();},get stats(){return {collected,kills,deaths,elapsed};},tick,play,pause,reset,respawn,draw};
+

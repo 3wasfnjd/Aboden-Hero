@@ -1,4 +1,4 @@
-import {createArt as createCharacterArt} from './art.js?v=20260917-guards-3-base';
+import {createArt as createCharacterArt} from './art.js?v=20260917-muzzle-1';
 
 const CITY_URL='./assets/backgrounds/stage1-city.png';
 const WALKWAY_URL='./assets/backgrounds/stage1-walkway.png';
@@ -96,3 +96,4 @@ export function createArt(ctx){
 
  return {...base,background,scenery,platform};
 }
+
