@@ -1,6 +1,6 @@
 import {BOSS_FRAMES,CITY_FRAMES,HEAVY_FRAMES,SNIPER_FRAMES,enemyKind,enemyAttackPose,fallbackEnemyMuzzle} from './enemy-weapon.js?v=20260917-guards-1';
 import {enemyDisplayHeight} from './hero-weapon.js?v=20260917-muzzle-1';
-import {createArt as createBaseArt} from './art-base.js?v=20260917-cleanup-1';
+import {createArt as createBaseArt} from './art-base.js?v=20260917-cleanup-2';
 
 const MOVEMENT_URL='./assets/aboden-hero-movement.png';
 const BOSS_URL='./assets/Gatekeeper.png';
@@ -84,13 +84,11 @@ const bossDeathStart=new WeakMap();
 export function createArt(ctx){
  const base=createBaseArt(ctx);
  const baseHero=base.hero;
- const baseEnemy=base.enemy;
- const baseBoss=base.boss;
 
  function hero(p,time){
   const movement=movementAsset.img;
   const special=p.invulnerable>1.05||p.dashTime>0||p.shot>.02;
-  if(!movementAsset.ready||special){baseHero(p,time);return;}
+  if(special){baseHero(p,time);return;}
   ctx.save();
   ctx.globalAlpha=.24;
   ctx.fillStyle='#071220';
@@ -119,8 +117,6 @@ export function createArt(ctx){
   const type=enemyKind(e);
   const asset=type==='city'?cityAsset:type==='sniper'?sniperAsset:heavyAsset;
   const frames=type==='city'?CITY_FRAMES:type==='sniper'?SNIPER_FRAMES:HEAVY_FRAMES;
-  if(!asset.ready){baseEnemy(e,time);return;}
-
   const img=asset.img;
   const attack=enemyAttackPose(e);
   if(attack){const frame=scaledFrames([attack.frame],img,ENEMY_BASE_W,ENEMY_BASE_H)[0];drawSprite(ctx,img,frame,e.x+e.w/2,e.y+e.h,attack.facing,attack.height);return;}
@@ -144,7 +140,6 @@ export function createArt(ctx){
 
  function boss(b,time){
   const gatekeeper=bossAsset.img;
-  if(!bossAsset.ready){baseBoss(b,time);return;}
   let frames=BOSS_FRAMES.idle,rate=3.4,displayH=146;
   if(b.hp<=0){
    if(!bossDeathStart.has(b))bossDeathStart.set(b,time);

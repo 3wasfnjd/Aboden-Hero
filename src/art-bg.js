@@ -1,4 +1,4 @@
-import {createArt as createCharacterArt} from './art.js?v=20260917-cleanup-1';
+import {createArt as createCharacterArt} from './art.js?v=20260917-cleanup-2';
 
 const CITY_URL='./assets/backgrounds/stage1-portrait.png';
 const WALKWAY_URL='./assets/backgrounds/stage1-walkway.png';
@@ -122,12 +122,9 @@ function drawGoal(ctx,g,time,locked){
 
 export function createArt(ctx){
  const base=createCharacterArt(ctx);
- const fallbackBackground=base.background;
- const fallbackScenery=base.scenery;
- const fallbackPlatform=base.platform;
 
  function background(camera,time){
-  if(!drawCity(ctx)){fallbackBackground(camera,time);return;}
+  drawCity(ctx);
 
   // Light separation only around the gameplay plane. The city remains crisp,
   // but the red/black sprites keep readable silhouettes.
@@ -141,14 +138,10 @@ export function createArt(ctx){
   ctx.fillRect(0,shift+280,W,260);
  }
 
- function scenery(camera){
-  // The city is now a dedicated fixed backdrop. Do not draw the old procedural
-  // rooftop scenery over it.
-  if(!cityAsset.ready)fallbackScenery(camera);
- }
+ function scenery(){}
 
  function platform(s){
-  if(s.ground){if(drawGroundWalkway(ctx,s))return;fallbackPlatform(s);return;}
+  if(s.ground){drawGroundWalkway(ctx,s);return;}
   drawFloatingPlatform(ctx,s);
  }
 
