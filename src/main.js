@@ -27,6 +27,9 @@ function updateHUD(){$('health').textContent='♥'.repeat(player.hp)+'♡'.repea
 function updateCombatHUD(){ $('combat-hud').hidden=state!=='playing';$('kill-count').textContent=`${kills} إسقاط`;$('dash-status').textContent=player.dashCooldown>0?`اندفاع ${player.dashCooldown.toFixed(1)}ث`:'الاندفاع جاهز';$('boss-hud').hidden=!(state==='playing'&&level.boss.active&&level.boss.hp>0);$('boss-health').style.width=`${Math.max(0,level.boss.hp)/level.boss.maxHP*100}%`; }
 function showOverlay(kind){state=kind;clearInput();$('overlay').hidden=false;$('pills').hidden=kind!=='menu';
  $('hud').hidden=true;$('controls').hidden=true;
+ const poster=$('poster');
+ if(kind==='won'){poster.src='./assets/victory-poster.jpeg';poster.alt='البطل واقف منتصرًا فوق حارس البوابة المحطم';}
+ else{poster.src='./assets/aboden-poster.jpeg';poster.alt='بوستر Aboden Hero: البطل بالجاكيت الأحمر';}
  if(kind==='paused'){$('eyebrow').textContent='MISSION PAUSED';$('title').innerHTML='المهمة<br><em>متوقفة.</em>';$('description').textContent='توقفت اللعبة. أكمل من مكانك عندما تكون جاهزًا.';$('play').textContent='نكمل المغامرة ◀';}
  if(kind==='won'){$('eyebrow').textContent='MISSION COMPLETE';$('title').innerHTML='المدينة<br><em>بأمان.</em>';$('description').textContent=`هزمت حارس البوابة. جمعت ${collected} شحنة وأسقطت ${kills} خصوم. الوقت ${Math.floor(elapsed/60)}:${String(Math.floor(elapsed%60)).padStart(2,'0')} • مرات العودة ${deaths}`;$('play').textContent='العب من جديد ↻';}
  $('pause').textContent='▶';$('pause').setAttribute('aria-label','متابعة اللعب');updateCombatHUD();
