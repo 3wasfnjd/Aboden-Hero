@@ -1,7 +1,30 @@
-import {enemyWeaponMuzzle,ENEMY_FLASH_TIME} from './enemy-weapon.js?v=20260917-muzzle-2';
+import {enemyWeaponMuzzle,ENEMY_FLASH_TIME,enemyKind} from './enemy-weapon.js?v=20260917-guards-1';
 import {overlaps} from './world.js?v=20260917-guards-3';
 
 export const getShotOrigin=enemyWeaponMuzzle;
+
+// Each guard type gets its own rhythm and range instead of an identical single shot:
+// city is the baseline; sniper telegraphs longer but hits fast from far away; heavy
+// reacts quickly and sprays a short burst of slower, easier-to-read shots.
+const KIND_STATS={
+ city:{windup:.48,speed:245,cooldown:1.75,range:530,burst:1,burstGap:0},
+ sniper:{windup:.85,speed:430,cooldown:2.3,range:720,burst:1,burstGap:0},
+ heavy:{windup:.34,speed:190,cooldown:2.1,range:480,burst:3,burstGap:.12}
+};
+
+function fireShot(e,isBoss,origin,shots){
+ const angle=Math.atan2(e.aimY-origin.y,e.aimX-origin.x);
+ for(const offset of isBoss?[-.16,0,.16]:[0]){
+  const speed=isBoss?270:KIND_STATS[enemyKind(e)].speed;
+  shots.push({x:origin.x-5,y:origin.y-3.5,w:10,h:7,vx:Math.cos(angle+offset)*speed,vy:Math.sin(angle+offset)*speed,life:3.5,boss:isBoss});
+ }
+ if(isBoss){
+  // The gatekeeper's own heavy weapon: one slow, oversized rocket down the center
+  // of the fan, alongside the fast triple shot.
+  const rocketSpeed=150;
+  shots.push({x:origin.x-9,y:origin.y-6,w:18,h:12,vx:Math.cos(angle)*rocketSpeed,vy:Math.sin(angle)*rocketSpeed,life:6,boss:true,rocket:true});
+ }
+}
 
 // Aim is locked at the start of the visible warning, giving the player time to dodge.
 export function stepCombat(level,player,shots,dt,getMuzzle=enemyWeaponMuzzle){
@@ -13,20 +36,30 @@ export function stepCombat(level,player,shots,dt,getMuzzle=enemyWeaponMuzzle){
  if(boss.active&&boss.hp>0)shooters.push(boss);
  for(const e of shooters){
   const isBoss=e===boss;
-  if(Math.abs(e.x-player.x)>(isBoss?1100:530))continue;
+  const stats=isBoss?null:KIND_STATS[enemyKind(e)];
+  if(Math.abs(e.x-player.x)>(isBoss?1100:stats.range))continue;
   if(e.windup>0){
    e.windup-=dt;
    if(e.windup<=0){
     e.shotFlash=ENEMY_FLASH_TIME;
-    const origin=getMuzzle(e,isBoss);
-    const angle=Math.atan2(e.aimY-origin.y,e.aimX-origin.x);
-    for(const offset of isBoss?[-.16,0,.16]:[0])shots.push({x:origin.x-5,y:origin.y-3.5,w:10,h:7,vx:Math.cos(angle+offset)*(isBoss?270:245),vy:Math.sin(angle+offset)*(isBoss?270:245),life:3.5,boss:isBoss});
-    e.fire=isBoss?(e.hp<12?1.05:1.45):1.75;
+    fireShot(e,isBoss,getMuzzle(e,isBoss),shots);
+    e.burstLeft=isBoss?0:stats.burst-1;
+    e.burstGap=isBoss?0:stats.burstGap;
+    e.fire=isBoss?(e.hp<12?1.05:1.45):(e.burstLeft>0?e.burstGap:stats.cooldown);
+    events.push('shot');
+   }
+  }else if(e.burstLeft>0){
+   e.fire-=dt;
+   if(e.fire<=0){
+    e.shotFlash=ENEMY_FLASH_TIME;
+    fireShot(e,isBoss,getMuzzle(e,isBoss),shots);
+    e.burstLeft--;
+    e.fire=e.burstLeft>0?e.burstGap:stats.cooldown;
     events.push('shot');
    }
   }else{
    e.fire-=dt;
-   if(e.fire<=0){e.windup=isBoss?.6:.48;e.aimX=player.x+player.w/2;e.aimY=player.y+player.h/2;e.attackFacing=e.aimX<e.x+e.w/2?-1:1;}
+   if(e.fire<=0){e.windup=isBoss?.6:stats.windup;e.windupDuration=e.windup;e.aimX=player.x+player.w/2;e.aimY=player.y+player.h/2;e.attackFacing=e.aimX<e.x+e.w/2?-1:1;}
   }
  }
  boss.hit=Math.max(0,boss.hit-dt);

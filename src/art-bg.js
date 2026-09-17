@@ -1,4 +1,4 @@
-import {createArt as createCharacterArt} from './art.js?v=20260917-portrait-2';
+import {createArt as createCharacterArt} from './art.js?v=20260917-guards-1';
 
 const CITY_URL='./assets/backgrounds/stage1-portrait.png';
 const WALKWAY_URL='./assets/backgrounds/stage1-walkway.png';

@@ -61,7 +61,10 @@ export function enemyAttackPose(e,isBoss=false){
   else{
    // The first aim frame has its gun lowered. Use the two raised-gun poses
    // during the warning so the visible line always starts at a aimed weapon.
-   state='aim';index=1+Math.floor(Math.max(0,(isBoss?.6:.48)-e.windup)*8)%2;
+   // windupDuration is set by combat.js per guard kind; fall back to the
+   // shared default for callers (tests, pre-fire enemies) that never set it.
+   const duration=e.windupDuration??(isBoss?.6:.48);
+   state='aim';index=1+Math.floor(Math.max(0,duration-e.windup)*8)%2;
    height=isBoss?147:enemyDisplayHeight(e);
   }
  }else if(e.shotFlash>0){state='fire';index=Math.min(3,Math.floor(Math.max(0,ENEMY_FLASH_TIME-e.shotFlash)*20+1e-8));height=isBoss?146:enemyDisplayHeight(e);}

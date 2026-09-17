@@ -24,7 +24,7 @@ for(const kind of ['city','heavy','sniper','boss']){
    e.attackFacing=facing;e.aimX=p.x+15;e.aimY=p.y+22;e.windup=1e-7;
    const shots=[],dt=1e-6;stepCombat(level,p,shots,dt);
    const muzzle=enemyWeaponMuzzle(e,boss);assert.equal(e.shotFlash,ENEMY_FLASH_TIME);
-   assert.equal(shots.length,boss?3:1);
+   assert.equal(shots.length,boss?4:1); // boss: 3-shot fan + 1 center rocket
    for(const s of shots){near(s.x+s.w/2-s.vx*dt,muzzle.x);near(s.y+s.h/2-s.vy*dt,muzzle.y);assert.equal(Math.sign(s.vx),facing);}
    // Patrol movement must not flip the firing pose after the warning ends.
    e.vx=-facing*48;assert.equal(enemyAttackPose(e,boss).facing,facing);
