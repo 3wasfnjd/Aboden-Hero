@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111a29">
 <meta name="description" content="عبودين هيرو — لعبة أكشن ومنصات في مدينة ليلية. العب باللمس أو لوحة المفاتيح.">
-<title>Aboden Hero • عملية منتصف الليل</title><link rel="stylesheet" href="./src/style.css?v=20260917-portrait-2"><link rel="stylesheet" href="./src/controls.css?v=20260917-ui-3">
+<title>Aboden Hero • عملية منتصف الليل</title><link rel="stylesheet" href="./src/style.css?v=20260917-hud-1"><link rel="stylesheet" href="./src/controls.css?v=20260917-ui-3">
 <style id="mobile-bottom-layout">
 /* Portrait is the intended mobile presentation; landscape shows a rotate prompt. */
 @media(max-width:1024px){
@@ -16,13 +16,13 @@
  #controls::before{content:""!important;display:block!important;position:absolute!important;top:0!important;left:0!important;right:0!important;height:3px!important;background:linear-gradient(90deg,transparent,#cf2f38 20%,#ff4b51 50%,#cf2f38 80%,transparent)!important;box-shadow:0 0 12px #e3323d88!important;pointer-events:none!important}
  #controls>div{display:flex!important;align-items:center!important;gap:6px!important;pointer-events:auto!important}
  #controls button[data-action]{width:68px!important;height:68px!important;min-width:68px!important;pointer-events:auto!important;opacity:1!important}
- header{position:fixed!important;left:50%!important;right:auto!important;bottom:auto!important;top:calc(max(10px,env(safe-area-inset-top)) + 54px)!important;width:auto!important;height:auto!important;min-height:0!important;padding:0!important;transform:translateX(-50%)!important;z-index:30!important;pointer-events:none!important}
+ header{position:fixed!important;right:max(10px,env(safe-area-inset-right))!important;left:auto!important;bottom:auto!important;top:max(10px,env(safe-area-inset-top))!important;width:auto!important;height:auto!important;min-height:0!important;padding:0!important;transform:none!important;z-index:30!important;pointer-events:none!important}
  header .brand,header .chapter{display:none!important}
  header .tools{display:flex!important;gap:6px!important;pointer-events:auto!important}
  header .tools button{width:40px!important;height:40px!important;min-width:40px!important}
  footer{display:none!important}
  body:has(#overlay:not([hidden])) #controls{opacity:1!important;pointer-events:auto!important}
- #hud{z-index:8!important;top:max(10px,env(safe-area-inset-top))!important;left:max(10px,env(safe-area-inset-left))!important;right:max(10px,env(safe-area-inset-right))!important}
+ #hud{z-index:8!important;top:max(10px,env(safe-area-inset-top))!important;left:max(10px,env(safe-area-inset-left))!important;right:auto!important}
  #boss-hud{z-index:8!important}
  #combat-hud{z-index:8!important;bottom:12px!important}
  #toast{bottom:16px!important;z-index:9!important}
@@ -38,11 +38,11 @@
 <main id="app">
 <header><div class="brand">ABODEN <b>HERO</b><span>عـبـوديـن قـيـمـز</span></div><div class="chapter">الفصل الأول <span>✦</span> عملية منتصف الليل</div><div class="tools"><button id="sound" aria-label="تشغيل الصوت" title="الصوت">♪</button><button id="pause" aria-label="إيقاف مؤقت" title="إيقاف مؤقت">Ⅱ</button><button id="fullscreen" aria-label="ملء الشاشة" title="ملء الشاشة">⛶</button></div></header>
 <section id="stage" aria-label="ساحة اللعب"><canvas id="game" width="720" height="1280" aria-label="لعبة منصات. الأسهم للحركة، K أو سهم أعلى للقفز، J أو Space للإطلاق"></canvas>
-<div id="hud" hidden><div class="health"><span id="health"></span><i>✦</i> <span id="coins">0</span></div><div class="progress"><span id="area">أطراف المدينة</span><div><i id="progress"></i></div></div></div>
+<div id="hud" hidden><div class="health" id="health-panel"><span id="health"></span><i class="heart-mask"></i><i class="heart-mask"></i><i class="heart-mask"></i><i class="heart-mask"></i><i class="heart-mask"></i><span id="coins">0</span></div><div class="progress"><span id="area">أطراف المدينة</span><div><i id="progress"></i></div></div></div>
 <div id="boss-hud" hidden><span>حارس البوابة</span><div><i id="boss-health"></i></div></div><div id="combat-hud" hidden><span id="kill-count">0 إسقاط</span><span id="dash-status">الاندفاع جاهز</span></div><div id="toast" role="status"></div>
 <div id="overlay"><img class="poster" src="./assets/aboden-poster.jpeg" alt="بوستر Aboden Hero: البطل بالجاكيت الأحمر" width="1122" height="1402"><div class="panel"><div class="eyebrow" id="eyebrow">ABODEN GAMES / MISSION 01</div><h1 id="title">المدينة<br><em>تحت الحصار.</em></h1><p id="description">واجه الحراس، تفادَ النيران، ودمّر حارس البوابة. الليلة… أنت البطل.</p><div class="pills" id="pills"><span>قفز وإطلاق</span><span>نقاط حفظ</span><span>مواجهة أخيرة</span></div><button id="play" class="primary">ابدأ المهمة <span>◀</span></button><p class="instructions">A / D أو الأسهم للحركة · K أو ↑ للقفز<br>J أو Space للإطلاق · L أو Shift للاندفاع</p></div></div>
 <div class="rotate-note">أدر الجوال إلى الوضع الطولي للعب ↻</div></section>
 <nav id="controls" aria-label="أزرار اللعب باللمس"><div><button data-action="left" aria-label="تحرك يسارًا"></button><button data-action="right" aria-label="تحرك يمينًا"></button></div><span class="control-hint" aria-hidden="true"></span><div><button data-action="dash" class="dash" aria-label="اندفاع"></button><button data-action="shoot" class="shoot" aria-label="إطلاق"></button><button data-action="jump" class="jump" aria-label="قفز"></button></div></nav>
 <footer><span>ABODEN GAMES</span><span>ABODEN HERO / ACTION PLATFORMER</span><span>CHAPTER 01</span></footer>
-</main><noscript>فعّل JavaScript لتشغيل اللعبة.</noscript><script type="module" src="./src/main.js?v=20260917-portrait-2"></script>
+</main><noscript>فعّل JavaScript لتشغيل اللعبة.</noscript><script type="module" src="./src/main.js?v=20260917-hud-1"></script>
 </body></html>

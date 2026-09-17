@@ -1,6 +1,6 @@
 import {createArt as createCharacterArt} from './art.js?v=20260917-portrait-2';
 
-const CITY_URL='./assets/backgrounds/stage1-city.png';
+const CITY_URL='./assets/backgrounds/stage1-portrait.png';
 const WALKWAY_URL='./assets/backgrounds/stage1-walkway.png';
 
 function loadImage(url){
@@ -18,29 +18,15 @@ const walkwayAsset=loadImage(WALKWAY_URL);
 
 function drawCity(ctx){
  if(!cityAsset.ready)return false;
- const img=cityAsset.img,W=ctx.canvas.width||960,H=ctx.canvas.height||540,shift=H-540;
+ const img=cityAsset.img,W=ctx.canvas.width||960,H=ctx.canvas.height||540;
+ // The portrait artwork is natively ~9:16, matching the canvas: cover-fit the
+ // whole frame (moon, skyline and water all the way down) with no split bands.
  ctx.save();
- // Portrait canvases are taller than the 16:9 artwork's native band: fill the extra
- // height with a starry night sky (gradient, moon, scattered stars) rather than a
- // flat dead void, then cover-fit (crop, never stretch) the skyline into the same
- // 540px-tall band the rest of the gameplay art is anchored to.
- if(shift>0){
-  // The city artwork already paints its own moon near the horizon; only extend
-  // the gradient and starfield upward, no second moon.
-  const sky=ctx.createLinearGradient(0,0,0,shift);
-  sky.addColorStop(0,'#0a1120');sky.addColorStop(1,'#111d30');
-  ctx.fillStyle=sky;ctx.fillRect(0,0,W,shift);
-  for(let i=0;i<Math.round(shift/14);i++){
-   ctx.fillStyle=i%5?'#c7d2df55':'#e9eef3aa';
-   ctx.fillRect((i*151+41)%W,(i*89+13)%shift,1.6,1.6);
-  }
- }
- ctx.beginPath();ctx.rect(0,shift,W,540);ctx.clip();
  ctx.imageSmoothingEnabled=true;
  ctx.imageSmoothingQuality='high';
- const scale=Math.max(W/img.naturalWidth,540/img.naturalHeight);
+ const scale=Math.max(W/img.naturalWidth,H/img.naturalHeight);
  const iw=img.naturalWidth*scale,ih=img.naturalHeight*scale;
- ctx.drawImage(img,(W-iw)/2,shift+(540-ih)/2,iw,ih);
+ ctx.drawImage(img,(W-iw)/2,(H-ih)/2,iw,ih);
  ctx.restore();
  return true;
 }

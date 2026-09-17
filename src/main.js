@@ -1,7 +1,7 @@
 import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260917-muzzle-1';
 import {stepCombat} from './combat.js?v=20260917-muzzle-2';
 import {WORLD_WIDTH,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260916-action-1';
-import {createArt} from './art-bg.js?v=20260917-portrait-2';
+import {createArt} from './art-bg.js?v=20260917-hud-1';
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx);
 // Portrait canvas for mobile: the original 960x540 landscape frame is preserved
 // unscaled and anchored to the bottom via GROUND_SHIFT, so world.js/combat.js
@@ -22,7 +22,7 @@ function sound(freq=440,duration=.09,type='sine',volume=.045){if(muted||!audio)r
 function unlockAudio(){if(muted)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume().catch(()=>{});}catch{muted=true;}}
 function toast(message){$('toast').textContent=message;$('toast').classList.add('show');toastTime=2.6;}
 function burst(x,y,color='#efd598',count=8){for(let i=0;i<count;i++){const a=i*Math.PI*2/count;particles.push({x,y,vx:Math.cos(a)*(35+i*9),vy:Math.sin(a)*80-35,life:.45,max:.45,color});}}
-function updateHUD(){$('health').textContent='♥'.repeat(player.hp)+'♡'.repeat(5-player.hp);$('health').setAttribute('aria-label',`الصحة ${player.hp} من 5`);$('coins').textContent=collected;$('area').textContent=player.x<1540?'أطراف المدينة':player.x<2990?'الحي الصناعي':player.x<4490?'الطريق المحاصر':player.x<5650?'المستودعات':'المواجهة الأخيرة';$('progress').style.width=`${clamp(player.x/6410*100,0,100)}%`;}
+function updateHUD(){$('health').textContent='♥'.repeat(player.hp)+'♡'.repeat(5-player.hp);$('health').setAttribute('aria-label',`الصحة ${player.hp} من 5`);$('health-panel').setAttribute('data-hp',player.hp);$('coins').textContent=collected;$('area').textContent=player.x<1540?'أطراف المدينة':player.x<2990?'الحي الصناعي':player.x<4490?'الطريق المحاصر':player.x<5650?'المستودعات':'المواجهة الأخيرة';$('progress').style.width=`${clamp(player.x/6410*100,0,100)}%`;}
 function updateCombatHUD(){ $('combat-hud').hidden=state==='menu';$('kill-count').textContent=`${kills} إسقاط`;$('dash-status').textContent=player.dashCooldown>0?`اندفاع ${player.dashCooldown.toFixed(1)}ث`:'الاندفاع جاهز';$('boss-hud').hidden=!(state==='playing'&&level.boss.active&&level.boss.hp>0);$('boss-health').style.width=`${Math.max(0,level.boss.hp)/level.boss.maxHP*100}%`; }
 function showOverlay(kind){state=kind;clearInput();$('overlay').hidden=false;$('pills').hidden=kind!=='menu';
  if(kind==='paused'){$('eyebrow').textContent='MISSION PAUSED';$('title').innerHTML='المهمة<br><em>متوقفة.</em>';$('description').textContent='توقفت اللعبة. أكمل من مكانك عندما تكون جاهزًا.';$('play').textContent='نكمل المغامرة ◀';}
