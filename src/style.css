@@ -15,7 +15,7 @@
    included, since that's what background-size:contain displays). */
 .health,.progress{position:relative;width:clamp(150px,42vw,210px);aspect-ratio:2172/724;background-repeat:no-repeat;background-size:contain;background-position:center;pointer-events:none}
 .health{background-image:url('../assets/ui/hud/health.png')}
-.progress{background-image:url('../assets/ui/hud/area.png')}
+.progress{background-image:url('../assets/ui/hud/area.png');margin-top:-8px}
 #health{position:absolute;opacity:0}
 .heart-mask{position:absolute;top:42%;height:20%;width:9.6%;background:#050f1b;border-radius:30%;display:none}
 .heart-mask:nth-of-type(1){left:10.7%}
