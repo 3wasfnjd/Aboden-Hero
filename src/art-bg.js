@@ -90,7 +90,7 @@ function drawFloatingPlatform(ctx,s){
  if(!floatingPlatformAsset.ready)return false;
  const img=floatingPlatformAsset.img;
  const dw=s.w,dh=img.naturalHeight*(dw/img.naturalWidth);
- ctx.drawImage(img,s.x,s.y,dw,dh);
+ ctx.drawImage(img,s.x,s.y-14,dw,dh);
  return true;
 }
 
