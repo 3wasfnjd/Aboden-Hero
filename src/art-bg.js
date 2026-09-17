@@ -1,4 +1,4 @@
-import {createArt as createCharacterArt} from './art.js?v=20260917-rocket-1';
+import {createArt as createCharacterArt} from './art.js?v=20260917-sprites-1';
 
 const CITY_URL='./assets/backgrounds/stage1-portrait.png';
 const WALKWAY_URL='./assets/backgrounds/stage1-walkway.png';

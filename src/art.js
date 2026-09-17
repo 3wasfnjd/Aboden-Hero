@@ -8,6 +8,9 @@ const CITY_URL='./assets/City_Guard.png';
 const HEAVY_URL='./assets/Heavy_Guard.png';
 const SNIPER_URL='./assets/Sniper_Rooftop_Guard.png';
 const ROCKET_URL='./assets/ui/rocket.png';
+const HERO_BULLET_URL='./assets/ui/projectiles/bullet-hero.png';
+const ENEMY_BULLET_URL='./assets/ui/projectiles/bullet-red2.png';
+const ROCKET_SMOKE_URL='./assets/ui/projectiles/rocket-smoke.png';
 
 function loadImage(url){
  const img=new Image();
@@ -25,7 +28,13 @@ const cityAsset=loadImage(CITY_URL);
 const heavyAsset=loadImage(HEAVY_URL);
 const sniperAsset=loadImage(SNIPER_URL);
 const rocketAsset=loadImage(ROCKET_URL);
+const heroBulletAsset=loadImage(HERO_BULLET_URL);
+const enemyBulletAsset=loadImage(ENEMY_BULLET_URL);
+const rocketSmokeAsset=loadImage(ROCKET_SMOKE_URL);
 const ROCKET_DISPLAY_H=34;
+const HERO_BULLET_DISPLAY_H=17;
+const ENEMY_BULLET_DISPLAY_H=15;
+const ROCKET_SMOKE_DISPLAY_H=58;
 
 const MOVE_FRAMES={
  run:[[6,42,206,306],[194,42,209,307],[402,43,196,304],[583,38,239,309],[808,42,208,306],[1008,39,208,310],[1220,43,211,306],[1436,42,217,307]],
@@ -159,6 +168,26 @@ export function createArt(ctx){
   ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.drawImage(img,-dw/2,-dh/2,dw,dh);ctx.restore();
   return true;
  }
- return {...base,hero,enemy,boss,enemyMuzzle,rocket};
+ function heroBullet(x,y,angle){
+  if(!heroBulletAsset.ready)return false;
+  const img=heroBulletAsset.img,dh=HERO_BULLET_DISPLAY_H,dw=dh*(img.naturalWidth/img.naturalHeight);
+  ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.drawImage(img,-dw/2,-dh/2,dw,dh);ctx.restore();
+  return true;
+ }
+ function enemyBullet(x,y,angle){
+  if(!enemyBulletAsset.ready)return false;
+  const img=enemyBulletAsset.img,dh=ENEMY_BULLET_DISPLAY_H,dw=dh*(img.naturalWidth/img.naturalHeight);
+  ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.drawImage(img,-dw/2,-dh/2,dw,dh);ctx.restore();
+  return true;
+ }
+ // Drawn with its bright tip anchored at (x,y) — the rocket's tail — and
+ // trailing backward along -angle, so it billows away behind the rocket.
+ function rocketSmoke(x,y,angle){
+  if(!rocketSmokeAsset.ready)return false;
+  const img=rocketSmokeAsset.img,dh=ROCKET_SMOKE_DISPLAY_H,dw=dh*(img.naturalWidth/img.naturalHeight);
+  ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.drawImage(img,-dw,-dh/2,dw,dh);ctx.restore();
+  return true;
+ }
+ return {...base,hero,enemy,boss,enemyMuzzle,rocket,heroBullet,enemyBullet,rocketSmoke};
 }
 
