@@ -32,7 +32,6 @@ export function stepCombat(level,player,shots,dt,getMuzzle=enemyWeaponMuzzle){
  boss.hit=Math.max(0,boss.hit-dt);
  for(const s of shots){
   s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;
-  if(level.solids.some(p=>overlaps(s,p)))s.life=0;
   if(s.life>0&&overlaps(player,s)){s.life=0;events.push('hit');}
  }
  return events;
