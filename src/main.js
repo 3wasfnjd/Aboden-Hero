@@ -1,7 +1,7 @@
 import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260917-muzzle-1';
-import {stepCombat} from './combat.js?v=20260916-action-1';
+import {stepCombat} from './combat.js?v=20260917-muzzle-2';
 import {WORLD_WIDTH,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260916-action-1';
-import {createArt} from './art-bg.js?v=20260917-muzzle-1';
+import {createArt} from './art-bg.js?v=20260917-muzzle-2';
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx);
 const W=960,H=540,STEP=1/120;
 const keys=new Set(),touch=new Map(),buttons=[...document.querySelectorAll('[data-action]')];
@@ -28,7 +28,7 @@ function showOverlay(kind){state=kind;clearInput();$('overlay').hidden=false;$('
 }
 function play(){unlockAudio();if(state==='menu'||state==='won')reset();state='playing';$('overlay').hidden=true;$('hud').hidden=false;$('pause').textContent='Ⅱ';$('pause').setAttribute('aria-label','إيقاف مؤقت');clearInput();last=performance.now();accumulator=0;updateCombatHUD();}
 function pause(){if(state==='playing')showOverlay('paused');else if(state==='paused')play();}
-function respawn(){deaths++;player=createPlayer(checkpoint,390);player.invulnerable=1.8;bullets=[];enemyShots=[];if(level.boss.hp>0){level.boss.hp=level.boss.maxHP;level.boss.active=false;level.boss.windup=0;level.boss.fire=1.4;}camera=clamp(checkpoint-250,0,WORLD_WIDTH-W);burst(player.x+15,420);toast('محاولة جديدة — عدت إلى آخر نقطة حفظ');sound(180,.2,'triangle');updateHUD();}
+function respawn(){deaths++;player=createPlayer(checkpoint,390);player.invulnerable=1.8;bullets=[];enemyShots=[];if(level.boss.hp>0){level.boss.hp=level.boss.maxHP;level.boss.active=false;level.boss.windup=0;level.boss.fire=1.4;level.boss.shotFlash=0;}camera=clamp(checkpoint-250,0,WORLD_WIDTH-W);burst(player.x+15,420);toast('محاولة جديدة — عدت إلى آخر نقطة حفظ');sound(180,.2,'triangle');updateHUD();}
 function hurt(){if(player.invulnerable>0||player.dashTime>0)return;player.hp--;player.invulnerable=1.35;burst(player.x+15,player.y+20,'#bc6245',10);sound(160,.18,'sawtooth',.025);if(player.hp<=0)respawn();else updateHUD();}
 function tick(dt){if(state!=='playing')return;time+=dt;elapsed+=dt;const controls=input();const previousBottom=player.y+player.h,wasDashing=player.dashTime>0;
  const {jumped,landed}=stepPlayer(player,controls,level.solids,dt);if(jumped){burst(player.x+15,player.y+44,'#ddd1a4',5);sound(510,.12,'triangle');}if(landed)burst(player.x+15,player.y+44,'#ddd1a4',5);
@@ -38,7 +38,7 @@ function tick(dt){if(state!=='playing')return;time+=dt;elapsed+=dt;const control
  for(const e of level.enemies){if(e.hp<=0)continue;if(e.windup<=0)e.x+=e.vx*dt;e.hit=Math.max(0,e.hit-dt);if(e.x<e.min){e.x=e.min;e.vx=Math.abs(e.vx);}if(e.x+e.w>e.max){e.x=e.max-e.w;e.vx=-Math.abs(e.vx);}
   if(overlaps(player,e)){if(player.vy>70&&previousBottom<=e.y+10){e.hp=0;kills++;player.vy=-390;player.coyote=0;burst(e.x+17,e.y+16,'#e0b164',12);sound(280,.12,'triangle');}else hurt();}
  }
- for(const event of stepCombat(level,player,enemyShots,dt)){if(event==='hit')hurt();if(event==='boss')toast('حارس البوابة — تفادَ النيران بالاندفاع!');}
+ for(const event of stepCombat(level,player,enemyShots,dt,(e,isBoss)=>art.enemyMuzzle(e,time,isBoss))){if(event==='hit')hurt();if(event==='boss')toast('حارس البوابة — تفادَ النيران بالاندفاع!');}
  enemyShots=enemyShots.filter(s=>s.life>0);
  if(level.boss.hp>0&&overlaps(player,level.boss))hurt();
  for(const b of bullets){b.x+=b.vx*dt;b.life-=dt;if(level.solids.some(s=>overlaps(b,s)))b.life=0;if(b.life<=0)continue;
@@ -66,8 +66,8 @@ function draw(){ctx.clearRect(0,0,W,H);art.background(camera,reducedMotion?0:tim
  for(const h of level.hearts)if(!h.taken&&visible(h.x)){ctx.fillStyle='#bc6554';ctx.font='25px Tahoma';ctx.textAlign='center';ctx.strokeStyle='#584631';ctx.lineWidth=3;ctx.strokeText('♥',h.x,h.y+8);ctx.fillText('♥',h.x,h.y+8);}
  for(const e of level.enemies)if(e.hp>0&&visible(e.x))art.enemy(e,time);
  art.boss(level.boss,time);art.goal(level.goal,time,level.boss.hp>0);
- for(const e of [...level.enemies,level.boss])if(e.hp>0&&e.windup>0&&visible(e.x)){ctx.globalAlpha=.4;art.line(e.x+e.w/2,e.y+14,e.aimX,e.aimY,'#edb273',1);ctx.globalAlpha=1;art.ellipse(e.aimX,e.aimY,10,10,'#f2a45815','#e5ac66',1);}
- for(const b of enemyShots){art.ellipse(b.x+5,b.y+3,6,4,'#e66b48','#f4bf7d',1);art.line(b.x-b.vx/35,b.y-b.vy/35,b.x,b.y,'#a0483f',2);}
+ for(const e of [...level.enemies,level.boss])if(e.hp>0&&e.windup>0&&visible(e.x)){ctx.globalAlpha=.4;const muzzle=art.enemyMuzzle(e,time,e===level.boss);art.line(muzzle.x,muzzle.y,e.aimX,e.aimY,'#edb273',1);ctx.globalAlpha=1;art.ellipse(e.aimX,e.aimY,10,10,'#f2a45815','#e5ac66',1);}
+ for(const b of enemyShots){const cx=b.x+b.w/2,cy=b.y+b.h/2;art.ellipse(cx,cy,6,4,'#e66b48','#f4bf7d',1);art.line(cx-b.vx/35,cy-b.vy/35,cx,cy,'#a0483f',2);}
  for(const b of bullets){const cx=b.x+b.w/2,cy=b.y+b.h/2;art.ellipse(cx,cy,9,5,'#f2dc92','#7e6843',2);art.line(cx-b.vx/90,cy,cx,cy,'#e6d3a0',3);}
  if(player.invulnerable===0||Math.floor(time*14)%2===0){art.hero(player,time);if(player.shot>.10){const muzzle=art.heroMuzzle(player,time);art.star(muzzle.x,muzzle.y,10,'#ffce7b',time*30);}}
  for(const p of particles){ctx.globalAlpha=p.life/p.max;art.ellipse(p.x,p.y,3,3,p.color,null);}ctx.globalAlpha=1;ctx.restore();
