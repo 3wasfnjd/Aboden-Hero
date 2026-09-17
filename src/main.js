@@ -9,7 +9,7 @@ const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('
 // coordinates stay untouched; only the extra vertical space above it is new sky.
 const W=720,H=1280,STEP=1/120,GROUND_SHIFT=H-540,LOOKAHEAD=210;
 const keys=new Set(),touch=new Map(),buttons=[...document.querySelectorAll('[data-action]')];
-let level,player,state='menu',camera=0,time=0,elapsed=0,collected=0,kills=0,deaths=0,checkpoint=110,bullets=[],enemyShots=[],particles=[],toastTime=0,accumulator=0,last=0,muted=true,audio=null,musicCtl=null;
+let level,player,state='menu',camera=0,time=0,elapsed=0,collected=0,kills=0,deaths=0,checkpoint=110,bullets=[],enemyShots=[],particles=[],toastTime=0,accumulator=0,last=0,muted=false,audio=null,musicCtl=null;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 // Seeded, cached paper grain: created once, never randomized during a frame.
 const paper=document.createElement('canvas');paper.width=256;paper.height=256;
