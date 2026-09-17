@@ -1,7 +1,7 @@
 import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260917-muzzle-1';
 import {stepCombat} from './combat.js?v=20260917-straight-1';
 import {WORLD_WIDTH,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260916-action-1';
-import {createArt} from './art-bg.js?v=20260917-level-2';
+import {createArt} from './art-bg.js?v=20260917-cleanup-1';
 import {createMusic} from './music.js?v=20260917-music-1';
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx);
 // Portrait canvas for mobile: the original 960x540 landscape frame is preserved
@@ -67,13 +67,13 @@ function draw(){ctx.clearRect(0,0,W,H);art.background(camera,reducedMotion?0:tim
  for(const s of level.solids)if(visible(s.x,s.w))art.platform(s);
  for(const s of level.spikes)if(visible(s.x)){for(let x=s.x;x<s.x+s.w;x+=13)art.path(`M${x} 440 L${x+6} 424 L${x+13} 440Z`,'#b48568');}
  for(let x=Math.floor(camera/85)*85;x<camera+W+85;x+=85)if(level.solids.some(s=>s.ground&&x>s.x+10&&x<s.x+s.w-10))art.flower(x,443,.55+(x%3)*.12);
- for(const cp of level.coins)if(!cp.taken&&visible(cp.x))if(!art.collectible(cp.x,cp.y,time,cp.id))art.star(cp.x,cp.y+Math.sin(time*3+cp.id)*3,10,'#edce78',Math.sin(time*2+cp.id)*.12);
- for(const h of level.hearts)if(!h.taken&&visible(h.x))if(!art.healthItem(h.x,h.y,time,h.x)){ctx.fillStyle='#bc6554';ctx.font='25px Tahoma';ctx.textAlign='center';ctx.strokeStyle='#584631';ctx.lineWidth=3;ctx.strokeText('♥',h.x,h.y+8);ctx.fillText('♥',h.x,h.y+8);}
+ for(const cp of level.coins)if(!cp.taken&&visible(cp.x))art.collectible(cp.x,cp.y,time,cp.id);
+ for(const h of level.hearts)if(!h.taken&&visible(h.x))art.healthItem(h.x,h.y,time,h.x);
  for(const e of level.enemies)if(e.hp>0&&visible(e.x))art.enemy(e,time);
  art.boss(level.boss,time);art.goal(level.goal,time,level.boss.hp>0);
  for(const e of [...level.enemies,level.boss])if(e.hp>0&&e.windup>0&&visible(e.x)){ctx.globalAlpha=.4;const muzzle=art.enemyMuzzle(e,time,e===level.boss);art.line(muzzle.x,muzzle.y,e.aimX,e.aimY,'#edb273',1);ctx.globalAlpha=1;art.ellipse(e.aimX,e.aimY,10,10,'#f2a45815','#e5ac66',1);}
- for(const b of enemyShots){const cx=b.x+b.w/2,cy=b.y+b.h/2;if(b.rocket){const angle=Math.atan2(b.vy,b.vx);art.rocketSmoke(cx-Math.cos(angle)*26,cy-Math.sin(angle)*26,angle);if(!art.rocket(cx,cy,angle))art.ellipse(cx,cy,11,7,'#ff8a00','#7a2c02',2);}else{const angle=Math.atan2(b.vy,b.vx);if(!art.enemyBullet(cx,cy,angle)){art.ellipse(cx,cy,6,4,'#e66b48','#f4bf7d',1);art.line(cx-b.vx/35,cy-b.vy/35,cx,cy,'#a0483f',2);}}}
- for(const b of bullets){const cx=b.x+b.w/2,cy=b.y+b.h/2;const angle=Math.atan2(b.vy||0,b.vx);if(!art.heroBullet(cx,cy,angle)){art.ellipse(cx,cy,9,5,'#f2dc92','#7e6843',2);art.line(cx-b.vx/90,cy,cx,cy,'#e6d3a0',3);}}
+ for(const b of enemyShots){const cx=b.x+b.w/2,cy=b.y+b.h/2;const angle=Math.atan2(b.vy,b.vx);if(b.rocket){art.rocketSmoke(cx-Math.cos(angle)*26,cy-Math.sin(angle)*26,angle);art.rocket(cx,cy,angle);}else art.enemyBullet(cx,cy,angle);}
+ for(const b of bullets){const cx=b.x+b.w/2,cy=b.y+b.h/2;art.heroBullet(cx,cy,Math.atan2(b.vy||0,b.vx));}
  if(player.invulnerable===0||Math.floor(time*14)%2===0){art.hero(player,time);if(player.shot>.10){const muzzle=art.heroMuzzle(player,time);art.star(muzzle.x,muzzle.y,10,'#ffce7b',time*30);}}
  for(const p of particles){ctx.globalAlpha=p.life/p.max;art.ellipse(p.x,p.y,3,3,p.color,null);}ctx.globalAlpha=1;ctx.restore();
  // Texture sits over the painted world, never on interactive HTML text.

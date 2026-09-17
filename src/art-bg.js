@@ -1,9 +1,10 @@
-import {createArt as createCharacterArt} from './art.js?v=20260917-items-1';
+import {createArt as createCharacterArt} from './art.js?v=20260917-cleanup-1';
 
 const CITY_URL='./assets/backgrounds/stage1-portrait.png';
 const WALKWAY_URL='./assets/backgrounds/stage1-walkway.png';
 const FLOATING_PLATFORM_URL='./assets/ui/level/platform.png';
 const CHECKPOINT_URL='./assets/ui/level/checkpoint.png';
+const GOAL_URL='./assets/ui/level/goal.png';
 
 function loadImage(url){
  const img=new Image();
@@ -19,7 +20,9 @@ const cityAsset=loadImage(CITY_URL);
 const walkwayAsset=loadImage(WALKWAY_URL);
 const floatingPlatformAsset=loadImage(FLOATING_PLATFORM_URL);
 const checkpointAsset=loadImage(CHECKPOINT_URL);
+const goalAsset=loadImage(GOAL_URL);
 const CHECKPOINT_DISPLAY_H=100;
+const GOAL_DISPLAY_H=175;
 
 function drawCity(ctx){
  if(!cityAsset.ready)return false;
@@ -105,6 +108,18 @@ function drawCheckpoint(ctx,cp,time){
  return true;
 }
 
+function drawGoal(ctx,g,time,locked){
+ if(!goalAsset.ready)return false;
+ const img=goalAsset.img,dh=GOAL_DISPLAY_H,dw=dh*(img.naturalWidth/img.naturalHeight);
+ const cx=g.x+g.w/2,bottom=g.y+g.h;
+ ctx.save();
+ if(locked){ctx.filter='grayscale(.8) brightness(.55)';}
+ else{ctx.globalAlpha=.9+Math.sin(time*3)*.1;}
+ ctx.drawImage(img,cx-dw/2,bottom-dh,dw,dh);
+ ctx.restore();
+ return true;
+}
+
 export function createArt(ctx){
  const base=createCharacterArt(ctx);
  const fallbackBackground=base.background;
@@ -133,16 +148,13 @@ export function createArt(ctx){
  }
 
  function platform(s){
-  if(s.ground&&drawGroundWalkway(ctx,s))return;
-  if(!s.ground&&drawFloatingPlatform(ctx,s))return;
-  fallbackPlatform(s);
+  if(s.ground){if(drawGroundWalkway(ctx,s))return;fallbackPlatform(s);return;}
+  drawFloatingPlatform(ctx,s);
  }
 
- function checkpoint(cp,time){
-  if(drawCheckpoint(ctx,cp,time))return;
-  base.checkpoint(cp);
- }
+ function checkpoint(cp,time){drawCheckpoint(ctx,cp,time);}
+ function goal(g,time,locked=false){drawGoal(ctx,g,time,locked);}
 
- return {...base,background,scenery,platform,checkpoint};
+ return {...base,background,scenery,platform,checkpoint,goal};
 }
 
