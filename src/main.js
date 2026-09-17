@@ -2,13 +2,14 @@ import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?
 import {stepCombat} from './combat.js?v=20260917-rocket-2';
 import {WORLD_WIDTH,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260916-action-1';
 import {createArt} from './art-bg.js?v=20260917-sprites-1';
+import {createMusic} from './music.js?v=20260917-music-1';
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx);
 // Portrait canvas for mobile: the original 960x540 landscape frame is preserved
 // unscaled and anchored to the bottom via GROUND_SHIFT, so world.js/combat.js
 // coordinates stay untouched; only the extra vertical space above it is new sky.
 const W=720,H=1280,STEP=1/120,GROUND_SHIFT=H-540,LOOKAHEAD=210;
 const keys=new Set(),touch=new Map(),buttons=[...document.querySelectorAll('[data-action]')];
-let level,player,state='menu',camera=0,time=0,elapsed=0,collected=0,kills=0,deaths=0,checkpoint=110,bullets=[],enemyShots=[],particles=[],toastTime=0,accumulator=0,last=0,muted=true,audio=null;
+let level,player,state='menu',camera=0,time=0,elapsed=0,collected=0,kills=0,deaths=0,checkpoint=110,bullets=[],enemyShots=[],particles=[],toastTime=0,accumulator=0,last=0,muted=true,audio=null,musicCtl=null;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 // Seeded, cached paper grain: created once, never randomized during a frame.
 const paper=document.createElement('canvas');paper.width=256;paper.height=256;
@@ -19,7 +20,7 @@ function reset(){level=createLevel();player=createPlayer();checkpoint=110;camera
 function clearInput(){keys.clear();touch.clear();buttons.forEach(b=>b.classList.remove('held'));if(player){player.jumpHeld=false;player.dashHeld=false;player.buffer=0;}}
 function input(){const active=a=>[...touch.values()].includes(a);return {left:keys.has('ArrowLeft')||keys.has('KeyA')||active('left'),right:keys.has('ArrowRight')||keys.has('KeyD')||active('right'),jump:keys.has('ArrowUp')||keys.has('KeyK')||active('jump'),dash:keys.has('KeyL')||keys.has('ShiftLeft')||keys.has('ShiftRight')||active('dash'),shoot:keys.has('KeyJ')||keys.has('Space')||active('shoot')};}
 function sound(freq=440,duration=.09,type='sine',volume=.045){if(muted||!audio)return;const o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.setValueAtTime(freq,audio.currentTime);o.frequency.exponentialRampToValueAtTime(freq*.55,audio.currentTime+duration);g.gain.setValueAtTime(volume,audio.currentTime);g.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+duration);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+duration);}
-function unlockAudio(){if(muted)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume().catch(()=>{});}catch{muted=true;}}
+function unlockAudio(){if(muted)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume().catch(()=>{});if(!musicCtl){musicCtl=createMusic(audio);musicCtl.start();}musicCtl.setMuted(false);}catch{muted=true;}}
 function toast(message){$('toast').textContent=message;$('toast').classList.add('show');toastTime=2.6;}
 function burst(x,y,color='#efd598',count=8){for(let i=0;i<count;i++){const a=i*Math.PI*2/count;particles.push({x,y,vx:Math.cos(a)*(35+i*9),vy:Math.sin(a)*80-35,life:.45,max:.45,color});}}
 function updateHUD(){$('health').textContent='♥'.repeat(player.hp)+'♡'.repeat(5-player.hp);$('health').setAttribute('aria-label',`الصحة ${player.hp} من 5`);$('health-panel').setAttribute('data-hp',player.hp);$('coins').textContent=collected;$('area').textContent=player.x<1540?'أطراف المدينة':player.x<2990?'الحي الصناعي':player.x<4490?'الطريق المحاصر':player.x<5650?'المستودعات':'المواجهة الأخيرة';$('progress').style.width=`${clamp(player.x/6410*100,0,100)}%`;}
@@ -89,7 +90,7 @@ window.addEventListener('blur',()=>{clearInput();if(state==='playing')showOverla
 document.addEventListener('visibilitychange',()=>{if(document.hidden){clearInput();if(state==='playing')showOverlay('paused');}});
 document.addEventListener('contextmenu',e=>{if(e.target.closest('#controls'))e.preventDefault();});
 $('play').addEventListener('click',()=>{play();$('play').blur();});$('pause').addEventListener('click',()=>{pause();$('pause').blur();});
-$('sound').addEventListener('click',()=>{muted=!muted;unlockAudio();$('sound').textContent=muted?'♪':'♫';$('sound').setAttribute('aria-label',muted?'تشغيل الصوت':'كتم الصوت');$('sound').setAttribute('aria-pressed',String(!muted));if(!muted)sound(660,.15);$('sound').blur();});
+$('sound').addEventListener('click',()=>{muted=!muted;unlockAudio();musicCtl?.setMuted(muted);$('sound').textContent=muted?'♪':'♫';$('sound').setAttribute('aria-label',muted?'تشغيل الصوت':'كتم الصوت');$('sound').setAttribute('aria-pressed',String(!muted));if(!muted)sound(660,.15);$('sound').blur();});
 reset();updateCombatHUD();requestAnimationFrame(frame);
 // Opt-in local test harness; absent from normal game sessions.
 if(new URLSearchParams(location.search).has('test'))window.__game={get player(){return player;},get level(){return level;},get state(){return state;},get checkpoint(){return checkpoint;},get enemyShots(){return enemyShots;},get bullets(){return bullets;},get input(){return input();},get stats(){return {collected,kills,deaths,elapsed};},tick,play,pause,reset,respawn,draw};
