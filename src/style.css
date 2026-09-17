@@ -7,3 +7,40 @@
 :root{background:#101722;color:#ece3d1}body{background:radial-gradient(ellipse at 50% 15%,#29384a,#0f1722 80%)}.brand{color:#eadbc0;text-shadow:2px 3px #0a101a;transform:none;letter-spacing:1px}.brand b{color:#dc6249}.brand span{color:#97a5b3}.chapter{color:#a7b6c7}.chapter span{color:#d75d43}.tools button{background:#273347;border:1px solid #66738455;border-radius:7px;color:#ded6c5}#stage{border:1px solid #7a879633;border-radius:10px;box-shadow:0 24px 65px #0009,0 0 0 5px #202c3a}canvas{background:#152334}#overlay{background:linear-gradient(270deg,#111a29fa 0%,#111a29ef 48%,#111a2933 75%);padding:4% 5%;isolation:isolate}.poster{position:absolute;left:0;top:0;width:51%;height:100%;object-fit:contain;object-position:left center;z-index:-1;filter:saturate(.88);background:#778993}.panel{width:44%;max-width:420px;background:transparent;border:0;outline:0;border-radius:0;box-shadow:none;padding:12px 0;text-align:right;color:#ece3d1;transform:none}.eyebrow{font-size:10px;letter-spacing:2px;color:#de7958;direction:ltr}h1{font-size:clamp(32px,4.9vw,62px);line-height:1.2;color:#f0e6d3;text-shadow:3px 4px #080f19;margin:23px 0 18px}h1 em{color:#e37050}.panel>p{font-size:13px;line-height:1.9;color:#a8b5c2;margin:12px 0;max-width:325px}.pills{justify-content:flex-start;gap:8px;margin:20px 0}.pills span{border:1px solid #8192a433;color:#c2cad0;border-radius:4px;padding:6px 8px}.primary{background:#b13d34;color:#f6e7d1;border:1px solid #ea9b6966;border-radius:5px;box-shadow:4px 5px #060e1980;transform:none;padding:14px 22px;min-width:215px}.panel .instructions{color:#8b9cad;font-size:10px;line-height:1.9}.health,.progress{background:#121d2ded;color:#dfd8c7;border:1px solid #8396a044;border-radius:6px;box-shadow:0 3px #0003}#health{color:#df7a60}.health i{color:#78c4cb}.progress>div{background:#455366}.progress i{background:#cd7053}.progress{color:#cbd0ce}#controls button{background:#253248;color:#d0d7db;border:1px solid #67758788;border-radius:10px;box-shadow:0 4px #050c15}#controls .jump{background:#c16b45;color:#fff1d5;transform:none}#controls .shoot{background:#933b37;color:#f1d4c0}#controls .dash{background:#244753;color:#a0d4d8;font-size:26px}.control-hint{color:#8495a6}footer{color:#667e93;border-color:#9aa4ae22}#toast{background:#172636ed;color:#dfc8a3;border:1px solid #ab836555;border-radius:5px}.rotate-note{color:#a3b6c7}#boss-hud{position:absolute;top:72px;left:33%;width:34%;color:#efc9aa;font-size:10px;text-align:center;pointer-events:none}#boss-hud>div{height:8px;background:#132031;border:1px solid #9c5145;margin-top:6px}#boss-health{display:block;height:100%;width:100%;background:#ca5447}#combat-hud{position:absolute;bottom:16px;left:18px;right:18px;display:flex;justify-content:space-between;font-size:10px;color:#d5d6cb;pointer-events:none;text-shadow:0 2px 3px #000}#dash-status{color:#93d0d3}
 @media(max-width:650px){#overlay{background:linear-gradient(0deg,#111a29fc 5%,#111a29ec 60%,#111a2944);padding:6%;align-items:flex-end}.poster{width:100%;height:100%;object-fit:cover;object-position:center 25%;opacity:.65}.panel{width:100%;max-width:none;padding:0}h1{font-size:38px;margin:10px 0}.panel>p{font-size:11px;max-width:100%}.pills{margin:12px 0}.eyebrow{font-size:8px}.primary{padding:12px 18px}.panel .instructions{font-size:8px;margin-top:10px}#controls{gap:12px}#controls>div{gap:7px}#controls button{width:49px;height:55px}#controls .jump{width:60px}#combat-hud{bottom:27px;font-size:8px}#boss-hud{top:65px;left:20%;width:60%}}
 @media(orientation:landscape) and (max-height:600px){#overlay{align-items:center;padding:2% 10%;background:linear-gradient(270deg,#111a29fa,#111a29eb 48%,#111a2922 85%)}.poster{width:50%;height:100%;object-fit:contain;opacity:1}.panel{width:45%;padding:5px 0}h1{font-size:33px;margin:8px 0}.eyebrow{font-size:8px}.panel>p{font-size:10px}.pills{margin:10px 0}.primary{padding:9px 18px;font-size:14px}.panel .instructions{font-size:8px;margin-top:9px}#combat-hud{bottom:18px;left:38%;right:35%;font-size:8px}#boss-hud{top:55px;left:35%;width:30%}#controls button{width:51px;height:49px}#controls .jump{width:62px}}
+
+/* Mobile showcase mode: the game owns the entire phone viewport. */
+@media(max-width:900px){
+ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#07111f;overscroll-behavior:none}
+ body{min-height:100dvh;touch-action:none}
+ #app{position:fixed;inset:0;width:100dvw;max-width:none;height:100dvh;margin:0;padding:0;overflow:hidden}
+ header{position:absolute;top:max(8px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));height:auto;z-index:12;pointer-events:none}
+ header .brand,header .chapter{display:none!important}
+ header .tools{pointer-events:auto}
+ #stage{position:absolute;inset:0;width:100dvw;height:100dvh;max-width:none;border:0!important;border-radius:0!important;box-shadow:none!important;outline:0;background:#07111f;overflow:hidden;aspect-ratio:auto}
+ #stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;background:#07111f}
+ #hud{z-index:7;top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));right:max(82px,calc(env(safe-area-inset-right) + 72px))}
+ #boss-hud{z-index:7}
+ #combat-hud{z-index:7}
+ #controls{position:absolute;left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom));z-index:11;padding:0;pointer-events:none}
+ #controls>div{pointer-events:none}
+ #controls button{pointer-events:auto}
+ footer{display:none!important}
+ body:has(#overlay:not([hidden])) #controls{opacity:0;pointer-events:none}
+ .rotate-note{z-index:8;bottom:max(10px,env(safe-area-inset-bottom));color:#d9e6ef;text-shadow:0 2px 4px #000;background:#07111faa;width:max-content;max-width:90%;margin:auto;padding:6px 12px;border-radius:999px}
+}
+
+/* Landscape is the intended mobile presentation: edge-to-edge without stretching. */
+@media(max-width:900px) and (orientation:landscape){
+ #stage canvas{object-fit:cover;object-position:center center}
+ .rotate-note{display:none!important}
+ #controls{left:max(14px,env(safe-area-inset-left));right:max(14px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom))}
+ #hud{top:max(8px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));right:max(96px,calc(env(safe-area-inset-right) + 86px))}
+ #toast{bottom:max(82px,calc(env(safe-area-inset-bottom) + 76px))}
+}
+
+/* Portrait stays usable, while clearly steering the showcase toward landscape. */
+@media(max-width:900px) and (orientation:portrait){
+ #stage canvas{object-fit:contain}
+ #controls{bottom:max(18px,env(safe-area-inset-bottom))}
+ .rotate-note{display:block}
+}
