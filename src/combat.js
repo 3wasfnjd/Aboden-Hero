@@ -12,6 +12,8 @@ const KIND_STATS={
  heavy:{windup:.34,speed:190,cooldown:2.1,range:480,burst:3,burstGap:.12}
 };
 
+const ROCKET_DURATION=2.1,ROCKET_LOOPS=1.3;
+
 function fireShot(e,isBoss,origin,shots){
  const angle=Math.atan2(e.aimY-origin.y,e.aimX-origin.x);
  for(const offset of isBoss?[-.16,0,.16]:[0]){
@@ -19,11 +21,40 @@ function fireShot(e,isBoss,origin,shots){
   shots.push({x:origin.x-5,y:origin.y-3.5,w:10,h:7,vx:Math.cos(angle+offset)*speed,vy:Math.sin(angle+offset)*speed,life:3.5,boss:isBoss});
  }
  if(isBoss){
-  // The gatekeeper's own heavy weapon: one slow, oversized rocket down the center
-  // of the fan, alongside the fast triple shot.
-  const rocketSpeed=150;
-  shots.push({x:origin.x-9,y:origin.y-6,w:18,h:12,vx:Math.cos(angle)*rocketSpeed,vy:Math.sin(angle)*rocketSpeed,life:6,boss:true,rocket:true});
+  // The gatekeeper's own heavy weapon: one oversized rocket that spirals out
+  // from the muzzle and tightens onto the locked aim point, alongside the fast
+  // triple shot. Position is driven parametrically (see updateRocket), not by
+  // a fixed velocity.
+  const dist=Math.hypot(e.aimX-origin.x,e.aimY-origin.y);
+  shots.push({
+   x:origin.x-9,y:origin.y-6,w:18,h:12,vx:0,vy:0,life:ROCKET_DURATION,boss:true,rocket:true,
+   launchX:origin.x,launchY:origin.y,targetX:e.aimX,targetY:e.aimY,
+   age:0,duration:ROCKET_DURATION,loopRadius:Math.min(220,Math.max(70,dist*.32))
+  });
  }
+}
+
+// The rocket's center travels straight from launch to the locked target while
+// swinging out to the side and back on top of that line. The swing is scaled
+// by an envelope that is exactly 0 at both ends, so the rocket starts right
+// at the muzzle and lands exactly on the target, looping wide in between.
+function updateRocket(s,dt){
+ const prevCx=s.x+s.w/2,prevCy=s.y+s.h/2;
+ s.age+=dt;
+ const progress=Math.min(1,s.age/s.duration);
+ const dx=s.targetX-s.launchX,dy=s.targetY-s.launchY;
+ const dist=Math.hypot(dx,dy)||1;
+ const dirX=dx/dist,dirY=dy/dist,perpX=-dirY,perpY=dirX;
+ const baseX=s.launchX+dx*progress,baseY=s.launchY+dy*progress;
+ const envelope=Math.sin(Math.PI*progress);
+ const angle=progress*ROCKET_LOOPS*Math.PI*2;
+ const offAlong=s.loopRadius*envelope*Math.cos(angle);
+ const offAcross=s.loopRadius*envelope*Math.sin(angle);
+ const cx=baseX+dirX*offAlong+perpX*offAcross;
+ const cy=baseY+dirY*offAlong+perpY*offAcross;
+ s.x=cx-s.w/2;s.y=cy-s.h/2;
+ s.vx=(cx-prevCx)/dt;s.vy=(cy-prevCy)/dt;
+ s.angle=Math.atan2(s.vy,s.vx);
 }
 
 // Aim is locked at the start of the visible warning, giving the player time to dodge.
@@ -64,7 +95,9 @@ export function stepCombat(level,player,shots,dt,getMuzzle=enemyWeaponMuzzle){
  }
  boss.hit=Math.max(0,boss.hit-dt);
  for(const s of shots){
-  s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;
+  if(s.rocket)updateRocket(s,dt);
+  else{s.x+=s.vx*dt;s.y+=s.vy*dt;}
+  s.life-=dt;
   if(s.life>0&&overlaps(player,s)){s.life=0;events.push('hit');}
  }
  return events;

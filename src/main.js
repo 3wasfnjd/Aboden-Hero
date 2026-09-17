@@ -1,7 +1,7 @@
 import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260917-muzzle-1';
-import {stepCombat} from './combat.js?v=20260917-guards-1';
+import {stepCombat} from './combat.js?v=20260917-rocket-1';
 import {WORLD_WIDTH,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260916-action-1';
-import {createArt} from './art-bg.js?v=20260917-guards-1';
+import {createArt} from './art-bg.js?v=20260917-rocket-1';
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx);
 // Portrait canvas for mobile: the original 960x540 landscape frame is preserved
 // unscaled and anchored to the bottom via GROUND_SHIFT, so world.js/combat.js
@@ -70,7 +70,7 @@ function draw(){ctx.clearRect(0,0,W,H);art.background(camera,reducedMotion?0:tim
  for(const e of level.enemies)if(e.hp>0&&visible(e.x))art.enemy(e,time);
  art.boss(level.boss,time);art.goal(level.goal,time,level.boss.hp>0);
  for(const e of [...level.enemies,level.boss])if(e.hp>0&&e.windup>0&&visible(e.x)){ctx.globalAlpha=.4;const muzzle=art.enemyMuzzle(e,time,e===level.boss);art.line(muzzle.x,muzzle.y,e.aimX,e.aimY,'#edb273',1);ctx.globalAlpha=1;art.ellipse(e.aimX,e.aimY,10,10,'#f2a45815','#e5ac66',1);}
- for(const b of enemyShots){const cx=b.x+b.w/2,cy=b.y+b.h/2;if(b.rocket){art.ellipse(cx,cy,11,7,'#ff8a00','#7a2c02',2);art.line(cx-b.vx/22,cy-b.vy/22,cx,cy,'#c24a12',5);}else{art.ellipse(cx,cy,6,4,'#e66b48','#f4bf7d',1);art.line(cx-b.vx/35,cy-b.vy/35,cx,cy,'#a0483f',2);}}
+ for(const b of enemyShots){const cx=b.x+b.w/2,cy=b.y+b.h/2;if(b.rocket){art.line(cx-b.vx/22,cy-b.vy/22,cx,cy,'#c24a12',5);if(!art.rocket(cx,cy,b.angle??Math.atan2(b.vy,b.vx)))art.ellipse(cx,cy,11,7,'#ff8a00','#7a2c02',2);}else{art.ellipse(cx,cy,6,4,'#e66b48','#f4bf7d',1);art.line(cx-b.vx/35,cy-b.vy/35,cx,cy,'#a0483f',2);}}
  for(const b of bullets){const cx=b.x+b.w/2,cy=b.y+b.h/2;art.ellipse(cx,cy,9,5,'#f2dc92','#7e6843',2);art.line(cx-b.vx/90,cy,cx,cy,'#e6d3a0',3);}
  if(player.invulnerable===0||Math.floor(time*14)%2===0){art.hero(player,time);if(player.shot>.10){const muzzle=art.heroMuzzle(player,time);art.star(muzzle.x,muzzle.y,10,'#ffce7b',time*30);}}
  for(const p of particles){ctx.globalAlpha=p.life/p.max;art.ellipse(p.x,p.y,3,3,p.color,null);}ctx.globalAlpha=1;ctx.restore();

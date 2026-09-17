@@ -7,6 +7,7 @@ const BOSS_URL='./assets/Gatekeeper.png';
 const CITY_URL='./assets/City_Guard.png';
 const HEAVY_URL='./assets/Heavy_Guard.png';
 const SNIPER_URL='./assets/Sniper_Rooftop_Guard.png';
+const ROCKET_URL='./assets/ui/rocket.png';
 
 function loadImage(url){
  const img=new Image();
@@ -23,6 +24,8 @@ const bossAsset=loadImage(BOSS_URL);
 const cityAsset=loadImage(CITY_URL);
 const heavyAsset=loadImage(HEAVY_URL);
 const sniperAsset=loadImage(SNIPER_URL);
+const rocketAsset=loadImage(ROCKET_URL);
+const ROCKET_DISPLAY_H=34;
 
 const MOVE_FRAMES={
  run:[[6,42,206,306],[194,42,209,307],[402,43,196,304],[583,38,239,309],[808,42,208,306],[1008,39,208,310],[1220,43,211,306],[1436,42,217,307]],
@@ -150,6 +153,12 @@ export function createArt(ctx){
  }
 
  function enemyMuzzle(e,time,isBoss=false){const asset=isBoss?bossAsset:enemyKind(e)==='city'?cityAsset:enemyKind(e)==='sniper'?sniperAsset:heavyAsset;const pose=enemyAttackPose(e,isBoss);return asset.ready&&pose?pose.muzzle:fallbackEnemyMuzzle(e,time,isBoss);}
- return {...base,hero,enemy,boss,enemyMuzzle};
+ function rocket(x,y,angle){
+  if(!rocketAsset.ready)return false;
+  const img=rocketAsset.img,dh=ROCKET_DISPLAY_H,dw=dh*(img.naturalWidth/img.naturalHeight);
+  ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.drawImage(img,-dw/2,-dh/2,dw,dh);ctx.restore();
+  return true;
+ }
+ return {...base,hero,enemy,boss,enemyMuzzle,rocket};
 }
 
