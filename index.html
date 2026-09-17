@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111a29">
 <meta name="description" content="عبودين هيرو — لعبة أكشن ومنصات في مدينة ليلية. العب باللمس أو لوحة المفاتيح.">
-<title>Aboden Hero • عملية منتصف الليل</title><link rel="stylesheet" href="./src/style.css?v=20260917-dock-raise-1"><link rel="stylesheet" href="./src/controls.css?v=20260917-ui-4">
+<title>Aboden Hero • عملية منتصف الليل</title><link rel="stylesheet" href="./src/style.css?v=20260917-toast-frame-1"><link rel="stylesheet" href="./src/controls.css?v=20260917-ui-4">
 <style id="mobile-bottom-layout">
 /* Portrait is the intended mobile presentation; landscape shows a rotate prompt. */
 @media(max-width:1024px){
@@ -25,7 +25,7 @@
  #hud{z-index:8!important;top:max(10px,env(safe-area-inset-top))!important;left:max(10px,env(safe-area-inset-left))!important;right:auto!important}
  #boss-hud{z-index:8!important}
  #combat-hud{z-index:8!important;bottom:12px!important}
- #toast{bottom:16px!important;z-index:9!important}
+ #toast{top:calc(max(10px,env(safe-area-inset-top)) + 138px)!important;z-index:9!important}
  .rotate-note{display:none!important}
 }
 @media(max-width:1024px) and (orientation:landscape){
