@@ -34,7 +34,7 @@
 .progress i{display:block;height:100%;width:0;background:#0ecbfd;border-radius:999px}
 
 /* Boss health plate, positioned from pixel analysis of the source art the same way. */
-#boss-hud{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:clamp(220px,60vw,340px);aspect-ratio:2172/724;background:url('../assets/ui/hud/boss.png') no-repeat center/contain;pointer-events:none}
+#boss-hud{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:clamp(220px,60vw,340px);aspect-ratio:2172/724;background:url('../assets/ui/hud/boss.png') no-repeat center/contain;pointer-events:none}
 #boss-hud>span{position:absolute;opacity:0}
 #boss-hud>.track{position:absolute;top:54.3%;left:22%;width:62.9%;height:11.2%;background:#12141c;border-radius:6px;overflow:hidden;margin:0}
 #boss-health{display:block;height:100%;width:100%;background:linear-gradient(90deg,#c21f16,#ff8a00);border-radius:6px}
