@@ -4,6 +4,45 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111a29">
 <meta name="description" content="عبودين هيرو — لعبة أكشن ومنصات في مدينة ليلية. العب باللمس أو لوحة المفاتيح.">
 <title>Aboden Hero • عملية منتصف الليل</title><link rel="stylesheet" href="./src/style.css?v=20260917-mobile-fullscreen-1"><link rel="stylesheet" href="./src/controls.css?v=20260917-ui-3">
+<style id="mobile-bottom-layout">
+@media(max-width:1024px){
+ html,body{width:100%;height:100%;margin:0!important;overflow:hidden!important;background:#07111f!important;overscroll-behavior:none}
+ body{min-height:100dvh!important;touch-action:none}
+ #app{--dock-h:132px;position:fixed!important;inset:0!important;width:100dvw!important;max-width:none!important;height:100dvh!important;margin:0!important;padding:0!important;display:grid!important;grid-template-rows:minmax(0,1fr) var(--dock-h)!important;grid-template-columns:1fr!important;align-items:stretch!important;justify-items:stretch!important;overflow:hidden!important;background:#07111f!important}
+ #stage{grid-row:1!important;position:relative!important;inset:auto!important;width:100%!important;height:100%!important;max-width:none!important;min-height:0!important;aspect-ratio:auto!important;border:0!important;border-radius:0!important;outline:0!important;box-shadow:none!important;overflow:hidden!important;background:#07111f!important}
+ #stage canvas{position:relative!important;inset:auto!important;display:block!important;width:100%!important;height:100%!important;object-fit:contain!important;object-position:center center!important;background:#07111f!important}
+ #controls{grid-row:2!important;position:relative!important;inset:auto!important;left:auto!important;right:auto!important;bottom:auto!important;width:100%!important;height:var(--dock-h)!important;min-height:var(--dock-h)!important;margin:0!important;padding:52px max(12px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))!important;display:flex!important;align-items:flex-end!important;justify-content:space-between!important;gap:8px!important;pointer-events:auto!important;opacity:1!important;visibility:visible!important;background:linear-gradient(180deg,#142136 0%,#0b1321 42%,#060b13 100%)!important;border-top:1px solid #4b6077!important;box-shadow:inset 0 2px 0 #20344a,inset 0 4px 18px #0009,0 -8px 24px #0008!important;z-index:20!important}
+ #controls::before{content:""!important;display:block!important;position:absolute!important;top:0!important;left:0!important;right:0!important;height:3px!important;background:linear-gradient(90deg,transparent,#cf2f38 20%,#ff4b51 50%,#cf2f38 80%,transparent)!important;box-shadow:0 0 12px #e3323d88!important;pointer-events:none!important}
+ #controls>div{display:flex!important;align-items:center!important;gap:6px!important;pointer-events:auto!important}
+ #controls button[data-action]{width:68px!important;height:68px!important;min-width:68px!important;pointer-events:auto!important;opacity:1!important}
+ header{position:fixed!important;left:50%!important;right:auto!important;top:auto!important;bottom:calc(max(10px,env(safe-area-inset-bottom)) + 78px)!important;width:auto!important;height:auto!important;min-height:0!important;padding:0!important;transform:translateX(-50%)!important;z-index:30!important;pointer-events:none!important}
+ header .brand,header .chapter{display:none!important}
+ header .tools{display:flex!important;gap:6px!important;pointer-events:auto!important}
+ header .tools button{width:40px!important;height:40px!important;min-width:40px!important}
+ footer{display:none!important}
+ body:has(#overlay:not([hidden])) #controls{opacity:1!important;pointer-events:auto!important}
+ #hud{z-index:8!important;top:max(10px,env(safe-area-inset-top))!important;left:max(10px,env(safe-area-inset-left))!important;right:max(10px,env(safe-area-inset-right))!important}
+ #boss-hud{z-index:8!important}
+ #combat-hud{z-index:8!important;bottom:12px!important}
+ #toast{bottom:16px!important;z-index:9!important}
+ .rotate-note{z-index:9!important;bottom:10px!important}
+}
+@media(max-width:1024px) and (orientation:landscape){
+ #app{--dock-h:92px}
+ #controls{padding:10px max(18px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left))!important;align-items:center!important}
+ #controls>div{gap:7px!important}
+ #controls button[data-action]{width:62px!important;height:62px!important;min-width:62px!important}
+ header{bottom:calc(max(8px,env(safe-area-inset-bottom)) + 20px)!important}
+ header .tools button{width:38px!important;height:38px!important;min-width:38px!important}
+ .rotate-note{display:none!important}
+ #hud{top:max(8px,env(safe-area-inset-top))!important}
+ #toast{bottom:12px!important}
+}
+@media(max-width:1024px) and (orientation:portrait){
+ #controls button[data-action]{width:66px!important;height:66px!important;min-width:66px!important}
+ .rotate-note{display:block!important;color:#dce8f2!important;text-shadow:0 2px 4px #000!important;background:#07111fbb!important;width:max-content!important;max-width:90%!important;margin:auto!important;padding:5px 10px!important;border-radius:999px!important}
+}
+</style>
 </head>
 <body>
 <main id="app">
