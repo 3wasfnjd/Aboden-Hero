@@ -76,7 +76,6 @@
 .tools button::before,.tools button::after{display:none!important}
 #pause{background-image:url('../assets/ui/buttons/pause.png')!important}
 #sound{background-image:url('../assets/ui/buttons/sound.png')!important}
-#fullscreen{background-image:url('../assets/ui/buttons/fullscreen.png')!important}
 .tools button:hover{filter:brightness(1.06)}
 .tools button:active{transform:translateY(1px) scale(.95)!important;filter:brightness(1.15)}
 .tools button:focus-visible{outline:2px solid #fff!important;outline-offset:2px}
