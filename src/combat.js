@@ -12,7 +12,7 @@ const KIND_STATS={
  heavy:{windup:.34,speed:190,cooldown:2.1,range:480,burst:3,burstGap:.12}
 };
 
-const ROCKET_DURATION=2.1,ROCKET_LOOPS=1.3;
+const ROCKET_DURATION=1.6,ROCKET_LOOPS=1;
 
 function fireShot(e,isBoss,origin,shots){
  const angle=Math.atan2(e.aimY-origin.y,e.aimX-origin.x);
@@ -41,13 +41,20 @@ function fireShot(e,isBoss,origin,shots){
 function updateRocket(s,dt){
  const prevCx=s.x+s.w/2,prevCy=s.y+s.h/2;
  s.age+=dt;
- const progress=Math.min(1,s.age/s.duration);
+ const t=Math.min(1,s.age/s.duration);
+ // Smoothstep easing: eases in and out instead of moving at a constant rate,
+ // so the rocket reads as accelerating/decelerating naturally.
+ const progress=t*t*(3-2*t);
  const dx=s.targetX-s.launchX,dy=s.targetY-s.launchY;
  const dist=Math.hypot(dx,dy)||1;
  const dirX=dx/dist,dirY=dy/dist,perpX=-dirY,perpY=dirX;
  const baseX=s.launchX+dx*progress,baseY=s.launchY+dy*progress;
- const envelope=Math.sin(Math.PI*progress);
- const angle=progress*ROCKET_LOOPS*Math.PI*2;
+ // The rocket completes its single loop in the first half of the flight
+ // (bulging off the direct line and back onto it), then dives straight at
+ // the target for the second half, matching the reference sketch.
+ const loopT=Math.min(1,progress/.5);
+ const envelope=Math.sin(Math.PI*loopT);
+ const angle=loopT*ROCKET_LOOPS*Math.PI*2;
  const offAlong=s.loopRadius*envelope*Math.cos(angle);
  const offAcross=s.loopRadius*envelope*Math.sin(angle);
  const cx=baseX+dirX*offAlong+perpX*offAcross;
