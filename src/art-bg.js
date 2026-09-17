@@ -2,6 +2,8 @@ import {createArt as createCharacterArt} from './art.js?v=20260917-items-1';
 
 const CITY_URL='./assets/backgrounds/stage1-portrait.png';
 const WALKWAY_URL='./assets/backgrounds/stage1-walkway.png';
+const FLOATING_PLATFORM_URL='./assets/ui/level/platform.png';
+const CHECKPOINT_URL='./assets/ui/level/checkpoint.png';
 
 function loadImage(url){
  const img=new Image();
@@ -15,6 +17,9 @@ function loadImage(url){
 
 const cityAsset=loadImage(CITY_URL);
 const walkwayAsset=loadImage(WALKWAY_URL);
+const floatingPlatformAsset=loadImage(FLOATING_PLATFORM_URL);
+const checkpointAsset=loadImage(CHECKPOINT_URL);
+const CHECKPOINT_DISPLAY_H=100;
 
 function drawCity(ctx){
  if(!cityAsset.ready)return false;
@@ -81,6 +86,25 @@ function drawGroundWalkway(ctx,s){
  return true;
 }
 
+function drawFloatingPlatform(ctx,s){
+ if(!floatingPlatformAsset.ready)return false;
+ const img=floatingPlatformAsset.img;
+ const dw=s.w,dh=img.naturalHeight*(dw/img.naturalWidth);
+ ctx.drawImage(img,s.x,s.y,dw,dh);
+ return true;
+}
+
+function drawCheckpoint(ctx,cp,time){
+ if(!checkpointAsset.ready)return false;
+ const img=checkpointAsset.img,dh=CHECKPOINT_DISPLAY_H,dw=dh*(img.naturalWidth/img.naturalHeight);
+ ctx.save();
+ if(!cp.active){ctx.filter='grayscale(.85) brightness(.65)';ctx.globalAlpha=.85;}
+ else{ctx.globalAlpha=.92+Math.sin(time*3+cp.x)*.08;}
+ ctx.drawImage(img,cp.x-dw/2,440-dh,dw,dh);
+ ctx.restore();
+ return true;
+}
+
 export function createArt(ctx){
  const base=createCharacterArt(ctx);
  const fallbackBackground=base.background;
@@ -110,9 +134,15 @@ export function createArt(ctx){
 
  function platform(s){
   if(s.ground&&drawGroundWalkway(ctx,s))return;
+  if(!s.ground&&drawFloatingPlatform(ctx,s))return;
   fallbackPlatform(s);
  }
 
- return {...base,background,scenery,platform};
+ function checkpoint(cp,time){
+  if(drawCheckpoint(ctx,cp,time))return;
+  base.checkpoint(cp);
+ }
+
+ return {...base,background,scenery,platform,checkpoint};
 }
 
