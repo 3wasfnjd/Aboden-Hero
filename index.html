@@ -21,7 +21,7 @@
  header .tools{display:flex!important;gap:6px!important;pointer-events:auto!important}
  header .tools button{width:40px!important;height:40px!important;min-width:40px!important}
  footer{display:none!important}
- body:has(#overlay:not([hidden])) #controls{opacity:1!important;pointer-events:auto!important}
+ #controls[hidden]{display:none!important}
  #hud{z-index:8!important;top:max(10px,env(safe-area-inset-top))!important;left:max(10px,env(safe-area-inset-left))!important;right:auto!important}
  #boss-hud{z-index:8!important}
  #combat-hud{z-index:8!important;bottom:12px!important}
@@ -42,7 +42,7 @@
 <div id="boss-hud" hidden><span>حارس البوابة</span><div class="track"><i id="boss-health"></i></div></div><div id="combat-hud" hidden><span id="kill-count">0 إسقاط</span><span id="dash-status">الاندفاع جاهز</span></div><div id="toast" role="status"></div>
 <div id="overlay"><img class="poster" src="./assets/aboden-poster.jpeg" alt="بوستر Aboden Hero: البطل بالجاكيت الأحمر" width="1122" height="1402"><div class="panel"><div class="eyebrow" id="eyebrow">ABODEN GAMES / MISSION 01</div><h1 id="title">المدينة<br><em>تحت الحصار.</em></h1><p id="description">واجه الحراس، تفادَ النيران، ودمّر حارس البوابة. الليلة… أنت البطل.</p><div class="pills" id="pills"><span>قفز وإطلاق</span><span>نقاط حفظ</span><span>مواجهة أخيرة</span></div><button id="play" class="primary">ابدأ المهمة <span>◀</span></button><p class="instructions">A / D أو الأسهم للحركة · K أو ↑ للقفز<br>J أو Space للإطلاق · L أو Shift للاندفاع</p></div></div>
 <div class="rotate-note">أدر الجوال إلى الوضع الطولي للعب ↻</div></section>
-<nav id="controls" aria-label="أزرار اللعب باللمس"><div><button data-action="left" aria-label="تحرك يسارًا"></button><button data-action="right" aria-label="تحرك يمينًا"></button></div><span class="control-hint" aria-hidden="true"></span><div><button data-action="dash" class="dash" aria-label="اندفاع"></button><button data-action="shoot" class="shoot" aria-label="إطلاق"></button><button data-action="jump" class="jump" aria-label="قفز"></button></div></nav>
+<nav id="controls" aria-label="أزرار اللعب باللمس" hidden><div><button data-action="left" aria-label="تحرك يسارًا"></button><button data-action="right" aria-label="تحرك يمينًا"></button></div><span class="control-hint" aria-hidden="true"></span><div><button data-action="dash" class="dash" aria-label="اندفاع"></button><button data-action="shoot" class="shoot" aria-label="إطلاق"></button><button data-action="jump" class="jump" aria-label="قفز"></button></div></nav>
 <footer><span>ABODEN GAMES</span><span>ABODEN HERO / ACTION PLATFORMER</span><span>CHAPTER 01</span></footer>
-</main><noscript>فعّل JavaScript لتشغيل اللعبة.</noscript><script type="module" src="./src/main.js?v=20260917-rocket-1"></script>
+</main><noscript>فعّل JavaScript لتشغيل اللعبة.</noscript><script type="module" src="./src/main.js?v=20260917-hud-toggle-1"></script>
 </body></html>
