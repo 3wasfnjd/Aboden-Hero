@@ -11,6 +11,8 @@ const ROCKET_URL='./assets/ui/rocket.png';
 const HERO_BULLET_URL='./assets/ui/projectiles/bullet-hero.png';
 const ENEMY_BULLET_URL='./assets/ui/projectiles/bullet-red2.png';
 const ROCKET_SMOKE_URL='./assets/ui/projectiles/rocket-smoke.png';
+const ENERGY_CRYSTAL_URL='./assets/ui/items/energy-crystal.png';
+const HEALTH_CROSS_URL='./assets/ui/items/health-cross.png';
 
 function loadImage(url){
  const img=new Image();
@@ -31,10 +33,14 @@ const rocketAsset=loadImage(ROCKET_URL);
 const heroBulletAsset=loadImage(HERO_BULLET_URL);
 const enemyBulletAsset=loadImage(ENEMY_BULLET_URL);
 const rocketSmokeAsset=loadImage(ROCKET_SMOKE_URL);
+const energyCrystalAsset=loadImage(ENERGY_CRYSTAL_URL);
+const healthCrossAsset=loadImage(HEALTH_CROSS_URL);
 const ROCKET_DISPLAY_H=34;
 const HERO_BULLET_DISPLAY_H=17;
 const ENEMY_BULLET_DISPLAY_H=15;
 const ROCKET_SMOKE_DISPLAY_H=58;
+const ENERGY_CRYSTAL_DISPLAY_H=24;
+const HEALTH_CROSS_DISPLAY_H=24;
 
 const MOVE_FRAMES={
  run:[[6,42,206,306],[194,42,209,307],[402,43,196,304],[583,38,239,309],[808,42,208,306],[1008,39,208,310],[1220,43,211,306],[1436,42,217,307]],
@@ -188,6 +194,21 @@ export function createArt(ctx){
   ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.drawImage(img,-dw,-dh/2,dw,dh);ctx.restore();
   return true;
  }
- return {...base,hero,enemy,boss,enemyMuzzle,rocket,heroBullet,enemyBullet,rocketSmoke};
+ // Gently bobbing/spinning energy-crystal pickup, replacing the plain gold star.
+ function collectible(x,y,time,id){
+  if(!energyCrystalAsset.ready)return false;
+  const img=energyCrystalAsset.img,dh=ENERGY_CRYSTAL_DISPLAY_H,dw=dh*(img.naturalWidth/img.naturalHeight);
+  ctx.save();ctx.translate(x,y+Math.sin(time*3+id)*3);ctx.rotate(Math.sin(time*2+id)*.12);
+  ctx.drawImage(img,-dw/2,-dh/2,dw,dh);ctx.restore();
+  return true;
+ }
+ // Softly pulsing medic-cross pickup, replacing the plain drawn heart glyph.
+ function healthItem(x,y,time,id){
+  if(!healthCrossAsset.ready)return false;
+  const img=healthCrossAsset.img,scale=1+Math.sin(time*4+id)*.08,dh=HEALTH_CROSS_DISPLAY_H*scale,dw=dh*(img.naturalWidth/img.naturalHeight);
+  ctx.drawImage(img,x-dw/2,y-dh/2,dw,dh);
+  return true;
+ }
+ return {...base,hero,enemy,boss,enemyMuzzle,rocket,heroBullet,enemyBullet,rocketSmoke,collectible,healthItem};
 }
 
