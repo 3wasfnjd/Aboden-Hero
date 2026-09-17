@@ -1,10 +1,4 @@
-/* Exact control artwork cropped from the approved ABODEN HERO UI board.
-   No re-drawn buttons and no replacement labels. */
-:root{
-  --control-atlas:url('../assets/ui/controls-exact.webp');
-  --start-art:url('../assets/ui/start-mission-exact.webp');
-}
-
+/* Exact ABODEN HERO controls: use the supplied PNG artwork directly. */
 #controls{
   position:relative;
   padding:18px 4px 22px;
@@ -19,14 +13,14 @@
   width:96px;
   height:96px;
   min-width:96px;
-  padding:0;
+  padding:0!important;
   border:0!important;
   outline:0;
-  border-radius:0;
+  border-radius:0!important;
   background-color:transparent!important;
-  background-image:var(--control-atlas)!important;
   background-repeat:no-repeat!important;
-  background-size:500% 200%!important;
+  background-position:center!important;
+  background-size:contain!important;
   color:transparent!important;
   font-size:0!important;
   line-height:0;
@@ -41,11 +35,11 @@
 #controls button[data-action]::after,
 #controls button[data-action] small{display:none!important}
 
-#controls button[data-action="left"]{background-position:0% 0%!important}
-#controls button[data-action="right"]{background-position:25% 0%!important}
-#controls button[data-action="jump"]{background-position:50% 0%!important}
-#controls button[data-action="shoot"]{background-position:75% 0%!important}
-#controls button[data-action="dash"]{background-position:100% 0%!important}
+#controls button[data-action="left"]{background-image:url('../assets/ui/buttons/left.png')!important}
+#controls button[data-action="right"]{background-image:url('../assets/ui/buttons/right.png')!important}
+#controls button[data-action="jump"]{background-image:url('../assets/ui/buttons/jump.png')!important}
+#controls button[data-action="shoot"]{background-image:url('../assets/ui/buttons/shoot.png')!important}
+#controls button[data-action="dash"]{background-image:url('../assets/ui/buttons/dash.png')!important}
 
 #controls button[data-action]:hover{filter:brightness(1.05)}
 #controls button[data-action]:active,
@@ -58,7 +52,7 @@
   outline-offset:2px;
 }
 
-/* Header utility controls are also cut directly from the supplied board. */
+/* Header utility controls use their individual supplied PNGs. */
 .tools{gap:7px}
 .tools button{
   width:50px!important;
@@ -69,9 +63,9 @@
   outline:0;
   border-radius:0!important;
   background-color:transparent!important;
-  background-image:var(--control-atlas)!important;
   background-repeat:no-repeat!important;
-  background-size:500% 200%!important;
+  background-position:center!important;
+  background-size:contain!important;
   color:transparent!important;
   font-size:0!important;
   text-shadow:none!important;
@@ -80,14 +74,14 @@
   transition:transform .07s ease,filter .07s ease;
 }
 .tools button::before,.tools button::after{display:none!important}
-#pause{background-position:0% 100%!important}
-#sound{background-position:25% 100%!important}
-#fullscreen{background-position:50% 100%!important}
+#pause{background-image:url('../assets/ui/buttons/pause.png')!important}
+#sound{background-image:url('../assets/ui/buttons/sound.png')!important}
+#fullscreen{background-image:url('../assets/ui/buttons/fullscreen.png')!important}
 .tools button:hover{filter:brightness(1.06)}
 .tools button:active{transform:translateY(1px) scale(.95)!important;filter:brightness(1.15)}
 .tools button:focus-visible{outline:2px solid #fff!important;outline-offset:2px}
 
-/* Use the exact START MISSION artwork from the same supplied board. */
+/* Exact START MISSION artwork supplied by the user. */
 .primary{
   width:290px!important;
   height:78px!important;
@@ -97,7 +91,7 @@
   outline:0;
   border-radius:0!important;
   background-color:transparent!important;
-  background-image:var(--start-art)!important;
+  background-image:url('../assets/ui/start-mission-exact.png')!important;
   background-repeat:no-repeat!important;
   background-position:center!important;
   background-size:contain!important;
@@ -136,7 +130,7 @@
     width:66px;
     height:66px;
     min-width:66px;
-    opacity:.88;
+    opacity:.92;
     pointer-events:auto;
   }
   .tools button{width:42px!important;height:42px!important;min-width:42px}
