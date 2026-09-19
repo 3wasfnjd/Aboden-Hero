@@ -28,6 +28,9 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
 
 const keys=new Set(),touch=new Map(),buttons=[...document.querySelectorAll('[data-action]')];
+const moveStick=$('move-stick'),moveStickBase=moveStick?.querySelector('.move-stick-base'),moveStickKnob=moveStick?.querySelector('.move-stick-knob');
+const STICK_RANGE=44,STICK_DEADZONE=.16;
+let stickPointerId=null,stickCenterX=0,stickCenterY=0,stickX=0,stickY=0;
 let progress=createProgress(),player=createPlayer(105,groundY(1)-44),state='menu',time=0,elapsed=0;
 let cameraX=0,cameraY=cameraFloorY(1),bullets=[],enemyShots=[],particles=[],enemySets=new Map();
 let kills=0,deaths=0,toastTime=0,accumulator=0,last=0,elevatorTime=0,puzzleOpen=false;
@@ -54,11 +57,20 @@ function spawnFloorEnemies(floor){
 }
 function resetEnemies(){for(let f=1;f<=FLOOR_COUNT;f++)spawnFloorEnemies(f);}
 
-function clearInput(){keys.clear();touch.clear();buttons.forEach(b=>b.classList.remove('held'));if(player){player.jumpHeld=false;player.dashHeld=false;player.buffer=0;}}
+function resetMoveStick(){
+  const id=stickPointerId;stickPointerId=null;stickX=0;stickY=0;
+  if(moveStickKnob)moveStickKnob.style.transform='translate3d(0,0,0)';
+  moveStick?.classList.remove('active');
+  if(id!==null&&moveStick?.hasPointerCapture?.(id)){try{moveStick.releasePointerCapture(id);}catch{}}
+}
+function clearInput(){
+  keys.clear();touch.clear();buttons.forEach(b=>b.classList.remove('held'));resetMoveStick();
+  if(player){player.jumpHeld=false;player.dashHeld=false;player.buffer=0;}
+}
 function activeTouch(action){return [...touch.values()].includes(action);}
 function input(){return {
-  left:keys.has('ArrowLeft')||keys.has('KeyA')||activeTouch('left'),
-  right:keys.has('ArrowRight')||keys.has('KeyD')||activeTouch('right'),
+  left:keys.has('ArrowLeft')||keys.has('KeyA')||stickX<-STICK_DEADZONE,
+  right:keys.has('ArrowRight')||keys.has('KeyD')||stickX>STICK_DEADZONE,
   jump:keys.has('ArrowUp')||keys.has('KeyK')||activeTouch('jump'),
   dash:keys.has('KeyL')||keys.has('ShiftLeft')||keys.has('ShiftRight')||activeTouch('dash'),
   shoot:keys.has('KeyJ')||keys.has('Space')||activeTouch('shoot')
@@ -325,6 +337,26 @@ function doAction(){
   const floor=progress.currentFloor,def=FLOOR_DEFS[floor],done=progress.floors[floor].complete;
   if(!done&&def.type==='puzzle'&&near(currentPuzzleX(),105))openPuzzle();
   else if(done&&floor<FLOOR_COUNT&&near(ELEVATOR_ENTRY_X,105))useElevator();
+}
+
+if(moveStick&&moveStickBase&&moveStickKnob){
+  const updateStick=e=>{
+    let dx=(e.clientX-stickCenterX)/STICK_RANGE,dy=(e.clientY-stickCenterY)/STICK_RANGE;
+    const mag=Math.hypot(dx,dy);if(mag>1){dx/=mag;dy/=mag;}
+    stickX=dx;stickY=dy;
+    moveStickKnob.style.transform=`translate3d(${(dx*44).toFixed(1)}px,${(dy*44).toFixed(1)}px,0)`;
+  };
+  moveStick.addEventListener('pointerdown',e=>{
+    if(state!=='playing'||puzzleOpen||progress.mode==='elevator'||stickPointerId!==null)return;
+    e.preventDefault();unlockAudio();moveStick.setPointerCapture(e.pointerId);stickPointerId=e.pointerId;
+    const rect=moveStickBase.getBoundingClientRect();stickCenterX=rect.left+rect.width/2;stickCenterY=rect.top+rect.height/2;
+    stickX=0;stickY=0;moveStick.classList.add('active');updateStick(e);
+  });
+  moveStick.addEventListener('pointermove',e=>{if(e.pointerId!==stickPointerId)return;e.preventDefault();updateStick(e);});
+  const endStick=e=>{if(e.pointerId!==stickPointerId)return;resetMoveStick();};
+  moveStick.addEventListener('pointerup',endStick);
+  moveStick.addEventListener('pointercancel',endStick);
+  moveStick.addEventListener('lostpointercapture',endStick);
 }
 
 const mapped=new Set(['ArrowLeft','ArrowRight','ArrowUp','KeyA','KeyD','KeyK','KeyJ','Space','KeyL','ShiftLeft','ShiftRight']);

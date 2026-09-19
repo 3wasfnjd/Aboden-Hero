@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#07111f">
 <meta name="description" content="Aboden Hero — الفصل الثاني: المصعد الرأسي، قتال وألغاز عبر ستة طوابق.">
 <title>Aboden Hero • الفصل الثاني</title>
-<link rel="stylesheet" href="./src/controls.css?v=20260919-stage2-2">
-<link rel="stylesheet" href="./src/stage2.css?v=20260919-stage2-2">
+<link rel="stylesheet" href="./src/controls.css?v=20260919-stage2-3">
+<link rel="stylesheet" href="./src/stage2.css?v=20260919-stage2-3">
 </head>
 <body>
 <main id="app">
@@ -37,13 +37,18 @@
     </div>
     <div class="rotate-note">أدر الجوال إلى الوضع الطولي للعب ↻</div>
   </section>
-  <nav id="controls" aria-label="أزرار اللعب باللمس" hidden>
-    <div><button data-action="left" aria-label="تحرك يسارًا"></button><button data-action="right" aria-label="تحرك يمينًا"></button></div>
-    <span class="control-hint" aria-hidden="true"></span>
-    <div><button data-action="dash" class="dash" aria-label="اندفاع"></button><button data-action="shoot" class="shoot" aria-label="إطلاق"></button><button data-action="jump" class="jump" aria-label="قفز"></button></div>
+  <nav id="controls" aria-label="تحكم اللعب باللمس" hidden>
+    <div id="move-stick" class="move-stick game-hud" role="group" aria-label="عصا تحكم المشي">
+      <div class="move-stick-base" aria-hidden="true"><div class="move-stick-knob"></div></div>
+    </div>
+    <div class="action-controls game-hud">
+      <button data-action="dash" class="dash" aria-label="اندفاع"></button>
+      <button data-action="shoot" class="shoot" aria-label="إطلاق"></button>
+      <button data-action="jump" class="jump" aria-label="قفز"></button>
+    </div>
   </nav>
 </main>
 <noscript>فعّل JavaScript لتشغيل اللعبة.</noscript>
-<script type="module" src="./src/stage2.js?v=20260919-stage2-2"></script>
+<script type="module" src="./src/stage2.js?v=20260919-stage2-3"></script>
 </body>
 </html>
