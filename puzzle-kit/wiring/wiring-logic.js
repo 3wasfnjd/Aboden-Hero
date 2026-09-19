@@ -9,27 +9,32 @@ export const BASE_PORTS=Object.freeze({
   tee:Object.freeze(['N','E','W'])
 });
 
+// User-defined solution path from START to END:
+// r1c1 -> r2c1 -> r2c2 -> r2c3 -> r2c4 -> r3c4
+export const SOLUTION_PATH=Object.freeze([0,4,5,6,7,11]);
+
 export const WIRING_LAYOUT=Object.freeze([
-  Object.freeze({type:'straight',solution:1}),
-  Object.freeze({type:'tee',solution:0}),
-  Object.freeze({type:'straight',solution:1}),
-  Object.freeze({type:'elbow',solution:2}),
+  Object.freeze({type:'elbow',solution:2,path:true}),
+  Object.freeze({type:'tee',solution:null,path:false}),
+  Object.freeze({type:'cross',solution:null,path:false}),
+  Object.freeze({type:'straight',solution:null,path:false}),
 
-  Object.freeze({type:'elbow',solution:1}),
-  Object.freeze({type:'cross',solution:0}),
-  Object.freeze({type:'tee',solution:2}),
-  Object.freeze({type:'straight',solution:0}),
+  Object.freeze({type:'elbow',solution:0,path:true}),
+  Object.freeze({type:'straight',solution:1,path:true}),
+  Object.freeze({type:'straight',solution:1,path:true}),
+  Object.freeze({type:'elbow',solution:2,path:true}),
 
-  Object.freeze({type:'tee',solution:3}),
-  Object.freeze({type:'elbow',solution:0}),
-  Object.freeze({type:'cross',solution:0}),
-  Object.freeze({type:'elbow',solution:0})
+  Object.freeze({type:'tee',solution:null,path:false}),
+  Object.freeze({type:'cross',solution:null,path:false}),
+  Object.freeze({type:'straight',solution:null,path:false}),
+  Object.freeze({type:'elbow',solution:0,path:true})
 ]);
 
+// Starts deliberately unsolved. Piece types stay fixed; taps rotate them.
 export const INITIAL_ROTATIONS=Object.freeze([
-  0,1,2,1,
-  2,0,3,1,
-  1,3,0,3
+  1,2,1,0,
+  1,0,2,1,
+  2,3,1,3
 ]);
 
 export function normalizeRotation(value){
@@ -46,6 +51,12 @@ export function portsFor(type,rotation=0){
   const base=BASE_PORTS[type];
   if(!base)throw new Error(`Unknown pipe type: ${type}`);
   return base.map(direction=>rotateDirection(direction,rotation));
+}
+
+function samePorts(a,b){
+  if(a.length!==b.length)return false;
+  const set=new Set(a);
+  return b.every(port=>set.has(port));
 }
 
 export function connectedFromStart(layout=WIRING_LAYOUT,rotations=INITIAL_ROTATIONS,{cols=4,rows=3,startIndex=0,startSide='W'}={}){
@@ -75,9 +86,25 @@ export function connectedFromStart(layout=WIRING_LAYOUT,rotations=INITIAL_ROTATI
   return visited;
 }
 
+export function matchesDefinedPath(layout=WIRING_LAYOUT,rotations=INITIAL_ROTATIONS){
+  return SOLUTION_PATH.every(index=>{
+    const tile=layout[index];
+    if(tile?.solution==null)return false;
+    return samePorts(
+      portsFor(tile.type,rotations[index]),
+      portsFor(tile.type,tile.solution)
+    );
+  });
+}
+
 export function isWiringSolved(layout=WIRING_LAYOUT,rotations=INITIAL_ROTATIONS,options={}){
   const endIndex=options.endIndex??11;
   const endSide=options.endSide??'E';
+
+  // The puzzle must match the user's intended six-piece route, not an
+  // accidental alternative route through distractor cells.
+  if(!matchesDefinedPath(layout,rotations))return false;
+
   const connected=connectedFromStart(layout,rotations,options);
   if(!connected.has(endIndex))return false;
   return portsFor(layout[endIndex].type,rotations[endIndex]).includes(endSide);
