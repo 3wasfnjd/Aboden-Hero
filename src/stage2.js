@@ -3,10 +3,11 @@ import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?
 import {stepCombat} from './combat.js?v=20260917-straight-1';
 import {createArt} from './art.js?v=20260917-cleanup-2';
 import {createMusic} from './music.js?v=20260917-music-1';
+import {createMatchingPuzzle} from '../puzzle-kit/matching/matching.js?v=20260920-stage2-embed-1';
 import {createWiringPuzzle} from '../puzzle-kit/wiring/wiring.js?v=20260919-stage2-embed-2';
 import {
   FLOOR_DEFS,FLOOR_COUNT,createProgress,completeFloor,beginElevator,updateElevator,
-  MATCH_SYMBOLS,isMatchSolved,CUBE_INITIAL,isCubeSolved
+  CUBE_INITIAL,isCubeSolved
 } from './stage2-state.js?v=20260919-stage2-2';
 
 const $=id=>document.getElementById(id);
@@ -36,7 +37,7 @@ let cameraX=0,cameraY=cameraFloorY(1),bullets=[],enemyShots=[],particles=[],enem
 let kills=0,deaths=0,toastTime=0,accumulator=0,last=0,elevatorTime=0,puzzleOpen=false;
 let activePuzzleModule=null,puzzleSession=0;
 let muted=false,audio=null,musicCtl=null;
-let matchConnections={},matchSelected=null,cubeOrder=[...CUBE_INITIAL],cubeSelected=null;
+let cubeOrder=[...CUBE_INITIAL],cubeSelected=null;
 
 function loadImage(url){const img=new Image();img.decoding='async';img.src=url;return img;}
 const floorAtlas=loadImage('./assets/stage2/floors-atlas.webp?v=20260919-hi2');
@@ -122,7 +123,7 @@ function updateAction(){
 function reset(){
   progress=createProgress();player=createPlayer(105,groundY(1)-44);player.facing=1;state='menu';time=0;elapsed=0;
   destroyActivePuzzle();cameraX=0;cameraY=cameraFloorY(1);bullets=[];enemyShots=[];particles=[];kills=0;deaths=0;elevatorTime=0;puzzleOpen=false;
-  $('puzzle').hidden=true;matchConnections={};matchSelected=null;cubeOrder=[...CUBE_INITIAL];cubeSelected=null;
+  $('puzzle').hidden=true;cubeOrder=[...CUBE_INITIAL];cubeSelected=null;
   resetEnemies();clearInput();updateHUD();updateAction();
 }
 function setIntroCopy(){
@@ -308,19 +309,50 @@ function draw(){
 }
 function frame(now){if(!last)last=now;const dt=Math.min((now-last)/1000,.1);last=now;if(state==='playing'){accumulator+=dt;while(accumulator>=STEP){tick(STEP);accumulator-=STEP;}}else time+=dt;draw();requestAnimationFrame(frame);}
 
-function puzzleSolved(type){return type==='match'?isMatchSolved(matchConnections):type==='cubes'?isCubeSolved(cubeOrder):false;}
+function puzzleSolved(type){return type==='cubes'?isCubeSolved(cubeOrder):false;}
 function solveCurrentPuzzle(){
   const type=FLOOR_DEFS[progress.currentFloor].puzzle;if(!puzzleSolved(type))return;
   $('puzzle-status').textContent='SYSTEM ONLINE';$('puzzle-status').classList.add('online');sound(960,.25,'triangle',.06);
   setTimeout(()=>{closePuzzle();finishChallenge();},600);
 }
-function symbolLabel(s){return s==='hex'?'⬡':s==='bolt'?'ϟ':'▲';}
-function renderMatch(){
-  $('puzzle-title').textContent='توصيل الطاقة';$('puzzle-help').textContent='اختر رمزًا من اليسار ثم صله بالرمز المطابق في اليمين. يجب تشغيل المسارات الثلاثة.';
-  const shuffled=['tri','hex','bolt'];
-  $('puzzle-body').innerHTML=`<div class="match-board"><div class="match-col">${MATCH_SYMBOLS.map(s=>`<button class="match-node ${s}" data-left="${s}">${symbolLabel(s)}</button>`).join('')}</div><div class="match-lines">${MATCH_SYMBOLS.map(s=>`<i class="${matchConnections[s]===s?'on':''}"></i>`).join('')}</div><div class="match-col">${shuffled.map(s=>`<button class="match-node ${s}" data-right="${s}">${symbolLabel(s)}</button>`).join('')}</div></div>`;
-  $('puzzle-body').querySelectorAll('[data-left]').forEach(b=>b.addEventListener('click',()=>{matchSelected=b.dataset.left;renderMatch();$('puzzle-body').querySelector(`[data-left="${matchSelected}"]`)?.classList.add('selected');}));
-  $('puzzle-body').querySelectorAll('[data-right]').forEach(b=>b.addEventListener('click',()=>{if(!matchSelected)return;matchConnections[matchSelected]=b.dataset.right;matchSelected=null;renderMatch();solveCurrentPuzzle();}));
+async function mountMatchingPuzzle(){
+  const session=++puzzleSession;
+  const body=$('puzzle-body');
+  $('puzzle-title').textContent='مطابقة التوصيلات';
+  $('puzzle-help').textContent='اختر موصلًا من اليسار ثم وصّله بالموصل المطابق له في الجهة الأخرى.';
+  body.replaceChildren();
+
+  const mount=document.createElement('div');
+  mount.className='puzzle-root embedded-puzzle-root';
+  body.append(mount);
+
+  try{
+    const puzzle=await createMatchingPuzzle({
+      root:mount,
+      audio:!muted,
+      // Stage 2 keeps its own background score. Only Matching Puzzle SFX play here.
+      audioOptions:{musicVolume:0,sfxVolume:.20}
+    });
+    if(session!==puzzleSession||!puzzleOpen||FLOOR_DEFS[progress.currentFloor].puzzle!=='match'){
+      puzzle.destroy();
+      return;
+    }
+    activePuzzleModule=puzzle;
+    puzzle.onSolved(()=>{
+      if(session!==puzzleSession||!puzzleOpen)return;
+      // Leave the solved board visible briefly so the green completion lights are seen.
+      setTimeout(()=>{
+        if(session!==puzzleSession||!puzzleOpen)return;
+        closePuzzle();
+        finishChallenge();
+      },1000);
+    });
+    puzzle.start();
+  }catch(error){
+    console.error('Failed to mount reusable Matching Puzzle',error);
+    if(session!==puzzleSession)return;
+    body.innerHTML='<div class="embedded-puzzle-error">تعذر تحميل لوحة مطابقة التوصيلات.</div>';
+  }
 }
 async function mountWiringPuzzle(){
   const session=++puzzleSession;
@@ -372,7 +404,7 @@ function openPuzzle(){
   destroyActivePuzzle();
   puzzleOpen=true;clearInput();$('puzzle').hidden=false;$('action').hidden=true;$('puzzle-status').textContent='SYSTEM OFFLINE';$('puzzle-status').classList.remove('online');
   $('puzzle').dataset.type=def.puzzle;
-  if(def.puzzle==='match')renderMatch();else if(def.puzzle==='wiring')mountWiringPuzzle();else renderCubes();
+  if(def.puzzle==='match')mountMatchingPuzzle();else if(def.puzzle==='wiring')mountWiringPuzzle();else renderCubes();
 }
 function closePuzzle(){
   puzzleOpen=false;destroyActivePuzzle();$('puzzle').hidden=true;clearInput();
