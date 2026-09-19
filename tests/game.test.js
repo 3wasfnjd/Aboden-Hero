@@ -22,7 +22,8 @@ test('movement, collecting, simultaneous controls, cancellation, pause, checkpoi
  buttons[2].emit('pointercancel',{pointerId:2});assert(!g.input.jump&&g.input.right&&g.input.shoot);
  g.pause();assert.equal(g.state,'paused');assert(!g.input.right&&!g.input.shoot);const x=g.player.x;steps(120);assert.equal(g.player.x,x);g.play();
  g.player.x=1650;g.player.y=396;g.player.vy=0;g.player.vx=0;g.player.grounded=true;steps(1);assert.equal(g.checkpoint,1650);g.player.y=700;steps(1);assert.equal(g.player.x,1650);assert.equal(g.player.hp,5);assert.equal(g.stats.deaths,1);
- g.player.x=6415;g.player.y=396;steps(1);assert.equal(g.state,'playing','exit stays locked while boss lives');g.level.boss.hp=0;steps(1);assert.equal(g.state,'won');g.play();assert.equal(g.state,'playing');assert.equal(g.stats.collected,0);assert.equal(g.checkpoint,110);assert.equal(g.stats.deaths,0);
+ g.player.x=6415;g.player.y=396;steps(1);assert.equal(g.state,'playing','exit stays locked while boss lives');g.level.boss.hp=0;steps(1);assert.equal(g.state,'chapterEnd','chapter 1 ends before the final mission');g.play();assert.equal(g.state,'playing');assert.equal(g.chapter,2);assert.equal(g.stats.collected,0);assert.equal(g.checkpoint,110);assert.equal(g.stats.deaths,0);
+ g.player.x=g.level.goal.x+10;g.player.y=396;steps(1);assert.equal(g.state,'playing','chapter 2 exit stays locked while its boss lives');g.level.boss.hp=0;steps(1);assert.equal(g.state,'won','the campaign only ends after the final chapter');g.play();assert.equal(g.state,'playing');assert.equal(g.chapter,1,'replaying from the final win restarts the campaign');
  g.draw();
 });
 
@@ -30,7 +31,8 @@ test('boss can be defeated with shots and enemy shots are cleared',()=>{
  g.reset();g.play();g.player.x=5830;g.player.y=396;g.player.invulnerable=30;
  g.level.enemies.forEach(e=>e.hp=0);key('KeyJ',true);steps(900);key('KeyJ',false);
  assert(g.level.boss.hp<=0);assert.equal(g.stats.kills,1);assert.equal(g.enemyShots.length,0);
- g.player.x=6420;steps(1);assert.equal(g.state,'won');
+ g.player.x=6420;steps(1);assert.equal(g.state,'chapterEnd');
+ g.play();
 });
 test('dash evades hostile projectiles, normal contact costs health',()=>{
  g.reset();g.play();steps(60);g.player.invulnerable=0;
@@ -40,6 +42,26 @@ test('dash evades hostile projectiles, normal contact costs health',()=>{
 });
 
 
+test('shielded chapter-2 guards block frontal shots but take damage from behind',()=>{
+ g.reset(2);g.play();
+ const e=g.level.enemies.find(x=>x.shield);
+ assert(e,'chapter 2 has at least one shielded guard');
+ e.windup=0;e.vx=-48;e.hp=3; // facing left: front toward -x, back toward +x
+ g.bullets.length=0;g.bullets.push({x:e.x+5,y:e.y+e.h-20,w:13,h:8,vx:620,life:1});
+ g.tick(1/60);
+ assert.equal(e.hp,3,'a shot into the shielded side does no damage');
+ g.bullets.length=0;g.bullets.push({x:e.x+5,y:e.y+e.h-20,w:13,h:8,vx:-620,life:1});
+ g.tick(1/60);
+ assert.equal(e.hp,2,'a shot from behind the shield still damages the guard');
+});
+test('the hovering mini-boss and chapter-2 captain use the shared boss escalation',()=>{
+ g.reset(2);g.play();
+ const chopper=g.level.enemies.find(x=>x.flying);
+ assert(chopper,'chapter 2 has a flying mini-boss');
+ assert(chopper.hp>3,'the mini-boss is tougher than a regular guard');
+ assert.equal(g.level.boss.kind,'captain');
+ assert.equal(g.level.boss.maxHP,30);
+});
 test('new sprite muzzle shots damage guards in both facing directions',()=>{
  for(const facing of [1,-1]){
   g.reset();g.play();steps(60);g.player.x=700;g.player.facing=facing;

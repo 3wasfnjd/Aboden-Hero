@@ -1,5 +1,5 @@
 import {enemyWeaponMuzzle,ENEMY_FLASH_TIME,enemyKind} from './enemy-weapon.js?v=20260917-guards-1';
-import {overlaps} from './world.js?v=20260917-guards-3';
+import {overlaps} from './world.js?v=20260919-chapter2-2';
 
 export const getShotOrigin=enemyWeaponMuzzle;
 
@@ -33,7 +33,7 @@ export function stepCombat(level,player,shots,dt,getMuzzle=enemyWeaponMuzzle){
  const shooters=level.enemies.filter(e=>e.hp>0);
  const boss=level.boss;
  for(const e of [...level.enemies,boss])e.shotFlash=Math.max(0,(e.shotFlash??0)-dt);
- if(boss.hp>0&&player.x>5630&&!boss.active){boss.active=true;events.push('boss');}
+ if(boss.hp>0&&player.x>(boss.triggerX??boss.x-500)&&!boss.active){boss.active=true;events.push('boss');}
  if(boss.active&&boss.hp>0)shooters.push(boss);
  for(const e of shooters){
   const isBoss=e===boss;
@@ -46,7 +46,7 @@ export function stepCombat(level,player,shots,dt,getMuzzle=enemyWeaponMuzzle){
     fireShot(e,isBoss,getMuzzle(e,isBoss),shots);
     e.burstLeft=isBoss?0:stats.burst-1;
     e.burstGap=isBoss?0:stats.burstGap;
-    e.fire=isBoss?(e.hp<12?1.05:1.45):(e.burstLeft>0?e.burstGap:stats.cooldown);
+    e.fire=isBoss?(e.hp<boss.maxHP/2?1.05:1.45):(e.burstLeft>0?e.burstGap:stats.cooldown);
     events.push('shot');
    }
   }else if(e.burstLeft>0){

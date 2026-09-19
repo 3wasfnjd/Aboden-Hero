@@ -114,12 +114,15 @@ export function createArt(ctx){
  }
 
  function enemy(e,time){
+  const center=e.x+e.w/2;
+  const facing=e.windup>0&&e.aimX?e.aimX<center?-1:1:e.vx<0?-1:1;
+  if(e.flying){drawChopper(e,center,facing,time);return;}
   const type=enemyKind(e);
   const asset=type==='city'?cityAsset:type==='sniper'?sniperAsset:heavyAsset;
   const frames=type==='city'?CITY_FRAMES:type==='sniper'?SNIPER_FRAMES:HEAVY_FRAMES;
   const img=asset.img;
   const attack=enemyAttackPose(e);
-  if(attack){const frame=scaledFrames([attack.frame],img,ENEMY_BASE_W,ENEMY_BASE_H)[0];drawSprite(ctx,img,frame,e.x+e.w/2,e.y+e.h,attack.facing,attack.height);return;}
+  if(attack){const frame=scaledFrames([attack.frame],img,ENEMY_BASE_W,ENEMY_BASE_H)[0];drawSprite(ctx,img,frame,e.x+e.w/2,e.y+e.h,attack.facing,attack.height);if(e.shield)drawShield(e,center,attack.facing);return;}
   let state='idle',rate=4,displayH=enemyDisplayHeight(e);
   if(e.hit>0){state='hit';rate=12;}
   else if(Math.abs(e.vx)>5){state='run';rate=4.5;}
@@ -127,8 +130,6 @@ export function createArt(ctx){
   const set=frames[state]||frames.idle;
   const scaled=scaledFrames(set,img,ENEMY_BASE_W,ENEMY_BASE_H);
   const i=Math.floor(time*rate+e.x*.006)%scaled.length;
-  const center=e.x+e.w/2;
-  const facing=e.windup>0&&e.aimX?e.aimX<center?-1:1:e.vx<0?-1:1;
 
   ctx.save();
   ctx.globalAlpha=.24;
@@ -136,9 +137,50 @@ export function createArt(ctx){
   ctx.beginPath();ctx.ellipse(center,e.y+e.h+2,type==='heavy'?27:21,4,0,0,Math.PI*2);ctx.fill();
   ctx.restore();
   drawSprite(ctx,img,scaled[i],center,e.y+e.h,facing,displayH);
+  if(e.shield)drawShield(e,center,facing);
+ }
+
+ // Placeholder riot shield for guards awaiting dedicated art: blocks frontal
+ // hits, so it is drawn on whichever side the guard is currently facing.
+ function drawShield(e,center,facing){
+  const y=e.y+e.h-46;
+  ctx.save();
+  ctx.translate(center+facing*20,y);
+  ctx.fillStyle='#5b7a8caa';
+  ctx.strokeStyle='#e8c877';
+  ctx.lineWidth=2;
+  ctx.beginPath();ctx.roundRect(-9,-34,18,58,6);ctx.fill();ctx.stroke();
+  ctx.restore();
+ }
+
+ // Placeholder hovering gunner mini-boss, awaiting dedicated art: a simple
+ // metal-body silhouette with a spinning rotor, distinct from any ground guard.
+ function drawChopper(e,center,facing,time){
+  const y=e.y+e.h/2;
+  ctx.save();
+  ctx.globalAlpha=.28;ctx.fillStyle='#050a12';ctx.beginPath();ctx.ellipse(center,e.y+e.h+70,26,6,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+  ctx.translate(center,y+Math.sin(time*2.4)*4);
+  ctx.scale(facing,1);
+  ctx.fillStyle='#6d7d8c';
+  ctx.strokeStyle='#e0663c';
+  ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.roundRect(-22,-11,44,22,10);ctx.fill();ctx.stroke();
+  ctx.fillStyle=e.hit>0?'#ffdca0':'#bfe3f2';
+  ctx.beginPath();ctx.ellipse(14,-2,8,7,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#12181f';ctx.lineWidth=2;ctx.stroke();
+  ctx.strokeStyle='#f4c25f';ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(-24,-18);ctx.lineTo(-6,-18);ctx.stroke();
+  const spin=time*22;
+  ctx.strokeStyle='#d8e4ec';ctx.lineWidth=2.4;
+  ctx.beginPath();ctx.moveTo(-15-Math.cos(spin)*22,-18-Math.sin(spin)*4);ctx.lineTo(-15+Math.cos(spin)*22,-18+Math.sin(spin)*4);ctx.stroke();
+  ctx.fillStyle='#e0663c';
+  ctx.beginPath();ctx.roundRect(-8,9,10,7,2);ctx.fill();
+  ctx.beginPath();ctx.roundRect(6,9,10,7,2);ctx.fill();
+  ctx.restore();
  }
 
  function boss(b,time){
+  if(b.kind==='captain')return drawCaptain(b,time);
   const gatekeeper=bossAsset.img;
   let frames=BOSS_FRAMES.idle,rate=3.4,displayH=146;
   if(b.hp<=0){
@@ -156,10 +198,33 @@ export function createArt(ctx){
   const facing=(b.aimX||0)<b.x?-1:1;
   if(b.hit>0){frames=BOSS_FRAMES.hit;rate=12;displayH=145;}
 
-  else if(b.hp<12){frames=BOSS_FRAMES.enraged;rate=9;displayH=150;}
+  else if(b.hp<b.maxHP/2){frames=BOSS_FRAMES.enraged;rate=9;displayH=150;}
   const i=Math.floor(time*rate)%frames.length;
   ctx.save();ctx.globalAlpha=.30;ctx.fillStyle='#081220';ctx.beginPath();ctx.ellipse(b.x+b.w/2,b.y+b.h+3,52,7,0,0,Math.PI*2);ctx.fill();ctx.restore();
   drawSprite(ctx,gatekeeper,frames[i],b.x+b.w/2,b.y+b.h,facing,displayH);
+ }
+
+ // Placeholder final-boss silhouette for chapter 2's captain, awaiting
+ // dedicated art: a lean armored officer, visually distinct from the
+ // Gatekeeper mech so the two finales don't look identical.
+ function drawCaptain(b,time){
+  if(b.hp<=0)return;
+  const cx=b.x+b.w/2,base=b.y+b.h,facing=(b.aimX||0)<b.x?-1:1,enraged=b.hp<b.maxHP/2;
+  ctx.save();
+  ctx.translate(cx,base);
+  ctx.scale(facing,1);
+  ctx.globalAlpha=.3;ctx.fillStyle='#081220';ctx.beginPath();ctx.ellipse(0,3,40,7,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+  const flicker=b.hit>0?'#e8b98f':enraged?'#8a2e2e':'#33424f';
+  ctx.fillStyle='#141b22';ctx.beginPath();ctx.moveTo(-20,0);ctx.lineTo(20,0);ctx.lineTo(30,-70);ctx.lineTo(-30,-70);ctx.closePath();ctx.fill();
+  ctx.fillStyle=flicker;ctx.beginPath();ctx.roundRect(-24,-96,48,34,8);ctx.fill();
+  ctx.strokeStyle='#12181f';ctx.lineWidth=3;ctx.strokeRect(-24,-96,48,34);
+  ctx.fillStyle='#101418';ctx.beginPath();ctx.roundRect(-14,-118,28,26,10);ctx.fill();
+  ctx.fillStyle=enraged?'#ff6b5c':'#e8c877';
+  ctx.beginPath();ctx.ellipse(-facing*6,-108,3.4,3.4,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(facing*6,-108,3.4,3.4,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#e8c877';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(24,-90);ctx.lineTo(46,-70+Math.sin(time*10)*4);ctx.stroke();
+  ctx.restore();
  }
 
  function enemyMuzzle(e,time,isBoss=false){const asset=isBoss?bossAsset:enemyKind(e)==='city'?cityAsset:enemyKind(e)==='sniper'?sniperAsset:heavyAsset;const pose=enemyAttackPose(e,isBoss);return asset.ready&&pose?pose.muzzle:fallbackEnemyMuzzle(e,time,isBoss);}
