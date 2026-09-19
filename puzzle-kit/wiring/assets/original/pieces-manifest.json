@@ -1,0 +1,58 @@
+{
+  "source": "pipe-pieces.png",
+  "sourceSize": {
+    "width": 1448,
+    "height": 1086
+  },
+  "method": "lossless alpha-bounds crop; no resize; no recolor",
+  "pieces": {
+    "straight": {
+      "file": "pipe-straight.png",
+      "cropBox": [
+        59,
+        19,
+        724,
+        527
+      ],
+      "width": 665,
+      "height": 508,
+      "pixelSha256": "7fdb3cd60643d359e95f12189f397e2a869316726b25a0cced8c81af49726455"
+    },
+    "elbow": {
+      "file": "pipe-elbow.png",
+      "cropBox": [
+        724,
+        19,
+        1382,
+        543
+      ],
+      "width": 658,
+      "height": 524,
+      "pixelSha256": "f378fa06367b1f88531a879394988c222ac7fc6284b0dba3748058ef2007c8c0"
+    },
+    "cross": {
+      "file": "pipe-cross.png",
+      "cropBox": [
+        23,
+        543,
+        692,
+        1062
+      ],
+      "width": 669,
+      "height": 519,
+      "pixelSha256": "7978d6306002e2cde97092bc8e0ec93f3d64e960638b954dc61f0e3f80b5a0dd"
+    },
+    "tee": {
+      "file": "pipe-tee.png",
+      "cropBox": [
+        733,
+        546,
+        1428,
+        1062
+      ],
+      "width": 695,
+      "height": 516,
+      "pixelSha256": "976d614aac8f0b9632d6070abaa27294fc822b165ea1d3447960a7d2d6c74dbd"
+    }
+  }
+}
