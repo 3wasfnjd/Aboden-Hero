@@ -4,55 +4,55 @@
     "width": 1448,
     "height": 1086
   },
-  "method": "lossless alpha-bounds crop; no resize; no recolor",
+  "method": "lossless crop using alpha>=16 visual bounds + 10px transparent margin; no resize; no recolor",
   "pieces": {
     "straight": {
       "file": "pipe-straight.png",
       "cropBox": [
-        59,
-        19,
-        724,
-        527
+        274,
+        39,
+        503,
+        516
       ],
-      "width": 665,
-      "height": 508,
-      "pixelSha256": "7fdb3cd60643d359e95f12189f397e2a869316726b25a0cced8c81af49726455"
+      "width": 229,
+      "height": 477,
+      "pixelSha256": "f63793d171678f2f35dff79667f4b9393234fe312ea133628eabe1c60b241e07"
     },
     "elbow": {
       "file": "pipe-elbow.png",
       "cropBox": [
-        724,
-        19,
-        1382,
-        543
+        776,
+        78,
+        1231,
+        511
       ],
-      "width": 658,
-      "height": 524,
-      "pixelSha256": "f378fa06367b1f88531a879394988c222ac7fc6284b0dba3748058ef2007c8c0"
+      "width": 455,
+      "height": 433,
+      "pixelSha256": "681d27920aca2ab097aa56e6c96248c1b1a053c4bfa4a40983e51ad9d8087fa2"
     },
     "cross": {
       "file": "pipe-cross.png",
       "cropBox": [
-        23,
+        119,
         543,
-        692,
-        1062
+        658,
+        1037
       ],
-      "width": 669,
-      "height": 519,
-      "pixelSha256": "7978d6306002e2cde97092bc8e0ec93f3d64e960638b954dc61f0e3f80b5a0dd"
+      "width": 539,
+      "height": 494,
+      "pixelSha256": "7dfdfb7a653eff9dfd06ec35239fbb4cc3c5312175e7a6ceb78dd7f5ae8ce55d"
     },
     "tee": {
       "file": "pipe-tee.png",
       "cropBox": [
-        733,
-        546,
-        1428,
-        1062
+        756,
+        592,
+        1338,
+        976
       ],
-      "width": 695,
-      "height": 516,
-      "pixelSha256": "976d614aac8f0b9632d6070abaa27294fc822b165ea1d3447960a7d2d6c74dbd"
+      "width": 582,
+      "height": 384,
+      "pixelSha256": "78f3023a9679db59563d60f1508da28d22bace4eea402e740c3c1504e59a0cd8"
     }
   }
 }
