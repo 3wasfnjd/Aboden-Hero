@@ -3,10 +3,10 @@ import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?
 import {stepCombat} from './combat.js?v=20260917-straight-1';
 import {createArt} from './art.js?v=20260917-cleanup-2';
 import {createMusic} from './music.js?v=20260917-music-1';
+import {createWiringPuzzle} from '../puzzle-kit/wiring/wiring.js?v=20260919-stage2-embed-1';
 import {
   FLOOR_DEFS,FLOOR_COUNT,createProgress,completeFloor,beginElevator,updateElevator,
-  MATCH_SYMBOLS,isMatchSolved,WIRING_TEMPLATE,WIRING_INITIAL,isWiringSolved,
-  CUBE_INITIAL,isCubeSolved
+  MATCH_SYMBOLS,isMatchSolved,CUBE_INITIAL,isCubeSolved
 } from './stage2-state.js?v=20260919-stage2-2';
 
 const $=id=>document.getElementById(id);
@@ -34,8 +34,9 @@ let stickPointerId=null,stickCenterX=0,stickCenterY=0,stickX=0,stickY=0;
 let progress=createProgress(),player=createPlayer(105,groundY(1)-44),state='menu',time=0,elapsed=0;
 let cameraX=0,cameraY=cameraFloorY(1),bullets=[],enemyShots=[],particles=[],enemySets=new Map();
 let kills=0,deaths=0,toastTime=0,accumulator=0,last=0,elevatorTime=0,puzzleOpen=false;
+let activePuzzleModule=null,puzzleSession=0;
 let muted=false,audio=null,musicCtl=null;
-let matchConnections={},matchSelected=null,wiringRotations=[...WIRING_INITIAL],cubeOrder=[...CUBE_INITIAL],cubeSelected=null;
+let matchConnections={},matchSelected=null,cubeOrder=[...CUBE_INITIAL],cubeSelected=null;
 
 function loadImage(url){const img=new Image();img.decoding='async';img.src=url;return img;}
 const floorAtlas=loadImage('./assets/stage2/floors-atlas.webp?v=20260919-hi2');
@@ -86,6 +87,14 @@ function sound(freq=440,duration=.08,type='sine',volume=.055){
 }
 function unlockAudio(){if(muted)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume().catch(()=>{});if(!musicCtl){musicCtl=createMusic(audio);musicCtl.start();}musicCtl.setMuted(false);}catch{muted=true;}}
 function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');toastTime=2.5;}
+function destroyActivePuzzle(){
+  puzzleSession++;
+  if(activePuzzleModule){
+    try{activePuzzleModule.destroy();}catch{}
+    activePuzzleModule=null;
+  }
+  $('puzzle-body')?.replaceChildren();
+}
 function burst(x,y,color='#6de0ff',count=8){for(let i=0;i<count;i++){const a=i*Math.PI*2/count;particles.push({x,y,vx:Math.cos(a)*(30+i*5),vy:Math.sin(a)*55-25,life:.45,max:.45,color});}}
 
 function challengeLabel(){
@@ -112,8 +121,8 @@ function updateAction(){
 
 function reset(){
   progress=createProgress();player=createPlayer(105,groundY(1)-44);player.facing=1;state='menu';time=0;elapsed=0;
-  cameraX=0;cameraY=cameraFloorY(1);bullets=[];enemyShots=[];particles=[];kills=0;deaths=0;elevatorTime=0;puzzleOpen=false;
-  matchConnections={};matchSelected=null;wiringRotations=[...WIRING_INITIAL];cubeOrder=[...CUBE_INITIAL];cubeSelected=null;
+  destroyActivePuzzle();cameraX=0;cameraY=cameraFloorY(1);bullets=[];enemyShots=[];particles=[];kills=0;deaths=0;elevatorTime=0;puzzleOpen=false;
+  $('puzzle').hidden=true;matchConnections={};matchSelected=null;cubeOrder=[...CUBE_INITIAL];cubeSelected=null;
   resetEnemies();clearInput();updateHUD();updateAction();
 }
 function setIntroCopy(){
@@ -299,7 +308,7 @@ function draw(){
 }
 function frame(now){if(!last)last=now;const dt=Math.min((now-last)/1000,.1);last=now;if(state==='playing'){accumulator+=dt;while(accumulator>=STEP){tick(STEP);accumulator-=STEP;}}else time+=dt;draw();requestAnimationFrame(frame);}
 
-function puzzleSolved(type){return type==='match'?isMatchSolved(matchConnections):type==='wiring'?isWiringSolved(wiringRotations):isCubeSolved(cubeOrder);}
+function puzzleSolved(type){return type==='match'?isMatchSolved(matchConnections):type==='cubes'?isCubeSolved(cubeOrder):false;}
 function solveCurrentPuzzle(){
   const type=FLOOR_DEFS[progress.currentFloor].puzzle;if(!puzzleSolved(type))return;
   $('puzzle-status').textContent='SYSTEM ONLINE';$('puzzle-status').classList.add('online');sound(960,.25,'triangle',.06);
@@ -313,11 +322,42 @@ function renderMatch(){
   $('puzzle-body').querySelectorAll('[data-left]').forEach(b=>b.addEventListener('click',()=>{matchSelected=b.dataset.left;renderMatch();$('puzzle-body').querySelector(`[data-left="${matchSelected}"]`)?.classList.add('selected');}));
   $('puzzle-body').querySelectorAll('[data-right]').forEach(b=>b.addEventListener('click',()=>{if(!matchSelected)return;matchConnections[matchSelected]=b.dataset.right;matchSelected=null;renderMatch();solveCurrentPuzzle();}));
 }
-function wireGlyph(type){return type==='straight'?'━':type==='elbow'?'┗':type==='tee'?'┳':type==='cross'?'╋':'•';}
-function renderWiring(){
-  $('puzzle-title').textContent='دائرة الطاقة';$('puzzle-help').textContent='اضغط قطع الأسلاك لتدويرها. كوّن دائرة مستمرة من START إلى END.';
-  $('puzzle-body').innerHTML=`<div class="wire-grid">${WIRING_TEMPLATE.map((tile,i)=>`<button class="wire-tile" data-wire="${i}"><span style="transform:rotate(${(wiringRotations[i]??0)*90}deg)">${wireGlyph(tile.type)}</span></button>`).join('')}</div>`;
-  $('puzzle-body').querySelectorAll('[data-wire]').forEach(b=>b.addEventListener('click',()=>{const i=Number(b.dataset.wire);wiringRotations[i]=(wiringRotations[i]+1)%4;renderWiring();solveCurrentPuzzle();}));
+async function mountWiringPuzzle(){
+  const session=++puzzleSession;
+  const body=$('puzzle-body');
+  $('puzzle-title').textContent='دائرة الطاقة';
+  $('puzzle-help').textContent='دوّر قطع المواسير حتى يكتمل المسار من START إلى END.';
+  body.replaceChildren();
+
+  const mount=document.createElement('div');
+  mount.className='puzzle-root embedded-puzzle-root';
+  body.append(mount);
+
+  // Let the dedicated puzzle soundscape take over while the panel is open.
+  musicCtl?.setMuted(true);
+
+  try{
+    const puzzle=await createWiringPuzzle({root:mount,audio:!muted});
+    if(session!==puzzleSession||!puzzleOpen||FLOOR_DEFS[progress.currentFloor].puzzle!=='wiring'){
+      puzzle.destroy();
+      return;
+    }
+    activePuzzleModule=puzzle;
+    puzzle.onSolved(()=>{
+      if(session!==puzzleSession||!puzzleOpen)return;
+      setTimeout(()=>{
+        if(session!==puzzleSession||!puzzleOpen)return;
+        closePuzzle();
+        finishChallenge();
+      },1000);
+    });
+    puzzle.start();
+  }catch(error){
+    console.error('Failed to mount reusable Wiring Puzzle',error);
+    if(session!==puzzleSession)return;
+    body.innerHTML='<div class="embedded-puzzle-error">تعذر تحميل لوحة دائرة الطاقة.</div>';
+    musicCtl?.setMuted(muted);
+  }
 }
 const CUBE_META={start:['ϟ','START','start'],right:['→','',''],down:['↓','',''],lock:['×','LOCK','lock'],junction:['╋','','junction'],down2:['↓','',''],straight:['┃','',''],right2:['→','',''],goal:['◯','GOAL','goal']};
 function renderCubes(){
@@ -327,11 +367,17 @@ function renderCubes(){
 }
 function openPuzzle(){
   const def=FLOOR_DEFS[progress.currentFloor];if(def.type!=='puzzle'||progress.floors[progress.currentFloor].complete)return;
+  destroyActivePuzzle();
   puzzleOpen=true;clearInput();$('puzzle').hidden=false;$('action').hidden=true;$('puzzle-status').textContent='SYSTEM OFFLINE';$('puzzle-status').classList.remove('online');
   $('puzzle').dataset.type=def.puzzle;
-  if(def.puzzle==='match')renderMatch();else if(def.puzzle==='wiring')renderWiring();else renderCubes();
+  if(def.puzzle==='match')renderMatch();else if(def.puzzle==='wiring')mountWiringPuzzle();else renderCubes();
 }
-function closePuzzle(){puzzleOpen=false;$('puzzle').hidden=true;clearInput();updateAction();}
+function closePuzzle(){
+  const wasWiring=$('puzzle').dataset.type==='wiring';
+  puzzleOpen=false;destroyActivePuzzle();$('puzzle').hidden=true;clearInput();
+  if(wasWiring)musicCtl?.setMuted(muted);
+  updateAction();
+}
 function doAction(){
   if(state!=='playing'||progress.mode!=='floor'||puzzleOpen)return;
   const floor=progress.currentFloor,def=FLOOR_DEFS[floor],done=progress.floors[floor].complete;
