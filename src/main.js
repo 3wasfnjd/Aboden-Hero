@@ -1,15 +1,16 @@
 import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260917-muzzle-1';
 import {stepCombat} from './combat.js?v=20260919-assets-1';
-import {CHAPTER_COUNT,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260919-assets-1';
-import {createArt} from './art-bg.js?v=20260919-fullsheets-1';
+import {CHAPTER_COUNT,CHAPTER2_FLOORS,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260919-floors-1';
+import {createArt} from './art-bg.js?v=20260919-floors-1';
 import {createMusic} from './music.js?v=20260917-music-1';
+import {openPuzzle,close as closePuzzle} from './puzzle-ui.js?v=20260919-puzzles-1';
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx);
 // Portrait canvas for mobile: the original 960x540 landscape frame is preserved
 // unscaled and anchored to the bottom via GROUND_SHIFT, so world.js/combat.js
 // coordinates stay untouched; only the extra vertical space above it is new sky.
 const W=720,H=1280,STEP=1/120,GROUND_SHIFT=H-540,LOOKAHEAD=210;
 const keys=new Set(),touch=new Map(),buttons=[...document.querySelectorAll('[data-action]')];
-let level,player,state='menu',chapter=1,camera=0,time=0,elapsed=0,collected=0,kills=0,deaths=0,checkpoint=110,bullets=[],enemyShots=[],particles=[],toastTime=0,accumulator=0,last=0,muted=false,audio=null,musicCtl=null;
+let level,player,state='menu',chapter=1,floor=1,camera=0,time=0,elapsed=0,collected=0,kills=0,deaths=0,checkpoint=110,bullets=[],enemyShots=[],particles=[],toastTime=0,accumulator=0,last=0,muted=false,audio=null,musicCtl=null;
 const CHAPTER_NAMES={1:'حصار المدينة',2:'عاصفة الأسطح'};
 const BOSS_NAMES={1:'حارس البوابة',2:'قائد الحرس'};
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -18,7 +19,34 @@ const paper=document.createElement('canvas');paper.width=256;paper.height=256;
 const pc=paper.getContext('2d'),grain=pc.createImageData(256,256);let seed=127;
 for(let i=0;i<grain.data.length;i+=4){seed=(seed*1664525+1013904223)>>>0;const v=seed%2?45:255;grain.data[i]=v;grain.data[i+1]=v;grain.data[i+2]=v;grain.data[i+3]=seed%15;}
 pc.putImageData(grain,0,0);const paperPattern=ctx.createPattern(paper,'repeat');
-function reset(ch=1){chapter=ch;level=createLevel(chapter);player=createPlayer();checkpoint=110;camera=0;time=0;elapsed=0;collected=0;kills=0;deaths=0;bullets=[];enemyShots=[];particles=[];clearInput();$('chapter-label').innerHTML=`الفصل ${chapter===1?'الأول':'الثاني'} <span>✦</span> ${CHAPTER_NAMES[chapter]}`;$('boss-label').textContent=BOSS_NAMES[chapter];updateHUD();}
+function reset(ch=1,fl=1){chapter=ch;floor=fl;level=createLevel(chapter,floor);player=createPlayer();checkpoint=110;camera=0;time=0;elapsed=0;collected=0;kills=0;deaths=0;bullets=[];enemyShots=[];particles=[];clearInput();closePuzzle();$('chapter-label').innerHTML=`الفصل ${chapter===1?'الأول':'الثاني'} <span>✦</span> ${CHAPTER_NAMES[chapter]}`;$('boss-label').textContent=BOSS_NAMES[chapter];updateHUD();}
+// Ascending the rooftop elevator: the next floor is a fresh short level, but the
+// run's stats (coins, kills, deaths, hp) carry over — only position/camera reset.
+function ascend(){
+ if(chapter!==2||floor>=CHAPTER2_FLOORS)return;
+ floor++;
+ const hp=player.hp;
+ level=createLevel(chapter,floor);
+ player=createPlayer(90,390);
+ player.hp=hp;player.invulnerable=1.2;
+ checkpoint=90;camera=0;bullets=[];enemyShots=[];particles=[];
+ toast(`الطابق ${floor} — ${level.areas[0][1]}`);
+ sound(520,.28,'triangle');
+ updateHUD();updateCombatHUD();
+}
+function openTerminal(term){
+ state='puzzle';clearInput();$('controls').hidden=true;
+ openPuzzle(term.kind,floor,()=>{
+  term.solved=true;
+  const gateIdx=level.solids.findIndex(s=>s.locked);
+  if(gateIdx>=0)level.solids.splice(gateIdx,1);
+  burst(term.x+term.w/2,term.y+term.h/2,'#7ff0e0',16);
+  sound(880,.3,'triangle');
+  toast('تم فتح الباب ✦ توجّه إلى المصعد');
+ },()=>{
+  state='playing';$('controls').hidden=false;last=performance.now();accumulator=0;
+ });
+}
 function clearInput(){keys.clear();touch.clear();buttons.forEach(b=>b.classList.remove('held'));if(player){player.jumpHeld=false;player.dashHeld=false;player.buffer=0;}}
 function input(){const active=a=>[...touch.values()].includes(a);return {left:keys.has('ArrowLeft')||keys.has('KeyA')||active('left'),right:keys.has('ArrowRight')||keys.has('KeyD')||active('right'),jump:keys.has('ArrowUp')||keys.has('KeyK')||active('jump'),dash:keys.has('KeyL')||keys.has('ShiftLeft')||keys.has('ShiftRight')||active('dash'),shoot:keys.has('KeyJ')||keys.has('Space')||active('shoot')};}
 function sound(freq=440,duration=.09,type='sine',volume=.065){if(muted||!audio)return;const o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.setValueAtTime(freq,audio.currentTime);o.frequency.exponentialRampToValueAtTime(freq*.55,audio.currentTime+duration);g.gain.setValueAtTime(volume,audio.currentTime);g.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+duration);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+duration);}
@@ -62,6 +90,8 @@ function tick(dt){if(state!=='playing')return;time+=dt;elapsed+=dt;const control
  for(const heart of level.hearts)if(!heart.taken&&player.hp<5&&overlaps(player,{x:heart.x-12,y:heart.y-12,w:24,h:24})){heart.taken=true;player.hp++;sound(720,.15);burst(heart.x,heart.y,'#c77764');updateHUD();}
  for(const cp of level.checkpoints)if(!cp.active&&player.x>cp.x&&player.grounded){cp.active=true;checkpoint=cp.x+20;player.hp=5;toast('تم حفظ تقدمك واستعادة الصحة ✦');sound(920,.2);updateHUD();}
  for(const s of level.spikes)if(overlaps(player,s))hurt();
+ if(level.terminal&&!level.terminal.solved){const inside=overlaps(player,level.terminal);if(inside&&!level.terminal.inside){openTerminal(level.terminal);level.terminal.inside=inside;return;}level.terminal.inside=inside;}
+ if(level.elevator&&overlaps(player,level.elevator)){ascend();return;}
  if(level.boss.hp<=0&&overlaps(player,level.goal)){burst(player.x,player.y,'#efcf7e',25);sound(1100,.4);showOverlay(chapter<CHAPTER_COUNT?'chapterEnd':'won');}
  for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=180*dt;p.life-=dt;}particles=particles.filter(p=>p.life>0);
  camera+=(clamp(player.x-LOOKAHEAD,0,level.width-W)-camera)*(1-Math.exp(-7*dt));
@@ -72,7 +102,9 @@ function draw(){ctx.clearRect(0,0,W,H);art.background(camera,reducedMotion?0:tim
  const visible=(x,w=100)=>x+w>camera-100&&x<camera+W+100;
  for(const cp of level.checkpoints)if(visible(cp.x))art.checkpoint(cp,time);
  for(const [x,text] of level.signs)art.sign(x,text);
- for(const s of level.solids)if(visible(s.x,s.w))art.platform(s);
+ for(const s of level.solids)if(visible(s.x,s.w)){if(s.locked)art.gate(s,time);else art.platform(s);}
+ if(level.terminal&&visible(level.terminal.x,level.terminal.w))art.terminal(level.terminal,time);
+ if(level.elevator&&visible(level.elevator.x,level.elevator.w))art.elevator(level.elevator,time,!level.terminal||level.terminal.solved);
  for(const s of level.spikes)if(visible(s.x)){for(let x=s.x;x<s.x+s.w;x+=13)art.path(`M${x} 440 L${x+6} 424 L${x+13} 440Z`,'#b48568');}
  for(let x=Math.floor(camera/85)*85;x<camera+W+85;x+=85)if(level.solids.some(s=>s.ground&&x>s.x+10&&x<s.x+s.w-10))art.flower(x,443,.55+(x%3)*.12);
  for(const cp of level.coins)if(!cp.taken&&visible(cp.x))art.collectible(cp.x,cp.y,time,cp.id);
@@ -91,7 +123,7 @@ function draw(){ctx.clearRect(0,0,W,H);art.background(camera,reducedMotion?0:tim
 }
 function frame(now){if(!last)last=now;const dt=Math.min((now-last)/1000,.1);last=now;if(state==='playing'){accumulator+=dt;while(accumulator>=STEP){tick(STEP);accumulator-=STEP;}}else if(state==='menu'&&!reducedMotion)time+=dt;draw();requestAnimationFrame(frame);}
 const mapped=new Set(['ArrowLeft','ArrowRight','ArrowUp','KeyA','KeyD','KeyK','KeyJ','Space','KeyL','ShiftLeft','ShiftRight']);
-window.addEventListener('keydown',e=>{if(mapped.has(e.code)){if(e.target instanceof HTMLButtonElement&&(e.code==='Space'))return;e.preventDefault();if(state==='playing')keys.add(e.code);}if(e.code==='Escape'&&!e.repeat)pause();});
+window.addEventListener('keydown',e=>{if(mapped.has(e.code)){if(e.target instanceof HTMLButtonElement&&(e.code==='Space'))return;e.preventDefault();if(state==='playing')keys.add(e.code);}if(e.code==='Escape'&&!e.repeat){if(state==='puzzle')closePuzzle();else pause();}});
 window.addEventListener('keyup',e=>keys.delete(e.code));
 for(const button of buttons){button.addEventListener('pointerdown',e=>{e.preventDefault();if(state!=='playing')return;unlockAudio();button.setPointerCapture(e.pointerId);touch.set(e.pointerId,button.dataset.action);button.classList.add('held');});const release=e=>{touch.delete(e.pointerId);if(![...touch.values()].includes(button.dataset.action))button.classList.remove('held');};button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);button.addEventListener('lostpointercapture',release);}
 window.addEventListener('blur',()=>{clearInput();if(state==='playing')showOverlay('paused');});
@@ -101,5 +133,10 @@ $('play').addEventListener('click',()=>{play();$('play').blur();});$('pause').ad
 $('sound').addEventListener('click',()=>{muted=!muted;unlockAudio();musicCtl?.setMuted(muted);$('sound').textContent=muted?'♪':'♫';$('sound').setAttribute('aria-label',muted?'تشغيل الصوت':'كتم الصوت');$('sound').setAttribute('aria-pressed',String(!muted));if(!muted)sound(660,.15);$('sound').blur();});
 reset();updateCombatHUD();requestAnimationFrame(frame);
 // Opt-in local test harness; absent from normal game sessions.
-if(new URLSearchParams(location.search).has('test'))window.__game={get player(){return player;},get level(){return level;},get state(){return state;},get chapter(){return chapter;},get checkpoint(){return checkpoint;},get enemyShots(){return enemyShots;},get bullets(){return bullets;},get input(){return input();},get stats(){return {collected,kills,deaths,elapsed};},tick,play,pause,reset,respawn,draw};
+if(new URLSearchParams(location.search).has('test'))window.__game={get player(){return player;},get level(){return level;},get state(){return state;},get chapter(){return chapter;},get floor(){return floor;},get checkpoint(){return checkpoint;},get enemyShots(){return enemyShots;},get bullets(){return bullets;},get input(){return input();},get stats(){return {collected,kills,deaths,elapsed};},tick,play,pause,reset,respawn,draw,
+ // Test-only seam: solves the current floor's terminal without driving the
+ // real DOM puzzle overlay, so integration tests can exercise gate/elevator
+ // wiring independently of the puzzle-ui click interactions (covered separately).
+ debugSolveTerminal(){if(!level.terminal||level.terminal.solved)return;level.terminal.solved=true;const i=level.solids.findIndex(s=>s.locked);if(i>=0)level.solids.splice(i,1);closePuzzle();}
+};
 

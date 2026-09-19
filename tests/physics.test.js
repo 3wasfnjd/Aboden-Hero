@@ -10,7 +10,10 @@ test('coyote jump works shortly after walking off edge, but not later',()=>{cons
 test('jump buffer fires after landing',()=>{const p=createPlayer(100,370);p.vy=160;step(p,{...idle,jump:true},14);assert(p.vy<0);});
 test('cannot double jump during ascent',()=>{const p=settled();step(p,{...idle,jump:true},10);step(p,idle,1);const before=p.vy;step(p,{...idle,jump:true},1);assert(p.vy>before);});
 test('one-way platforms allow upward passage and catch descending player',()=>{const p=settled(),solids=[...ground,{x:50,y:365,w:200,h:20,oneWay:true}];step(p,{...idle,jump:true},140,solids);assert.equal(p.y,321);assert(p.grounded);});
-test('all mandatory gaps can be crossed at normal speed',()=>{for(const chapter of [1,2]){const level=createLevel(chapter),grounds=level.solids.filter(s=>s.ground);for(let i=0;i<grounds.length-1;i++){const edge=grounds[i].x+grounds[i].w,next=grounds[i+1].x;const p=createPlayer(edge-45,396);p.grounded=true;p.vx=TUNING.speed;step(p,{...idle,right:true,jump:true},100,level.solids,level.width);assert(p.x>next,`chapter ${chapter} gap at ${edge}`);assert(p.y<441,`chapter ${chapter} survived gap at ${edge}`);}}});
+test('all mandatory gaps can be crossed at normal speed',()=>{
+ const levels=[['chapter 1',createLevel(1)],['chapter 2 floor 1',createLevel(2,1)],['chapter 2 floor 2',createLevel(2,2)],['chapter 2 floor 3',createLevel(2,3)],['chapter 2 floor 4',createLevel(2,4)]];
+ for(const [label,level] of levels){const grounds=level.solids.filter(s=>s.ground);for(let i=0;i<grounds.length-1;i++){const edge=grounds[i].x+grounds[i].w,next=grounds[i+1].x;const p=createPlayer(edge-45,396);p.grounded=true;p.vx=TUNING.speed;step(p,{...idle,right:true,jump:true},100,level.solids,level.width);assert(p.x>next,`${label} gap at ${edge}`);assert(p.y<441,`${label} survived gap at ${edge}`);}}
+});
 test('horizontal travel independent of render frame grouping',()=>{const a=settled(),b=settled();step(a,{...idle,right:true},240);for(let i=0;i<60;i++)step(b,{...idle,right:true},4);assert.equal(a.x,b.x);});
 
 test('dash is short, fast and cannot repeat until cooldown expires',()=>{const p=settled();const x=p.x;step(p,{...idle,dash:true},22);assert(p.x-x>100);assert.equal(p.dashTime,0);step(p,{...idle,dash:false});step(p,{...idle,dash:true});assert.equal(p.dashTime,0);step(p,idle,170);step(p,{...idle,dash:true});assert(p.dashTime>0);});

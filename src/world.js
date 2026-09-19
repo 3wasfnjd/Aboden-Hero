@@ -17,35 +17,80 @@ function chapter1(){
  spikes:[{x:2070,y:424,w:50,h:16},{x:3780,y:424,w:55,h:16},{x:5360,y:424,w:55,h:16}],
  checkpoints:[{x:1630,active:false},{x:3060,active:false},{x:4580,active:false},{x:5700,active:false}],hearts:[{x:2350,y:333,taken:false},{x:4220,y:333,taken:false},{x:5750,y:336,taken:false}],boss:{x:6130,y:360,w:72,h:80,hp:24,maxHP:24,active:false,fire:1.4,windup:0,aimX:0,aimY:0,hit:0,triggerX:5630},goal:{x:6410,y:315,w:90,h:125}};
 }
-// Rooftop finale: shorter, gappier and vertical, with shield-carrying guards
-// and a hovering gunner mini-boss above the midpoint before the captain's stand.
-function chapter2(){
- const WIDTH=5300;
- const ground=[[0,950],[1080,900],[2120,950],[3200,2100]].map(([x,w])=>({x,y:440,w,h:130,ground:true}));
- const ledges=[[550,365,150],[1300,300,160],[1650,360,150],[2400,300,170],[2700,360,160],[3500,300,180],[3850,360,170],[4200,300,190]];
- const mkEnemy=(x,min,max,kind,extra={})=>({x,y:408,w:34,h:32,min,max,vx:x%2?48:-48,hp:3,hit:0,fire:1.3,windup:0,aimX:0,aimY:0,kind,...extra});
- return {chapter:2,width:WIDTH,
- signs:[[200,'احذر: تحتاج دقة بالقفز فوق الأسطح'],[1200,'دروع تحمي بعض الحراس — التف خلفهم'],[2300,'طائرة مراقبة — لا تقف تحتها طويلًا'],[3900,'قائد الحرس أمامك']],
- areas:[[1080,'مدخل الأسطح'],[2120,'ممرات الصيانة'],[3200,'برج المراقبة'],[4450,'الملجأ الأخير'],[Infinity,'قمة الحصار']],
- solids:[...ground,...ledges.map(([x,y,w])=>({x,y,w,h:20,oneWay:true,chapter:2}))],
- coins:[...Array.from({length:22},(_,i)=>({x:220+i*198,y:407})),...ledges.flatMap(([x,y,w])=>[.25,.5,.75].map(f=>({x:x+w*f,y:y-25})))].filter(c=>![[950,1080],[1980,2120],[3070,3200]].some(([a,b])=>c.x>a&&c.x<b&&c.y>400)).map((c,id)=>({...c,id,taken:false})),
- enemies:[
-  mkEnemy(300,150,550,'heavy',{shield:true}),
-  mkEnemy(750,600,900,'sniper'),
-  mkEnemy(1300,1150,1550,'heavy',{shield:true}),
-  mkEnemy(2500,2200,2900,'heavy',{flying:true,y:280,w:40,h:28,hp:6,fire:1.5}),
-  mkEnemy(3400,3250,3650,'heavy',{shield:true}),
-  mkEnemy(4000,3850,4200,'city'),
-  mkEnemy(4650,4500,4800,'sniper'),
- ],
- spikes:[{x:1400,y:424,w:50,h:16},{x:4500,y:424,w:55,h:16}],
- checkpoints:[{x:1900,active:false},{x:3900,active:false}],
- hearts:[{x:1500,y:333,taken:false},{x:3800,y:333,taken:false}],
- boss:{x:4950,y:360,w:72,h:80,hp:30,maxHP:30,active:false,fire:1.3,windup:0,aimX:0,aimY:0,hit:0,triggerX:4450,kind:'captain'},
- goal:{x:5150,y:315,w:90,h:125,chapter:2}};
+// Rooftop finale: a vertical climb told as a sequence of short rooftop floors
+// linked by a service elevator. Each of the first three floors locks its exit
+// behind a puzzle terminal — the terminal's solved flag removes a `locked`
+// solid, physically opening the path to that floor's elevator trigger — so
+// the existing horizontal physics/camera pipeline needs no changes at all;
+// only main.js's floor-transition logic treats these as a vertical sequence.
+export const CHAPTER2_FLOORS=4;
+const mkEnemy=(x,min,max,kind,extra={})=>({x,y:408,w:34,h:32,min,max,vx:x%2?48:-48,hp:3,hit:0,fire:1.3,windup:0,aimX:0,aimY:0,kind,...extra});
+const dummyBoss=()=>({x:-1000,y:-1000,w:1,h:1,hp:0,maxHP:1,active:false,fire:99,windup:0,aimX:0,aimY:0,hit:0,triggerX:-1,kind:'captain'});
+const offGoal=()=>({x:-1000,y:-1000,w:1,h:1,chapter:2});
+function floorCoins(width,ledges,gapRanges){
+ return [...Array.from({length:Math.round(width/198)},(_,i)=>({x:220+i*198,y:407})),...ledges.flatMap(([x,y,w])=>[.25,.5,.75].map(f=>({x:x+w*f,y:y-25})))]
+  .filter(c=>c.x<width-120&&!gapRanges.some(([a,b])=>c.x>a&&c.x<b&&c.y>400))
+  .map((c,id)=>({...c,id,taken:false}));
 }
+// A puzzle-gated floor: enemies before a terminal, a locked wall the terminal's
+// solve unlocks, then an elevator trigger just beyond it.
+function puzzleFloor(floor,puzzle,label,sign,enemies,extraHeart){
+ const WIDTH=2050;
+ const ground=[[0,850],[1000,1050]].map(([x,w])=>({x,y:440,w,h:130,ground:true}));
+ const ledges=[[1300,300,180],[550,365,150]];
+ return {chapter:2,floor,totalFloors:CHAPTER2_FLOORS,width:WIDTH,
+ signs:[[200,'احذر: تحتاج دقة بالقفز فوق الأسطح'],[1500,sign]],
+ areas:[[Infinity,label]],
+ solids:[...ground,...ledges.map(([x,y,w])=>({x,y,w,h:20,oneWay:true,chapter:2})),{x:1960,y:200,w:24,h:260,locked:true,chapter:2}],
+ coins:floorCoins(WIDTH,ledges,[[850,1000]]),
+ enemies,
+ spikes:[{x:700,y:424,w:50,h:16}],
+ checkpoints:[{x:1100,active:false}],
+ hearts:extraHeart?[{x:extraHeart,y:333,taken:false}]:[],
+ terminal:{x:1900,y:390,w:40,h:50,kind:puzzle,solved:false},
+ elevator:{x:1990,y:300,w:50,h:140},
+ boss:dummyBoss(),goal:offGoal()};
+}
+function chapter2Floor1(){
+ return puzzleFloor(1,'pipes','الطابق الأول ✦ لوحة التوصيل','لوح كهربائي يغلق الباب — رتّب الأنابيب لفتحه',[
+  mkEnemy(300,150,550,'heavy',{shield:true}),
+  mkEnemy(1150,1000,1300,'sniper'),
+ ],1200);
+}
+function chapter2Floor2(){
+ return puzzleFloor(2,'cubes','الطابق الثاني ✦ غرفة المكعبات','رتّب المكعبات لتوصيل الطاقة من البداية للهدف',[
+  mkEnemy(300,150,600,'heavy',{shield:true}),
+  mkEnemy(1500,1200,1850,'heavy',{flying:true,y:280,w:40,h:28,hp:6,fire:1.5}),
+ ],1400);
+}
+function chapter2Floor3(){
+ return puzzleFloor(3,'match','الطابق الثالث ✦ لوحة المطابقة','طابِق كل رمز مع لونه لفتح الباب الأخير',[
+  mkEnemy(300,150,600,'heavy',{shield:true}),
+  mkEnemy(1150,1050,1350,'city'),
+  mkEnemy(1650,1500,1850,'sniper'),
+ ],1750);
+}
+function chapter2Floor4(){
+ const WIDTH=1900;
+ const ground=[[0,900],[1000,900]].map(([x,w])=>({x,y:440,w,h:130,ground:true}));
+ const ledges=[[1300,300,180]];
+ return {chapter:2,floor:4,totalFloors:CHAPTER2_FLOORS,width:WIDTH,
+ signs:[[200,'قمة الحصار — قائد الحرس أمامك']],
+ areas:[[Infinity,'قمة الحصار']],
+ solids:[...ground,...ledges.map(([x,y,w])=>({x,y,w,h:20,oneWay:true,chapter:2}))],
+ coins:floorCoins(WIDTH,ledges,[[900,1000]]),
+ enemies:[mkEnemy(1200,1050,1350,'sniper')],
+ spikes:[],
+ checkpoints:[{x:1000,active:false}],
+ hearts:[{x:1500,y:333,taken:false}],
+ terminal:null,elevator:null,
+ boss:{x:1700,y:360,w:72,h:80,hp:30,maxHP:30,active:false,fire:1.3,windup:0,aimX:0,aimY:0,hit:0,triggerX:1450,kind:'captain'},
+ goal:{x:1820,y:315,w:90,h:125,chapter:2}};
+}
+const CHAPTER2_BUILDERS=[chapter2Floor1,chapter2Floor2,chapter2Floor3,chapter2Floor4];
+function chapter2(floor=1){return CHAPTER2_BUILDERS[clamp(floor,1,CHAPTER2_FLOORS)-1]();}
 export const CHAPTER_COUNT=2;
-export function createLevel(chapter=1){return chapter===2?chapter2():chapter1();}
+export function createLevel(chapter=1,floor=1){return chapter===2?chapter2(floor):chapter1();}
 export function createPlayer(x=110,y=390){return {dashTime:0,dashCooldown:0,dashHeld:false,x,y,w:30,h:44,vx:0,vy:0,facing:1,grounded:false,coyote:0,buffer:0,jumpHeld:false,invulnerable:0,hp:5,shot:0};}
 export function stepPlayer(p,input,solids,dt,width=WORLD_WIDTH){
  p.dashCooldown=Math.max(0,p.dashCooldown-dt);

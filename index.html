@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111a29">
 <meta name="description" content="عبودين هيرو — لعبة أكشن ومنصات في مدينة ليلية. العب باللمس أو لوحة المفاتيح.">
-<title>Aboden Hero • حصار المدينة</title><link rel="stylesheet" href="./src/style.css?v=20260917-start-btn-1"><link rel="stylesheet" href="./src/controls.css?v=20260917-ui-4">
+<title>Aboden Hero • حصار المدينة</title><link rel="stylesheet" href="./src/style.css?v=20260917-start-btn-1"><link rel="stylesheet" href="./src/controls.css?v=20260917-ui-4"><link rel="stylesheet" href="./src/puzzle.css?v=20260919-puzzles-1">
 <style id="mobile-bottom-layout">
 /* Portrait is the intended mobile presentation; landscape shows a rotate prompt. */
 @media(max-width:1024px){
@@ -42,8 +42,10 @@
 <div id="hud" hidden><div class="health" id="health-panel"><span id="health"></span><i class="heart-mask"></i><i class="heart-mask"></i><i class="heart-mask"></i><i class="heart-mask"></i><i class="heart-mask"></i><span id="coins">0</span></div><div class="progress" id="area-panel"><span id="area">أطراف المدينة</span><div><i id="progress"></i></div></div></div>
 <div id="boss-hud" hidden><span id="boss-label">حارس البوابة</span><div class="track"><i id="boss-health"></i></div></div><div id="combat-hud" hidden><span id="kill-count">0 إسقاط</span><span id="dash-status">الاندفاع جاهز</span></div><div id="toast" role="status"></div>
 <div id="overlay"><img id="poster" class="poster" src="./assets/aboden-poster.jpeg" alt="بوستر Aboden Hero: البطل بالجاكيت الأحمر" width="1122" height="1402"><div class="panel"><div class="eyebrow" id="eyebrow">ABODEN GAMES / MISSION 01</div><h1 id="title">المدينة<br><em>تحت الحصار.</em></h1><p id="description">واجه الحراس، تفادَ النيران، ودمّر حارس البوابة. الليلة… أنت البطل.</p><div class="pills" id="pills"><span>قفز وإطلاق</span><span>نقاط حفظ</span><span>مواجهة أخيرة</span></div><button id="play" class="primary">ابدأ المهمة <span>◀</span></button><p class="instructions">A / D أو الأسهم للحركة · K أو ↑ للقفز<br>J أو Space للإطلاق · L أو Shift للاندفاع</p></div></div>
-<div class="rotate-note">أدر الجوال إلى الوضع الطولي للعب ↻</div></section>
+<div class="rotate-note">أدر الجوال إلى الوضع الطولي للعب ↻</div>
+<div id="puzzle-overlay" hidden><div class="puzzle-panel"><div class="puzzle-panel-head"><span id="puzzle-title"></span><button id="puzzle-close" aria-label="إغلاق اللوحة">✕</button></div><span id="puzzle-hint"></span><div id="puzzle-board" class="puzzle-board"></div><span id="puzzle-status"></span></div></div>
+</section>
 <nav id="controls" aria-label="أزرار اللعب باللمس" hidden><div><button data-action="left" aria-label="تحرك يسارًا"></button><button data-action="right" aria-label="تحرك يمينًا"></button></div><span class="control-hint" aria-hidden="true"></span><div><button data-action="dash" class="dash" aria-label="اندفاع"></button><button data-action="shoot" class="shoot" aria-label="إطلاق"></button><button data-action="jump" class="jump" aria-label="قفز"></button></div></nav>
 <footer><span>ABODEN GAMES</span><span>ABODEN HERO / ACTION PLATFORMER</span><span>CHAPTER 01</span></footer>
-</main><noscript>فعّل JavaScript لتشغيل اللعبة.</noscript><script type="module" src="./src/main.js?v=20260919-fullsheets-1"></script>
+</main><noscript>فعّل JavaScript لتشغيل اللعبة.</noscript><script type="module" src="./src/main.js?v=20260919-floors-1"></script>
 </body></html>

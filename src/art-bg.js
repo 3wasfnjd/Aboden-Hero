@@ -133,6 +133,44 @@ function drawCheckpoint(ctx,cp,time){
  return true;
 }
 
+function drawGate(ctx,s,time){
+ ctx.save();
+ const stripe=14,pulse=.85+Math.sin(time*3)*.15;
+ ctx.beginPath();ctx.rect(s.x,s.y,s.w,s.h);ctx.clip();
+ ctx.fillStyle='#241012';ctx.fillRect(s.x,s.y,s.w,s.h);
+ ctx.fillStyle='#c0242c';
+ for(let x=-s.h;x<s.w+s.h;x+=stripe*2)ctx.fillRect(s.x+x,s.y,stripe,s.h);
+ ctx.restore();
+ ctx.save();ctx.strokeStyle='#5c1418';ctx.lineWidth=3;ctx.strokeRect(s.x+1.5,s.y+1.5,s.w-3,s.h-3);
+ ctx.globalAlpha=pulse;ctx.fillStyle='#ff5b5b';ctx.beginPath();ctx.arc(s.x+s.w/2,s.y+22,5,0,Math.PI*2);ctx.fill();
+ ctx.restore();
+}
+function drawTerminal(ctx,term,time){
+ const solved=term.solved,ink=solved?'#0ecbfd':'#ff4b51',glow=solved?'#7ff0e0':'#ff8c85';
+ const cx=term.x+term.w/2,top=term.y;
+ ctx.save();
+ ctx.fillStyle='#182430';ctx.fillRect(term.x-4,top-6,term.w+8,term.h+6);
+ ctx.strokeStyle='#4a6a86';ctx.lineWidth=2;ctx.strokeRect(term.x-4,top-6,term.w+8,term.h+6);
+ const flicker=solved?1:.65+Math.sin(time*9)*.25;
+ ctx.globalAlpha=flicker;ctx.fillStyle=ink;ctx.fillRect(term.x+3,top,term.w-6,14);
+ ctx.globalAlpha=1;
+ ctx.shadowColor=glow;ctx.shadowBlur=solved?10:5;
+ ctx.fillStyle=ink;
+ ctx.beginPath();ctx.arc(cx,top+26,4,0,Math.PI*2);ctx.fill();
+ ctx.font='bold 9px Tahoma';ctx.textAlign='center';ctx.fillText(solved?'ON':'OFF',cx,top+42);
+ ctx.restore();
+}
+function drawElevator(ctx,el,time,ready){
+ const cx=el.x+el.w/2,ink=ready?'#0ecbfd':'#93a8bb';
+ ctx.save();
+ ctx.fillStyle='#0d1620';ctx.fillRect(el.x,el.y,el.w,el.h);
+ ctx.strokeStyle='#4a6a86';ctx.lineWidth=3;ctx.strokeRect(el.x+2,el.y+2,el.w-4,el.h-4);
+ ctx.strokeStyle='#26364a';ctx.lineWidth=1;
+ ctx.beginPath();ctx.moveTo(cx,el.y+4);ctx.lineTo(cx,el.y+el.h-4);ctx.stroke();
+ const glow=ready?.7+Math.sin(time*4)*.3:.4;
+ ctx.globalAlpha=glow;ctx.fillStyle=ink;ctx.beginPath();ctx.arc(el.x+el.w/2,el.y+14,4,0,Math.PI*2);ctx.fill();
+ ctx.restore();
+}
 function drawGoal(ctx,g,time,locked){
  const asset=g.chapter===2?goal2Asset:goalAsset;
  if(!asset.ready)return false;
@@ -174,7 +212,10 @@ export function createArt(ctx){
 
  function checkpoint(cp,time){drawCheckpoint(ctx,cp,time);}
  function goal(g,time,locked=false){drawGoal(ctx,g,time,locked);}
+ function gate(s,time){drawGate(ctx,s,time);}
+ function terminal(term,time){drawTerminal(ctx,term,time);}
+ function elevator(el,time,ready){drawElevator(ctx,el,time,ready);}
 
- return {...base,background,scenery,platform,checkpoint,goal};
+ return {...base,background,scenery,platform,checkpoint,goal,gate,terminal,elevator};
 }
 
