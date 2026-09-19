@@ -131,3 +131,8 @@
       0 0 46px 14px rgba(0,255,90,.7);
   }
 }
+
+.wiring-piece[data-type="straight"] img{
+  width:66%;
+  height:66%;
+}
