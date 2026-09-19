@@ -1,0 +1,17 @@
+:root{color-scheme:dark;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05080d;color:#eef4f8}
+body{touch-action:manipulation}
+.puzzle-demo{position:fixed;inset:0;display:grid;grid-template-rows:auto minmax(0,1fr);background:#05080d}
+.puzzle-demo-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border-bottom:1px solid #24313f;background:#09111b}
+.puzzle-demo-header h1{font-size:15px;margin:0}
+.puzzle-demo-header small{color:#9db0c2}
+.puzzle-root{position:relative;min-width:0;min-height:0;display:grid;place-items:center;overflow:hidden;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+.puzzle-empty{max-width:520px;text-align:center;color:#aebccc;line-height:1.7;padding:24px}
+.puzzle-asset-viewport{position:relative;overflow:visible;flex:none}
+.puzzle-asset-scene{position:absolute;left:0;top:0;transform-origin:top left;overflow:hidden}
+.puzzle-asset-image{position:absolute;inset:0;display:block;max-width:none!important;max-height:none!important;object-fit:none!important;image-rendering:auto;user-select:none;-webkit-user-drag:none}
+.puzzle-hit-layer{position:absolute;inset:0;pointer-events:none}
+.puzzle-hit-area{position:absolute;padding:0;margin:0;border:0;background:transparent;appearance:none;-webkit-appearance:none;pointer-events:auto;touch-action:manipulation}
+.puzzle-hit-area.debug{outline:2px dashed #56e2ff;background:#38bde622}
+.puzzle-hit-area:focus-visible{outline:3px solid #fff}
