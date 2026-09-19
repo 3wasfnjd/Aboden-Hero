@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  WIRING_LAYOUT,INITIAL_ROTATIONS,portsFor,isWiringSolved,connectedFromStart
+  WIRING_LAYOUT,INITIAL_ROTATIONS,SOLUTION_PATH,portsFor,isWiringSolved,
+  connectedFromStart,matchesDefinedPath
 } from '../puzzle-kit/wiring/wiring-logic.js';
 
 test('pipe rotations map to expected ports',()=>{
@@ -11,14 +12,37 @@ test('pipe rotations map to expected ports',()=>{
   assert.deepEqual(portsFor('tee',0),['N','E','W']);
 });
 
+test('user solution path uses the requested six pieces',()=>{
+  assert.deepEqual(SOLUTION_PATH,[0,4,5,6,7,11]);
+  assert.deepEqual(
+    SOLUTION_PATH.map(index=>WIRING_LAYOUT[index].type),
+    ['elbow','elbow','straight','straight','elbow','elbow']
+  );
+});
+
 test('initial wiring layout is not solved',()=>{
   assert.equal(isWiringSolved(WIRING_LAYOUT,[...INITIAL_ROTATIONS]),false);
 });
 
-test('documented solution connects START to END',()=>{
-  const rotations=WIRING_LAYOUT.map(tile=>tile.solution);
+test('drawn START-to-END route solves exactly as specified',()=>{
+  const rotations=[...INITIAL_ROTATIONS];
+  for(const index of SOLUTION_PATH){
+    rotations[index]=WIRING_LAYOUT[index].solution;
+  }
+
+  assert.equal(matchesDefinedPath(WIRING_LAYOUT,rotations),true);
   assert.equal(isWiringSolved(WIRING_LAYOUT,rotations),true);
+
   const connected=connectedFromStart(WIRING_LAYOUT,rotations);
-  assert.equal(connected.has(0),true);
-  assert.equal(connected.has(11),true);
+  for(const index of SOLUTION_PATH)assert.equal(connected.has(index),true);
+});
+
+test('alternative route does not count unless the six path cells match',()=>{
+  const rotations=[...INITIAL_ROTATIONS];
+  for(const index of SOLUTION_PATH){
+    rotations[index]=WIRING_LAYOUT[index].solution;
+  }
+  rotations[5]=0;
+  assert.equal(matchesDefinedPath(WIRING_LAYOUT,rotations),false);
+  assert.equal(isWiringSolved(WIRING_LAYOUT,rotations),false);
 });
