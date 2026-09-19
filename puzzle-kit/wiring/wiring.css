@@ -136,3 +136,26 @@
   width:66%;
   height:66%;
 }
+
+.wiring-audio-toggle{
+  position:absolute;
+  left:7.5%;
+  bottom:4.5%;
+  z-index:5;
+  display:grid;
+  place-items:center;
+  width:4.8%;
+  aspect-ratio:1;
+  min-width:32px;
+  padding:0;
+  border:1px solid rgba(171,205,230,.45);
+  border-radius:50%;
+  background:rgba(8,17,27,.82);
+  color:#dcebf5;
+  font:700 1.15em/1 system-ui,sans-serif;
+  pointer-events:auto;
+  cursor:pointer;
+  box-shadow:0 0 12px rgba(70,153,205,.12);
+}
+.wiring-audio-toggle:active{transform:translateY(1px) scale(.97)}
+.wiring-audio-toggle.muted{opacity:.7}
