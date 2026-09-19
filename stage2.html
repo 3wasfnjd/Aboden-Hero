@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07111f">
+<meta name="description" content="Aboden Hero — الفصل الثاني: المصعد الرأسي، قتال وألغاز عبر ستة طوابق.">
+<title>Aboden Hero • الفصل الثاني</title>
+<link rel="stylesheet" href="./src/controls.css?v=20260919-stage2-1">
+<link rel="stylesheet" href="./src/stage2.css?v=20260919-stage2-1">
+</head>
+<body>
+<main id="app">
+  <section id="stage" aria-label="الفصل الثاني — المصعد الرأسي">
+    <canvas id="game" width="720" height="1280" aria-label="لعبة أكشن وألغاز. تحرك واقترب من لوحة اللغز أو المصعد للتفاعل."></canvas>
+    <div id="hud" hidden>
+      <div class="hud-card"><b id="floor-label">الطابق 1 / 6</b><span id="floor-title">الاستقبال الأمني</span></div>
+      <div class="hud-card compact"><span id="health">♥♥♥♥♥</span><span id="challenge">اقضِ على الحراس</span></div>
+    </div>
+    <div id="tools"><button id="sound" aria-label="كتم الصوت" aria-pressed="true">♫</button><button id="pause" aria-label="إيقاف مؤقت">Ⅱ</button></div>
+    <button id="action" hidden>تفاعل</button><div id="toast" role="status"></div>
+    <div id="overlay">
+      <div class="chapter-tag">ABODEN HERO / CHAPTER 02</div>
+      <div class="overlay-panel">
+        <p class="eyebrow">ROOFTOP ELEVATOR</p>
+        <h1>ستة طوابق.<br><em>طريق واحد للأعلى.</em></h1>
+        <p id="overlay-description">قاتل في طابق، حل لغزًا في التالي، وشغّل المصعد للوصول إلى غرفة التحكم.</p>
+        <div class="mission-grid"><span>3 مواجهات</span><span>3 ألغاز</span><span>مصعد رأسي</span></div>
+        <button id="play" class="primary">ابدأ الفصل الثاني ◀</button>
+      </div>
+    </div>
+    <div id="puzzle" hidden>
+      <div class="puzzle-shell">
+        <div class="puzzle-head"><div><small>ABODEN HERO / SYSTEM PANEL</small><h2 id="puzzle-title">اللغز</h2></div><button id="puzzle-close" aria-label="إغلاق اللغز">×</button></div>
+        <p id="puzzle-help"></p><div id="puzzle-body"></div><div class="puzzle-status" id="puzzle-status">SYSTEM OFFLINE</div>
+      </div>
+    </div>
+    <div class="rotate-note">أدر الجوال إلى الوضع الطولي للعب ↻</div>
+  </section>
+  <nav id="controls" aria-label="أزرار اللعب باللمس" hidden>
+    <div><button data-action="left" aria-label="تحرك يسارًا"></button><button data-action="right" aria-label="تحرك يمينًا"></button></div>
+    <span class="control-hint" aria-hidden="true"></span>
+    <div><button data-action="dash" class="dash" aria-label="اندفاع"></button><button data-action="shoot" class="shoot" aria-label="إطلاق"></button><button data-action="jump" class="jump" aria-label="قفز"></button></div>
+  </nav>
+</main>
+<noscript>فعّل JavaScript لتشغيل اللعبة.</noscript>
+<script type="module" src="./src/stage2.js?v=20260919-stage2-1"></script>
+</body>
+</html>
