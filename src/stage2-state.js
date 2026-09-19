@@ -2,8 +2,8 @@ export const FLOOR_COUNT=6;
 
 export const FLOOR_DEFS=Object.freeze([
   null,
-  {id:1,type:'combat',title:'الاستقبال الأمني',enemies:['city','city']},
-  {id:2,type:'puzzle',puzzle:'match',title:'شبكة المطابقة'},
+  {id:1,type:'combat',title:'قطاع المعالجة',enemies:['city','city']},
+  {id:2,type:'puzzle',puzzle:'match',title:'قطاع الانضباط'},
   {id:3,type:'combat',title:'منطقة الآلات',enemies:['city','sniper']},
   {id:4,type:'puzzle',puzzle:'wiring',title:'غرفة الطاقة'},
   {id:5,type:'combat',title:'مختبر الأبحاث',enemies:['heavy','city','sniper']},
