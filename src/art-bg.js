@@ -1,10 +1,13 @@
 import {createArt as createCharacterArt} from './art.js?v=20260919-chapter2-2';
 
 const CITY_URL='./assets/backgrounds/stage1-portrait.png';
+const CITY2_URL='./assets/backgrounds/stage2-rooftop.jpeg';
 const WALKWAY_URL='./assets/backgrounds/stage1-walkway.png';
 const FLOATING_PLATFORM_URL='./assets/ui/level/platform.png';
+const FLOATING_PLATFORM2_URL='./assets/ui/level/platform2.png';
 const CHECKPOINT_URL='./assets/ui/level/checkpoint.png';
 const GOAL_URL='./assets/ui/level/goal.png';
+const GOAL2_URL='./assets/ui/level/goal2.png';
 
 function loadImage(url){
  const img=new Image();
@@ -17,10 +20,13 @@ function loadImage(url){
 }
 
 const cityAsset=loadImage(CITY_URL);
+const city2Asset=loadImage(CITY2_URL);
 const walkwayAsset=loadImage(WALKWAY_URL);
 const floatingPlatformAsset=loadImage(FLOATING_PLATFORM_URL);
+const floatingPlatform2Asset=loadImage(FLOATING_PLATFORM2_URL);
 const checkpointAsset=loadImage(CHECKPOINT_URL);
 const goalAsset=loadImage(GOAL_URL);
+const goal2Asset=loadImage(GOAL2_URL);
 const CHECKPOINT_DISPLAY_H=100;
 const GOAL_DISPLAY_H=175;
 
@@ -52,6 +58,24 @@ function drawCity(ctx){
   }
  }
  ctx.drawImage(img,0,0,img.naturalWidth,cropH,0,dy,W,dh);
+ ctx.restore();
+ return true;
+}
+
+// Chapter 2's source art is a wide landscape rooftop shot, the opposite shape
+// of chapter 1's tall portrait skyline. Cover-fit on height and center-crop
+// the width instead, so the storm and skyline fill the tall phone canvas
+// rather than shrinking to a thin strip anchored at the bottom.
+function drawCity2(ctx){
+ if(!city2Asset.ready)return false;
+ const img=city2Asset.img,W=ctx.canvas.width||960,H=ctx.canvas.height||540;
+ ctx.save();
+ ctx.imageSmoothingEnabled=true;
+ ctx.imageSmoothingQuality='high';
+ const scale=H/img.naturalHeight;
+ const srcW=Math.min(img.naturalWidth,W/scale);
+ const sx=(img.naturalWidth-srcW)/2;
+ ctx.drawImage(img,sx,0,srcW,img.naturalHeight,0,0,W,H);
  ctx.restore();
  return true;
 }
@@ -90,8 +114,9 @@ function drawGroundWalkway(ctx,s){
 }
 
 function drawFloatingPlatform(ctx,s){
- if(!floatingPlatformAsset.ready)return false;
- const img=floatingPlatformAsset.img;
+ const asset=s.chapter===2?floatingPlatform2Asset:floatingPlatformAsset;
+ if(!asset.ready)return false;
+ const img=asset.img;
  const dw=s.w,dh=img.naturalHeight*(dw/img.naturalWidth);
  ctx.drawImage(img,s.x,s.y-14,dw,dh);
  return true;
@@ -109,8 +134,9 @@ function drawCheckpoint(ctx,cp,time){
 }
 
 function drawGoal(ctx,g,time,locked){
- if(!goalAsset.ready)return false;
- const img=goalAsset.img,dh=GOAL_DISPLAY_H,dw=dh*(img.naturalWidth/img.naturalHeight);
+ const asset=g.chapter===2?goal2Asset:goalAsset;
+ if(!asset.ready)return false;
+ const img=asset.img,dh=GOAL_DISPLAY_H,dw=dh*(img.naturalWidth/img.naturalHeight);
  const cx=g.x+g.w/2,bottom=g.y+g.h;
  ctx.save();
  if(locked){ctx.filter='grayscale(.8) brightness(.55)';}
@@ -123,8 +149,9 @@ function drawGoal(ctx,g,time,locked){
 export function createArt(ctx){
  const base=createCharacterArt(ctx);
 
- function background(camera,time){
-  drawCity(ctx);
+ function background(camera,time,chapter=1){
+  if(chapter===2)drawCity2(ctx);
+  else drawCity(ctx);
 
   // Light separation only around the gameplay plane. The city remains crisp,
   // but the red/black sprites keep readable silhouettes.

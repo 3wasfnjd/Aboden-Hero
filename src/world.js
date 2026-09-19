@@ -27,7 +27,7 @@ function chapter2(){
  return {chapter:2,width:WIDTH,
  signs:[[200,'احذر: تحتاج دقة بالقفز فوق الأسطح'],[1200,'دروع تحمي بعض الحراس — التف خلفهم'],[2300,'طائرة مراقبة — لا تقف تحتها طويلًا'],[3900,'قائد الحرس أمامك']],
  areas:[[1080,'مدخل الأسطح'],[2120,'ممرات الصيانة'],[3200,'برج المراقبة'],[4450,'الملجأ الأخير'],[Infinity,'قمة الحصار']],
- solids:[...ground,...ledges.map(([x,y,w])=>({x,y,w,h:20,oneWay:true}))],
+ solids:[...ground,...ledges.map(([x,y,w])=>({x,y,w,h:20,oneWay:true,chapter:2}))],
  coins:[...Array.from({length:22},(_,i)=>({x:220+i*198,y:407})),...ledges.flatMap(([x,y,w])=>[.25,.5,.75].map(f=>({x:x+w*f,y:y-25})))].filter(c=>![[950,1080],[1980,2120],[3070,3200]].some(([a,b])=>c.x>a&&c.x<b&&c.y>400)).map((c,id)=>({...c,id,taken:false})),
  enemies:[
   mkEnemy(300,150,550,'heavy',{shield:true}),
@@ -42,7 +42,7 @@ function chapter2(){
  checkpoints:[{x:1900,active:false},{x:3900,active:false}],
  hearts:[{x:1500,y:333,taken:false},{x:3800,y:333,taken:false}],
  boss:{x:4950,y:360,w:72,h:80,hp:30,maxHP:30,active:false,fire:1.3,windup:0,aimX:0,aimY:0,hit:0,triggerX:4450,kind:'captain'},
- goal:{x:5150,y:315,w:90,h:125}};
+ goal:{x:5150,y:315,w:90,h:125,chapter:2}};
 }
 export const CHAPTER_COUNT=2;
 export function createLevel(chapter=1){return chapter===2?chapter2():chapter1();}

@@ -1,5 +1,5 @@
 import {enemyWeaponMuzzle,ENEMY_FLASH_TIME,enemyKind} from './enemy-weapon.js?v=20260917-guards-1';
-import {overlaps} from './world.js?v=20260919-chapter2-2';
+import {overlaps} from './world.js?v=20260919-assets-1';
 
 export const getShotOrigin=enemyWeaponMuzzle;
 

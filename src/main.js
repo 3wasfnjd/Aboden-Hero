@@ -1,7 +1,7 @@
 import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260917-muzzle-1';
-import {stepCombat} from './combat.js?v=20260919-chapter2-2';
-import {CHAPTER_COUNT,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260919-chapter2-2';
-import {createArt} from './art-bg.js?v=20260919-chapter2-2';
+import {stepCombat} from './combat.js?v=20260919-assets-1';
+import {CHAPTER_COUNT,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260919-assets-1';
+import {createArt} from './art-bg.js?v=20260919-assets-1';
 import {createMusic} from './music.js?v=20260917-music-1';
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx);
 // Portrait canvas for mobile: the original 960x540 landscape frame is preserved
@@ -68,7 +68,7 @@ function tick(dt){if(state!=='playing')return;time+=dt;elapsed+=dt;const control
  if(toastTime>0){toastTime-=dt;if(toastTime<=0)$('toast').classList.remove('show');}
  updateHUD();updateCombatHUD();
 }
-function draw(){ctx.clearRect(0,0,W,H);art.background(camera,reducedMotion?0:time);art.scenery(camera);ctx.save();ctx.translate(-camera,GROUND_SHIFT);
+function draw(){ctx.clearRect(0,0,W,H);art.background(camera,reducedMotion?0:time,level.chapter);art.scenery(camera);ctx.save();ctx.translate(-camera,GROUND_SHIFT);
  const visible=(x,w=100)=>x+w>camera-100&&x<camera+W+100;
  for(const cp of level.checkpoints)if(visible(cp.x))art.checkpoint(cp,time);
  for(const [x,text] of level.signs)art.sign(x,text);
