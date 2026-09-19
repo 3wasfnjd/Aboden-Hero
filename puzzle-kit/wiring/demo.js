@@ -1,4 +1,4 @@
-import {createWiringPuzzle} from './wiring.js?v=6';
+import {createWiringPuzzle} from './wiring.js?v=7';
 
 const root=document.getElementById('puzzle-root');
 
