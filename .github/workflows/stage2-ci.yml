@@ -24,6 +24,7 @@ jobs:
           node --check puzzle-kit/wiring/wiring.js
           node --check puzzle-kit/wiring/wiring-logic.js
           node --check puzzle-kit/wiring/assets.js
+          node --check puzzle-kit/core/puzzle-audio.js
       - name: Verify game assets
         run: |
           test -s assets/stage2/floors-atlas.webp

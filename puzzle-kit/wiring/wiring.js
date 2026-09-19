@@ -1,6 +1,7 @@
 import {PuzzleCore} from '../core/puzzle-core.js';
 import {createAssetBackedPuzzle} from '../shared/create-puzzle.js';
 import {wiringAssets} from './assets.js';
+import {createPuzzleAudio} from '../core/puzzle-audio.js';
 import {
   WIRING_LAYOUT,INITIAL_ROTATIONS,connectedFromStart,isWiringSolved,normalizeRotation
 } from './wiring-logic.js';
@@ -18,7 +19,7 @@ const SLOT_RECTS=Object.freeze([
 ]);
 
 export class WiringPuzzle extends PuzzleCore {
-  constructor({root,assets=wiringAssets,debugHitAreas=false}={}){
+  constructor({root,assets=wiringAssets,debugHitAreas=false,audio=true,audioOptions={}}={}){
     super({id:'wiring',root,assets});
     this.debugHitAreas=debugHitAreas;
     this.stage=null;
@@ -26,6 +27,9 @@ export class WiringPuzzle extends PuzzleCore {
     this.statusEl=null;
     this.resetButton=null;
     this.successLights=[];
+    this.audioEngine=audio?createPuzzleAudio(audioOptions):null;
+    this.audioButton=null;
+    this.audioUnlockHandler=null;
     this.rotations=[...INITIAL_ROTATIONS];
     this.pieceButtons=[];
   }
@@ -41,6 +45,12 @@ export class WiringPuzzle extends PuzzleCore {
 
     this.root.classList.add('wiring-stage');
     this.buildPieces();
+    if(this.audioEngine){
+      this.audioUnlockHandler=()=>{
+        this.audioEngine.unlock().then(()=>this.updateAudioButton());
+      };
+      this.root.addEventListener('pointerdown',this.audioUnlockHandler,{once:true,passive:true});
+    }
     this.render();
     return this;
   }
@@ -97,6 +107,20 @@ export class WiringPuzzle extends PuzzleCore {
     this.statusEl.textContent='SYSTEM OFFLINE';
     this.stage.scene.append(this.statusEl);
 
+    if(this.audioEngine){
+      this.audioButton=document.createElement('button');
+      this.audioButton.type='button';
+      this.audioButton.className='wiring-audio-toggle';
+      this.audioButton.addEventListener('click',async event=>{
+        event.stopPropagation();
+        await this.audioEngine.unlock();
+        this.audioEngine.toggleMuted();
+        this.updateAudioButton();
+      });
+      this.stage.scene.append(this.audioButton);
+      this.updateAudioButton();
+    }
+
     this.resetButton=document.createElement('button');
     this.resetButton.type='button';
     this.resetButton.className='wiring-reset';
@@ -107,6 +131,9 @@ export class WiringPuzzle extends PuzzleCore {
 
   rotate(index){
     if(!this.started||this.solved||!this.pieceButtons[index])return false;
+    if(this.audioEngine){
+      this.audioEngine.unlock().then(ok=>{if(ok)this.audioEngine.playRotate();});
+    }
     this.rotations[index]=normalizeRotation(this.rotations[index]+1);
     this.render();
 
@@ -139,9 +166,20 @@ export class WiringPuzzle extends PuzzleCore {
 
   finish(){
     if(this.solved)return false;
+    this.audioEngine?.playSuccess();
     this.solve({rotations:[...this.rotations]});
     this.render();
     return true;
+  }
+
+  updateAudioButton(){
+    if(!this.audioButton||!this.audioEngine)return;
+    const muted=this.audioEngine.muted;
+    this.audioButton.textContent=muted?'🔇':'🔊';
+    this.audioButton.title=muted?'تشغيل الصوت':'كتم الصوت';
+    this.audioButton.ariaLabel=this.audioButton.title;
+    this.audioButton.setAttribute('aria-pressed',String(muted));
+    this.audioButton.classList.toggle('muted',muted);
   }
 
   reset(){
@@ -154,6 +192,11 @@ export class WiringPuzzle extends PuzzleCore {
 
   destroy(){
     this.root.classList.remove('wiring-stage');
+    if(this.audioUnlockHandler){
+      this.root.removeEventListener('pointerdown',this.audioUnlockHandler);
+      this.audioUnlockHandler=null;
+    }
+    this.audioEngine?.destroy();
     super.destroy();
   }
 }
