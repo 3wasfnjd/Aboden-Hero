@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Wiring Puzzle • ABODEN Puzzle Kit</title>
-<link rel="stylesheet" href="../core/puzzle-host.css">
+<link rel="stylesheet" href="../core/puzzle-host.css">\n<link rel="stylesheet" href="./wiring.css">
 </head>
 <body>
 <main class="puzzle-demo">
@@ -14,7 +14,7 @@
 <script type="module">
 import {createWiringPuzzle} from './wiring.js';
 const root=document.getElementById('puzzle-root');
-const puzzle=await createWiringPuzzle({root});
+const puzzle=await createWiringPuzzle({root});\npuzzle.onSolved(()=>{ document.title='✓ Wiring Solved • ABODEN Puzzle Kit'; });
 window.puzzle=puzzle;
 puzzle.start();
 </script>

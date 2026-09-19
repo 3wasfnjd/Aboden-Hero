@@ -1,0 +1,82 @@
+.wiring-stage .puzzle-asset-scene{overflow:visible}
+.wiring-piece-layer{position:absolute;inset:0;z-index:2;pointer-events:none}
+.wiring-piece{
+  position:absolute;
+  display:grid;
+  place-items:center;
+  padding:0;
+  margin:0;
+  border:0;
+  outline:0;
+  background:transparent;
+  appearance:none;
+  -webkit-appearance:none;
+  cursor:pointer;
+  pointer-events:auto;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+.wiring-piece img{
+  width:88%;
+  height:88%;
+  display:block;
+  object-fit:contain;
+  max-width:none;
+  max-height:none;
+  transform-origin:50% 50%;
+  transition:transform .16s ease;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+.wiring-piece:active img{scale:.97}
+.wiring-piece:focus-visible{outline:4px solid #fff8;outline-offset:-8px;border-radius:16px}
+.wiring-piece.powered::after{
+  content:"";
+  position:absolute;
+  inset:14%;
+  border-radius:50%;
+  box-shadow:0 0 20px 7px rgba(71,215,255,.24);
+  pointer-events:none;
+}
+.wiring-piece.solved::after{
+  box-shadow:0 0 26px 9px rgba(86,255,155,.32);
+}
+.wiring-status{
+  position:absolute;
+  left:50%;
+  top:5.4%;
+  z-index:4;
+  transform:translateX(-50%);
+  min-width:24%;
+  padding:.65% 1.4%;
+  border:1px solid rgba(255,61,73,.75);
+  border-radius:999px;
+  background:rgba(10,15,21,.76);
+  color:#ff6771;
+  text-align:center;
+  font:800 1.15em/1 system-ui,sans-serif;
+  letter-spacing:.08em;
+  pointer-events:none;
+  box-shadow:0 0 18px rgba(255,45,58,.18);
+}
+.wiring-status.online{
+  color:#66ffad;
+  border-color:rgba(96,255,169,.8);
+  box-shadow:0 0 22px rgba(86,255,155,.25);
+}
+.wiring-reset{
+  position:absolute;
+  right:7.5%;
+  bottom:4.5%;
+  z-index:5;
+  padding:.7% 1.4%;
+  border:1px solid rgba(171,205,230,.45);
+  border-radius:8px;
+  background:rgba(8,17,27,.78);
+  color:#dcebf5;
+  font:800 1em/1 system-ui,sans-serif;
+  pointer-events:auto;
+  cursor:pointer;
+}
+.wiring-reset:active{transform:translateY(1px)}
