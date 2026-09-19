@@ -77,20 +77,41 @@ export function isPipesSolved(p){
 }
 
 // ---- Puzzle 2: 3x3 sliding cube arrangement ----
-const CONDUCTIVE=new Set(['start','goal','straight','arrow','cross']);
+// Unlike the pipes grid, cubes are never rotated — they only slide through the
+// one empty slot — so each type carries a FIXED direction of flow, matching
+// the reference art (the arrow cube always points one way, the power cube's
+// bar is always vertical): straight only ever passes N<->S, arrow only ever
+// passes W->E (one-way), cross passes any direction through, start/goal are
+// the source/sink. Getting the layout right is a real routing puzzle, not
+// just "is this cell adjacent to another conductive cell".
+const DIROF=(row,col,nrow,ncol)=>nrow<row?N:nrow>row?S:ncol>col?E:W;
+function cubeAccepts(type,fromDir){
+ if(type==='goal'||type==='start')return true;
+ if(type==='cross')return true;
+ if(type==='straight')return fromDir===N||fromDir===S;
+ if(type==='arrow')return fromDir===W;
+ return false;
+}
+function cubeExits(type,fromDir){
+ if(type==='goal')return [];
+ if(type==='cross')return [N,E,S,W].filter(d=>d!==fromDir);
+ if(type==='straight')return [OPP[fromDir]];
+ if(type==='arrow')return [E];
+ return [];
+}
 export function createCubesPuzzle(seed=2){
  const rand=mulberry32(seed);
- // Two locked cubes (not one) so the 3x3 grid can actually be disconnected —
- // with only one non-conductive cell besides the empty slot, every
- // arrangement stays trivially connected and there is nothing to solve.
- const solved=['start','straight','locked','arrow','cross','straight','locked','goal','empty'];
+ // A hand-built solvable circuit: start -S-> straight -S-> cross -E-> arrow -E-> goal.
+ // straight/arrow decoys and the locked obstacle fill the rest, with one empty
+ // slot to slide through; shuffling via legal slides keeps it solvable.
+ const solved=['start','straight','locked','straight','empty','arrow','cross','arrow','goal'];
  const grid=solved.map(type=>({type}));
  const at=(i)=>({row:Math.floor(i/3),col:i%3});
  const neighborsOf=(i)=>{const {row,col}=at(i);const list=[];if(row>0)list.push(i-3);if(row<2)list.push(i+3);if(col>0)list.push(i-1);if(col<2)list.push(i+1);return list;};
  const shuffle=(n)=>{let emptyIdx=grid.findIndex(c=>c.type==='empty');for(let i=0;i<n;i++){const options=neighborsOf(emptyIdx);const pick=options[Math.floor(rand()*options.length)];[grid[emptyIdx],grid[pick]]=[grid[pick],grid[emptyIdx]];emptyIdx=pick;}};
- shuffle(30);
+ shuffle(40);
  const p={kind:'cubes',cols:3,rows:3,cells:grid,solved:false};
- for(let guard=0;guard<50&&isCubesSolved(p);guard++)shuffle(5);
+ for(let guard=0;guard<80&&isCubesSolved(p);guard++)shuffle(6);
  return p;
 }
 export function slideCube(p,index){
@@ -104,16 +125,38 @@ export function slideCube(p,index){
 }
 export function isCubesSolved(p){
  const start=p.cells.findIndex(c=>c.type==='start'),goal=p.cells.findIndex(c=>c.type==='goal');
- const seen=new Set([start]),stack=[start];
- const neighborsOf=(i)=>{const row=Math.floor(i/3),col=i%3;const list=[];if(row>0)list.push(i-3);if(row<2)list.push(i+3);if(col>0)list.push(i-1);if(col<2)list.push(i+1);return list;};
+ const at=i=>({row:Math.floor(i/3),col:i%3});
+ const idxAt=(row,col)=>row>=0&&col>=0&&row<3&&col<3?row*3+col:-1;
+ const neighborDirs=[[N,-1,0],[E,0,1],[S,1,0],[W,0,-1]];
+ // BFS over (cell, direction-power-will-exit-toward); start broadcasts outward
+ // in every direction that has a neighbor willing to accept it.
+ const seen=new Set(),stack=[];
+ const {row:sr,col:sc}=at(start);
+ for(const [d,dr,dc] of neighborDirs){
+  const nr=sr+dr,nc=sc+dc,ni=idxAt(nr,nc);
+  if(ni<0)continue;
+  const enterDir=OPP[d];
+  if(!cubeAccepts(p.cells[ni].type,enterDir))continue;
+  const key=`${ni},${enterDir}`;
+  if(seen.has(key))continue;
+  seen.add(key);stack.push([ni,enterDir]);
+ }
  while(stack.length){
-  const i=stack.pop();
-  for(const n of neighborsOf(i)){
-   if(seen.has(n)||!CONDUCTIVE.has(p.cells[n].type))continue;
-   seen.add(n);stack.push(n);
+  const [i,enterDir]=stack.pop();
+  if(i===goal)return true;
+  const {row,col}=at(i);
+  for(const outDir of cubeExits(p.cells[i].type,enterDir)){
+   const [,dr,dc]=neighborDirs.find(([d])=>d===outDir);
+   const nr=row+dr,nc=col+dc,ni=idxAt(nr,nc);
+   if(ni<0)continue;
+   const nextEnter=OPP[outDir];
+   if(!cubeAccepts(p.cells[ni].type,nextEnter))continue;
+   const key=`${ni},${nextEnter}`;
+   if(seen.has(key))continue;
+   seen.add(key);stack.push([ni,nextEnter]);
   }
  }
- return seen.has(goal);
+ return false;
 }
 
 // ---- Puzzle 3: symbol-matching terminals ----

@@ -1,16 +1,21 @@
 import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260917-muzzle-1';
 import {stepCombat} from './combat.js?v=20260919-assets-1';
-import {CHAPTER_COUNT,CHAPTER2_FLOORS,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260919-floors-1';
-import {createArt} from './art-bg.js?v=20260919-floors-1';
+import {CHAPTER_COUNT,CHAPTER2_FLOORS,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260919-floors-2';
+import {createArt} from './art-bg.js?v=20260919-floors-2';
 import {createMusic} from './music.js?v=20260917-music-1';
-import {openPuzzle,close as closePuzzle} from './puzzle-ui.js?v=20260919-puzzles-1';
+import {openPuzzle,close as closePuzzle} from './puzzle-ui.js?v=20260919-puzzles-2';
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx);
 // Portrait canvas for mobile: the original 960x540 landscape frame is preserved
 // unscaled and anchored to the bottom via GROUND_SHIFT, so world.js/combat.js
 // coordinates stay untouched; only the extra vertical space above it is new sky.
 const W=720,H=1280,STEP=1/120,GROUND_SHIFT=H-540,LOOKAHEAD=210;
+// Vertical floors reuse the exact same physics/camera pipeline as the
+// horizontal chapters — cameraY just tracks player.y instead of staying
+// pinned to BASE_Y, and the shafts are narrower than the canvas so cameraX
+// already resolves to 0 through its normal clamp. No new coordinate system.
+const BASE_Y=396,ELEVATOR_SPEED=210;
 const keys=new Set(),touch=new Map(),buttons=[...document.querySelectorAll('[data-action]')];
-let level,player,state='menu',chapter=1,floor=1,camera=0,time=0,elapsed=0,collected=0,kills=0,deaths=0,checkpoint=110,bullets=[],enemyShots=[],particles=[],toastTime=0,accumulator=0,last=0,muted=false,audio=null,musicCtl=null;
+let level,player,state='menu',chapter=1,floor=1,cameraX=0,cameraY=BASE_Y,time=0,elapsed=0,collected=0,kills=0,deaths=0,checkpoint=110,bullets=[],enemyShots=[],particles=[],toastTime=0,accumulator=0,last=0,muted=false,audio=null,musicCtl=null;
 const CHAPTER_NAMES={1:'حصار المدينة',2:'عاصفة الأسطح'};
 const BOSS_NAMES={1:'حارس البوابة',2:'قائد الحرس'};
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -19,17 +24,19 @@ const paper=document.createElement('canvas');paper.width=256;paper.height=256;
 const pc=paper.getContext('2d'),grain=pc.createImageData(256,256);let seed=127;
 for(let i=0;i<grain.data.length;i+=4){seed=(seed*1664525+1013904223)>>>0;const v=seed%2?45:255;grain.data[i]=v;grain.data[i+1]=v;grain.data[i+2]=v;grain.data[i+3]=seed%15;}
 pc.putImageData(grain,0,0);const paperPattern=ctx.createPattern(paper,'repeat');
-function reset(ch=1,fl=1){chapter=ch;floor=fl;level=createLevel(chapter,floor);player=createPlayer();checkpoint=110;camera=0;time=0;elapsed=0;collected=0;kills=0;deaths=0;bullets=[];enemyShots=[];particles=[];clearInput();closePuzzle();$('chapter-label').innerHTML=`الفصل ${chapter===1?'الأول':'الثاني'} <span>✦</span> ${CHAPTER_NAMES[chapter]}`;$('boss-label').textContent=BOSS_NAMES[chapter];updateHUD();}
-// Ascending the rooftop elevator: the next floor is a fresh short level, but the
-// run's stats (coins, kills, deaths, hp) carry over — only position/camera reset.
+function reset(ch=1,fl=1){chapter=ch;floor=fl;level=createLevel(chapter,floor);player=createPlayer();checkpoint=110;cameraX=0;cameraY=BASE_Y;time=0;elapsed=0;collected=0;kills=0;deaths=0;bullets=[];enemyShots=[];particles=[];clearInput();closePuzzle();$('chapter-label').innerHTML=`الفصل ${chapter===1?'الأول':'الثاني'} <span>✦</span> ${CHAPTER_NAMES[chapter]}`;$('boss-label').textContent=BOSS_NAMES[chapter];updateHUD();}
+// Ascending the rooftop elevator: the ride (tickRiding) already carried the
+// player up through the current floor's shaft — this just swaps in the next
+// floor's fresh level at its own ground level. Run stats carry over.
 function ascend(){
  if(chapter!==2||floor>=CHAPTER2_FLOORS)return;
  floor++;
  const hp=player.hp;
  level=createLevel(chapter,floor);
- player=createPlayer(90,390);
+ player=createPlayer(level.vertical?level.width/2-15:90,390);
  player.hp=hp;player.invulnerable=1.2;
- checkpoint=90;camera=0;bullets=[];enemyShots=[];particles=[];
+ checkpoint=player.x;cameraX=0;cameraY=BASE_Y;bullets=[];enemyShots=[];particles=[];
+ state='playing';
  toast(`الطابق ${floor} — ${level.areas[0][1]}`);
  sound(520,.28,'triangle');
  updateHUD();updateCombatHUD();
@@ -53,7 +60,9 @@ function sound(freq=440,duration=.09,type='sine',volume=.065){if(muted||!audio)r
 function unlockAudio(){if(muted)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume().catch(()=>{});if(!musicCtl){musicCtl=createMusic(audio);musicCtl.start();}musicCtl.setMuted(false);}catch{muted=true;}}
 function toast(message){$('toast').textContent=message;$('toast').classList.add('show');toastTime=2.6;}
 function burst(x,y,color='#efd598',count=8){for(let i=0;i<count;i++){const a=i*Math.PI*2/count;particles.push({x,y,vx:Math.cos(a)*(35+i*9),vy:Math.sin(a)*80-35,life:.45,max:.45,color});}}
-function updateHUD(){$('health').textContent='♥'.repeat(player.hp)+'♡'.repeat(5-player.hp);$('health').setAttribute('aria-label',`الصحة ${player.hp} من 5`);$('health-panel').setAttribute('data-hp',player.hp);$('coins').textContent=collected;$('area').textContent=(level.areas.find(([maxX])=>player.x<maxX)||level.areas[level.areas.length-1])[1];$('progress').style.width=`${clamp(player.x/level.goal.x*100,0,100)}%`;}
+function updateHUD(){$('health').textContent='♥'.repeat(player.hp)+'♡'.repeat(5-player.hp);$('health').setAttribute('aria-label',`الصحة ${player.hp} من 5`);$('health-panel').setAttribute('data-hp',player.hp);$('coins').textContent=collected;$('area').textContent=(level.areas.find(([maxX])=>player.x<maxX)||level.areas[level.areas.length-1])[1];
+ const progress=level.vertical?(level.bottomY-player.y)/(level.bottomY-level.topY)*100:player.x/level.goal.x*100;
+ $('progress').style.width=`${clamp(progress,0,100)}%`;}
 function updateCombatHUD(){ $('combat-hud').hidden=state!=='playing';$('kill-count').textContent=`${kills} إسقاط`;$('dash-status').textContent=player.dashCooldown>0?`اندفاع ${player.dashCooldown.toFixed(1)}ث`:'الاندفاع جاهز';$('boss-hud').hidden=!(state==='playing'&&level.boss.active&&level.boss.hp>0);$('boss-health').style.width=`${Math.max(0,level.boss.hp)/level.boss.maxHP*100}%`; }
 function showOverlay(kind){state=kind;clearInput();$('overlay').hidden=false;$('pills').hidden=kind!=='menu';
  $('hud').hidden=true;$('controls').hidden=true;
@@ -67,10 +76,23 @@ function showOverlay(kind){state=kind;clearInput();$('overlay').hidden=false;$('
 }
 function play(){unlockAudio();if(state==='menu'||state==='won')reset(1);else if(state==='chapterEnd')reset(chapter+1);state='playing';$('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=false;$('pause').textContent='Ⅱ';$('pause').setAttribute('aria-label','إيقاف مؤقت');clearInput();last=performance.now();accumulator=0;updateCombatHUD();}
 function pause(){if(state==='playing')showOverlay('paused');else if(state==='paused')play();}
-function respawn(){deaths++;player=createPlayer(checkpoint,390);player.invulnerable=1.8;bullets=[];enemyShots=[];if(level.boss.hp>0){level.boss.hp=level.boss.maxHP;level.boss.active=false;level.boss.windup=0;level.boss.fire=1.4;level.boss.shotFlash=0;}camera=clamp(checkpoint-250,0,level.width-W);burst(player.x+15,420);toast('محاولة جديدة — عدت إلى آخر نقطة حفظ');sound(180,.2,'triangle');updateHUD();}
+function respawn(){deaths++;player=createPlayer(checkpoint,390);player.invulnerable=1.8;bullets=[];enemyShots=[];if(level.boss.hp>0){level.boss.hp=level.boss.maxHP;level.boss.active=false;level.boss.windup=0;level.boss.fire=1.4;level.boss.shotFlash=0;}cameraX=clamp(checkpoint-250,0,level.width-W);cameraY=BASE_Y;burst(player.x+15,420);toast('محاولة جديدة — عدت إلى آخر نقطة حفظ');sound(180,.2,'triangle');updateHUD();}
 function hurt(){if(player.invulnerable>0||player.dashTime>0)return;player.hp--;player.invulnerable=1.35;burst(player.x+15,player.y+20,'#bc6245',10);sound(160,.18,'sawtooth',.036);if(player.hp<=0)respawn();else updateHUD();}
-function tick(dt){if(state!=='playing')return;time+=dt;elapsed+=dt;const controls=input();const previousBottom=player.y+player.h,wasDashing=player.dashTime>0;
- const {jumped,landed}=stepPlayer(player,controls,level.solids,dt,level.width);if(jumped){burst(player.x+15,player.y+44,'#ddd1a4',5);sound(510,.12,'triangle');}if(landed)burst(player.x+15,player.y+44,'#ddd1a4',5);
+// The elevator car is a real moving platform: injected as an extra solid each
+// tick so normal collision makes the player land and stand on it, then a
+// grounded-on-car check below starts the ride (tickRiding drives it upward).
+function solidsWithCar(){return level.elevator?[...level.solids,{x:level.elevator.x,y:level.elevator.y,w:level.elevator.w,h:20,oneWay:true}]:level.solids;}
+function tickRiding(dt){
+ time+=dt;
+ const el=level.elevator;
+ el.y=Math.max(el.topY,el.y-ELEVATOR_SPEED*dt);
+ player.y=el.y-player.h;
+ cameraY+=(player.y-cameraY)*(1-Math.exp(-6*dt));
+ for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=180*dt;p.life-=dt;}particles=particles.filter(p=>p.life>0);
+ if(el.y<=el.topY)ascend();
+}
+function tick(dt){if(state==='riding')return tickRiding(dt);if(state!=='playing')return;time+=dt;elapsed+=dt;const controls=input();const previousBottom=player.y+player.h,wasDashing=player.dashTime>0;
+ const {jumped,landed}=stepPlayer(player,controls,solidsWithCar(),dt,level.width);if(jumped){burst(player.x+15,player.y+44,'#ddd1a4',5);sound(510,.12,'triangle');}if(landed)burst(player.x+15,player.y+44,'#ddd1a4',5);
  if(player.dashTime>0){burst(player.x+15,player.y+22,'#6c9eaf',2);if(!wasDashing)sound(260,.13,'sawtooth',.026);}
  if(player.y>620){respawn();return;}
  if(controls.shoot&&player.shot<=0){player.shot=SHOT_INTERVAL;bullets.push(makeHeroBullet(art.heroMuzzle(player,time),player.facing));sound(660,.055,'triangle',.036);}
@@ -91,22 +113,25 @@ function tick(dt){if(state!=='playing')return;time+=dt;elapsed+=dt;const control
  for(const cp of level.checkpoints)if(!cp.active&&player.x>cp.x&&player.grounded){cp.active=true;checkpoint=cp.x+20;player.hp=5;toast('تم حفظ تقدمك واستعادة الصحة ✦');sound(920,.2);updateHUD();}
  for(const s of level.spikes)if(overlaps(player,s))hurt();
  if(level.terminal&&!level.terminal.solved){const inside=overlaps(player,level.terminal);if(inside&&!level.terminal.inside){openTerminal(level.terminal);level.terminal.inside=inside;return;}level.terminal.inside=inside;}
- if(level.elevator&&overlaps(player,level.elevator)){ascend();return;}
+ if(level.elevator&&player.grounded&&Math.abs((player.y+player.h)-level.elevator.y)<1&&player.x+player.w>level.elevator.x&&player.x<level.elevator.x+level.elevator.w){
+  state='riding';clearInput();$('controls').hidden=true;toast('يصعد المصعد...');sound(300,.4,'sawtooth',.03);return;
+ }
  if(level.boss.hp<=0&&overlaps(player,level.goal)){burst(player.x,player.y,'#efcf7e',25);sound(1100,.4);showOverlay(chapter<CHAPTER_COUNT?'chapterEnd':'won');}
  for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=180*dt;p.life-=dt;}particles=particles.filter(p=>p.life>0);
- camera+=(clamp(player.x-LOOKAHEAD,0,level.width-W)-camera)*(1-Math.exp(-7*dt));
+ cameraX+=(clamp(player.x-LOOKAHEAD,0,level.width-W)-cameraX)*(1-Math.exp(-7*dt));
+ cameraY+=((level.vertical?player.y:BASE_Y)-cameraY)*(1-Math.exp(-6*dt));
  if(toastTime>0){toastTime-=dt;if(toastTime<=0)$('toast').classList.remove('show');}
  updateHUD();updateCombatHUD();
 }
-function draw(){ctx.clearRect(0,0,W,H);art.background(camera,reducedMotion?0:time,level.chapter);art.scenery(camera);ctx.save();ctx.translate(-camera,GROUND_SHIFT);
- const visible=(x,w=100)=>x+w>camera-100&&x<camera+W+100;
+function draw(){ctx.clearRect(0,0,W,H);art.background(cameraX,reducedMotion?0:time,level.chapter,level.vertical?cameraY:BASE_Y);art.scenery(cameraX);ctx.save();ctx.translate(-cameraX,GROUND_SHIFT-(cameraY-BASE_Y));
+ const visible=(x,w=100)=>x+w>cameraX-100&&x<cameraX+W+100;
  for(const cp of level.checkpoints)if(visible(cp.x))art.checkpoint(cp,time);
  for(const [x,text] of level.signs)art.sign(x,text);
  for(const s of level.solids)if(visible(s.x,s.w)){if(s.locked)art.gate(s,time);else art.platform(s);}
  if(level.terminal&&visible(level.terminal.x,level.terminal.w))art.terminal(level.terminal,time);
  if(level.elevator&&visible(level.elevator.x,level.elevator.w))art.elevator(level.elevator,time,!level.terminal||level.terminal.solved);
  for(const s of level.spikes)if(visible(s.x)){for(let x=s.x;x<s.x+s.w;x+=13)art.path(`M${x} 440 L${x+6} 424 L${x+13} 440Z`,'#b48568');}
- for(let x=Math.floor(camera/85)*85;x<camera+W+85;x+=85)if(level.solids.some(s=>s.ground&&x>s.x+10&&x<s.x+s.w-10))art.flower(x,443,.55+(x%3)*.12);
+ for(let x=Math.floor(cameraX/85)*85;x<cameraX+W+85;x+=85)if(level.solids.some(s=>s.ground&&x>s.x+10&&x<s.x+s.w-10))art.flower(x,443,.55+(x%3)*.12);
  for(const cp of level.coins)if(!cp.taken&&visible(cp.x))art.collectible(cp.x,cp.y,time,cp.id);
  for(const h of level.hearts)if(!h.taken&&visible(h.x))art.healthItem(h.x,h.y,time,h.x);
  for(const e of level.enemies)if(e.hp>0&&visible(e.x))art.enemy(e,time);
@@ -121,7 +146,7 @@ function draw(){ctx.clearRect(0,0,W,H);art.background(camera,reducedMotion?0:tim
  const halfDiag=Math.hypot(W/2,H/2);
  const vignette=ctx.createRadialGradient(W/2,H/2-30,halfDiag*.33,W/2,H/2,halfDiag*1.05);vignette.addColorStop(0,'#342b1c00');vignette.addColorStop(1,'#342b1c2e');ctx.fillStyle=vignette;ctx.fillRect(0,0,W,H);
 }
-function frame(now){if(!last)last=now;const dt=Math.min((now-last)/1000,.1);last=now;if(state==='playing'){accumulator+=dt;while(accumulator>=STEP){tick(STEP);accumulator-=STEP;}}else if(state==='menu'&&!reducedMotion)time+=dt;draw();requestAnimationFrame(frame);}
+function frame(now){if(!last)last=now;const dt=Math.min((now-last)/1000,.1);last=now;if(state==='playing'||state==='riding'){accumulator+=dt;while(accumulator>=STEP){tick(STEP);accumulator-=STEP;}}else if(state==='menu'&&!reducedMotion)time+=dt;draw();requestAnimationFrame(frame);}
 const mapped=new Set(['ArrowLeft','ArrowRight','ArrowUp','KeyA','KeyD','KeyK','KeyJ','Space','KeyL','ShiftLeft','ShiftRight']);
 window.addEventListener('keydown',e=>{if(mapped.has(e.code)){if(e.target instanceof HTMLButtonElement&&(e.code==='Space'))return;e.preventDefault();if(state==='playing')keys.add(e.code);}if(e.code==='Escape'&&!e.repeat){if(state==='puzzle')closePuzzle();else pause();}});
 window.addEventListener('keyup',e=>keys.delete(e.code));

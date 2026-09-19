@@ -24,13 +24,16 @@ test('movement, collecting, simultaneous controls, cancellation, pause, checkpoi
  g.player.x=1650;g.player.y=396;g.player.vy=0;g.player.vx=0;g.player.grounded=true;steps(1);assert.equal(g.checkpoint,1650);g.player.y=700;steps(1);assert.equal(g.player.x,1650);assert.equal(g.player.hp,5);assert.equal(g.stats.deaths,1);
  g.player.x=6415;g.player.y=396;steps(1);assert.equal(g.state,'playing','exit stays locked while boss lives');g.level.boss.hp=0;steps(1);assert.equal(g.state,'chapterEnd','chapter 1 ends before the final mission');g.play();assert.equal(g.state,'playing');assert.equal(g.chapter,2);assert.equal(g.floor,1);assert.equal(g.stats.collected,0);assert.equal(g.checkpoint,110);assert.equal(g.stats.deaths,0);
  for(let f=1;f<4;f++){
-  g.player.x=g.level.terminal.x+5;g.player.y=396;g.player.grounded=true;steps(1);
+  g.player.x=g.level.terminal.x+5;g.player.y=g.level.terminal.y+5;g.player.grounded=true;steps(1);
   assert.equal(g.state,'puzzle',`floor ${f} terminal opens the puzzle overlay`);
   g.debugSolveTerminal();
   assert.equal(g.state,'playing',`floor ${f} puzzle close resumes play`);
   assert(g.level.terminal.solved);
-  g.player.x=g.level.elevator.x+5;g.player.y=396;steps(1);
-  assert.equal(g.floor,f+1,`elevator advances from floor ${f}`);
+  g.player.x=g.level.elevator.x+10;g.player.y=g.level.elevator.restY-g.player.h;g.player.vy=0;g.player.grounded=true;steps(1);
+  assert.equal(g.state,'riding',`floor ${f} stepping onto the car starts the ride`);
+  steps(320); // real elevator ride: physically rises from restY to topY over time
+  assert.equal(g.state,'playing',`floor ${f} ride finishes back into play`);
+  assert.equal(g.floor,f+1,`elevator ride advances from floor ${f}`);
  }
  g.player.x=g.level.goal.x+10;g.player.y=396;steps(1);assert.equal(g.state,'playing','chapter 2 exit stays locked while its boss lives');
  g.level.boss.hp=0;steps(1);assert.equal(g.state,'won','the campaign only ends after the final chapter and floor');g.play();assert.equal(g.state,'playing');assert.equal(g.chapter,1,'replaying from the final win restarts the campaign');

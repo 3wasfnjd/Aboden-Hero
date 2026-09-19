@@ -17,58 +17,74 @@ function chapter1(){
  spikes:[{x:2070,y:424,w:50,h:16},{x:3780,y:424,w:55,h:16},{x:5360,y:424,w:55,h:16}],
  checkpoints:[{x:1630,active:false},{x:3060,active:false},{x:4580,active:false},{x:5700,active:false}],hearts:[{x:2350,y:333,taken:false},{x:4220,y:333,taken:false},{x:5750,y:336,taken:false}],boss:{x:6130,y:360,w:72,h:80,hp:24,maxHP:24,active:false,fire:1.4,windup:0,aimX:0,aimY:0,hit:0,triggerX:5630},goal:{x:6410,y:315,w:90,h:125}};
 }
-// Rooftop finale: a vertical climb told as a sequence of short rooftop floors
-// linked by a service elevator. Each of the first three floors locks its exit
-// behind a puzzle terminal — the terminal's solved flag removes a `locked`
-// solid, physically opening the path to that floor's elevator trigger — so
-// the existing horizontal physics/camera pipeline needs no changes at all;
-// only main.js's floor-transition logic treats these as a vertical sequence.
+// Rooftop finale: a REAL vertical climb — three short rooftop shafts, each
+// climbed floor-by-floor (camera follows player.y, not player.x; the shaft is
+// narrower than the canvas so there is nothing to scroll horizontally), each
+// ending at a puzzle terminal that unlocks a gate to a service elevator car.
+// The car is a genuine moving platform (main.js drives elevator.y toward
+// elevator.topY over real time while the player rides it up) rather than an
+// instant floor swap — only once the ride finishes does the next floor load.
 export const CHAPTER2_FLOORS=4;
 const mkEnemy=(x,min,max,kind,extra={})=>({x,y:408,w:34,h:32,min,max,vx:x%2?48:-48,hp:3,hit:0,fire:1.3,windup:0,aimX:0,aimY:0,kind,...extra});
 const dummyBoss=()=>({x:-1000,y:-1000,w:1,h:1,hp:0,maxHP:1,active:false,fire:99,windup:0,aimX:0,aimY:0,hit:0,triggerX:-1,kind:'captain'});
 const offGoal=()=>({x:-1000,y:-1000,w:1,h:1,chapter:2});
-function floorCoins(width,ledges,gapRanges){
- return [...Array.from({length:Math.round(width/198)},(_,i)=>({x:220+i*198,y:407})),...ledges.flatMap(([x,y,w])=>[.25,.5,.75].map(f=>({x:x+w*f,y:y-25})))]
-  .filter(c=>c.x<width-120&&!gapRanges.some(([a,b])=>c.x>a&&c.x<b&&c.y>400))
-  .map((c,id)=>({...c,id,taken:false}));
+function floorCoins(width,ledges){
+ return ledges.flatMap(l=>[.3,.7].map(f=>({x:l.x+l.w*f,y:l.y-24}))).map((c,id)=>({...c,id,taken:false}));
 }
-// A puzzle-gated floor: enemies before a terminal, a locked wall the terminal's
-// solve unlocks, then an elevator trigger just beyond it.
-function puzzleFloor(floor,puzzle,label,sign,enemies,extraHeart){
- const WIDTH=2050;
- const ground=[[0,850],[1000,1050]].map(([x,w])=>({x,y:440,w,h:130,ground:true}));
- const ledges=[[1300,300,180],[550,365,150]];
- return {chapter:2,floor,totalFloors:CHAPTER2_FLOORS,width:WIDTH,
- signs:[[200,'احذر: تحتاج دقة بالقفز فوق الأسطح'],[1500,sign]],
+// Nine ledges climbing from the rooftop's ground up to the terminal, zig-zagging
+// left/right by a margin proven (via a jump-reachability sweep) to be clearable
+// with a released-then-re-pressed jump between each step.
+const CLIMB_STEP=100,CLIMB_LEDGE_W=180;
+function climbLedges(width,startY,count){
+ const shift=(width-CLIMB_LEDGE_W)*0.4;
+ const leftX=(width-CLIMB_LEDGE_W)/2-shift/2,rightX=(width-CLIMB_LEDGE_W)/2+shift/2;
+ return Array.from({length:count},(_,i)=>({x:i%2===0?leftX:rightX,y:startY-i*CLIMB_STEP,w:CLIMB_LEDGE_W}));
+}
+// A puzzle-gated vertical floor: climb past a couple of enemies to a terminal;
+// solving it removes the gate blocking the last step up to the elevator car.
+function puzzleFloor(floor,puzzle,label,sign,enemySpecs,extraHeart){
+ const WIDTH=460,GROUND_Y=440,CLIMB_COUNT=9;
+ const ledges=climbLedges(WIDTH,340,CLIMB_COUNT);
+ const top=ledges[CLIMB_COUNT-1];
+ const carLedge={x:top.x,y:top.y-CLIMB_STEP,w:top.w};
+ const gateY=top.y-75; // clears the jump arc onto the top ledge but blocks the one past it to the car
+ const enemies=enemySpecs.map(([ledgeIdx,kind,extra])=>{
+  const l=ledges[ledgeIdx];
+  return mkEnemy(l.x+l.w/2-17,l.x+10,l.x+l.w-44,kind,{y:l.y-32,...extra});
+ });
+ return {chapter:2,floor,totalFloors:CHAPTER2_FLOORS,width:WIDTH,vertical:true,bottomY:GROUND_Y,topY:carLedge.y-40,
+ signs:[[GROUND_Y-40,'تسلّق الأسطح — قفزة دقيقة توصلك للأعلى']],
  areas:[[Infinity,label]],
- solids:[...ground,...ledges.map(([x,y,w])=>({x,y,w,h:20,oneWay:true,chapter:2})),{x:1960,y:200,w:24,h:260,locked:true,chapter:2}],
- coins:floorCoins(WIDTH,ledges,[[850,1000]]),
+ solids:[{x:0,y:GROUND_Y,w:WIDTH,h:130,ground:true},...ledges.map(l=>({x:l.x,y:l.y,w:l.w,h:20,oneWay:true,chapter:2})),
+  {x:top.x,y:gateY,w:top.w,h:20,locked:true,chapter:2}],
+ coins:floorCoins(WIDTH,ledges),
  enemies,
- spikes:[{x:700,y:424,w:50,h:16}],
- checkpoints:[{x:1100,active:false}],
- hearts:extraHeart?[{x:extraHeart,y:333,taken:false}]:[],
- terminal:{x:1900,y:390,w:40,h:50,kind:puzzle,solved:false},
- elevator:{x:1990,y:300,w:50,h:140},
+ spikes:[],
+ checkpoints:[{x:WIDTH/2-15,active:false}],
+ hearts:extraHeart!=null?[{x:ledges[extraHeart].x+ledges[extraHeart].w/2,y:ledges[extraHeart].y-30,taken:false}]:[],
+ terminal:{x:top.x+top.w/2-20,y:top.y-50,w:40,h:50,kind:puzzle,solved:false},
+ elevator:{x:carLedge.x,y:carLedge.y,w:carLedge.w,h:14,restY:carLedge.y,topY:carLedge.y-520,riding:false},
+ sign2:sign,
  boss:dummyBoss(),goal:offGoal()};
 }
 function chapter2Floor1(){
  return puzzleFloor(1,'pipes','الطابق الأول ✦ لوحة التوصيل','لوح كهربائي يغلق الباب — رتّب الأنابيب لفتحه',[
-  mkEnemy(300,150,550,'heavy',{shield:true}),
-  mkEnemy(1150,1000,1300,'sniper'),
- ],1200);
+  [2,'heavy',{shield:true}],
+  [5,'sniper',{}],
+ ],7);
 }
 function chapter2Floor2(){
  return puzzleFloor(2,'cubes','الطابق الثاني ✦ غرفة المكعبات','رتّب المكعبات لتوصيل الطاقة من البداية للهدف',[
-  mkEnemy(300,150,600,'heavy',{shield:true}),
-  mkEnemy(1500,1200,1850,'heavy',{flying:true,y:280,w:40,h:28,hp:6,fire:1.5}),
- ],1400);
+  [2,'heavy',{shield:true}],
+  [6,'heavy',{flying:true,w:40,h:28,hp:6,fire:1.5}],
+ ],4);
 }
 function chapter2Floor3(){
  return puzzleFloor(3,'match','الطابق الثالث ✦ لوحة المطابقة','طابِق كل رمز مع لونه لفتح الباب الأخير',[
-  mkEnemy(300,150,600,'heavy',{shield:true}),
-  mkEnemy(1150,1050,1350,'city'),
-  mkEnemy(1650,1500,1850,'sniper'),
- ],1750);
+  [1,'heavy',{shield:true}],
+  [4,'city',{}],
+  [7,'sniper',{}],
+ ],5);
 }
 function chapter2Floor4(){
  const WIDTH=1900;

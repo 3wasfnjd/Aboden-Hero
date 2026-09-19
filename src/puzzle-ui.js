@@ -1,12 +1,17 @@
 // Full-screen DOM puzzle overlay: renders the three terminal puzzle types
 // from src/puzzles.js and reports back to main.js when one is solved.
-import {N,E,S,W,createPipesPuzzle,rotatePipe,createCubesPuzzle,slideCube,createMatchPuzzle,connectMatch} from './puzzles.js?v=20260919-puzzles-1';
+import {createPipesPuzzle,rotatePipe,createCubesPuzzle,slideCube,createMatchPuzzle,connectMatch} from './puzzles.js?v=20260919-puzzles-2';
 
 const TITLES={pipes:'لوحة التوصيل الكهربائي',cubes:'لوحة ترتيب المكعبات',match:'لوحة مطابقة الرموز'};
 const HINTS={pipes:'اضغط على أنبوب لتدويره — وصّل البداية بالنهاية',cubes:'اضغط على مكعب مجاور للخانة الفارغة لتحريكه',match:'اضغط رمزًا يسارًا ثم الرمز المطابق له يمينًا'};
-const SYMBOL_GLYPH={hex:'⬡',bolt:'⚡',tri:'▲'};
 const SYMBOL_COLOR={hex:'#4fb2e8',bolt:'#f2c94c',tri:'#b98af0'};
-const CUBE_GLYPH={start:'S',goal:'G',straight:'═',arrow:'➤',cross:'✦',locked:'🔒',empty:''};
+const PIPE_IMG=t=>`./assets/puzzles/pipes/${t}.png`;
+const CUBE_IMG=t=>`./assets/puzzles/cubes/${t}.png`;
+const MATCH_IMG=s=>`./assets/puzzles/match/${s}.png`;
+// The extracted "t"/splitter art is drawn pointing N|E|W, one step off this
+// module's N|E|S reference orientation — everything else's art already
+// matches its logical base shape, so only this type needs a render offset.
+const PIPE_VISUAL_OFFSET={t:1};
 
 let overlay,titleEl,hintEl,statusEl,boardEl,closeBtn;
 let puzzle=null,selection=-1,onSolved=null,onClose=null;
@@ -23,33 +28,23 @@ function ensureDom(){
  boardEl.addEventListener('click',onBoardClick);
 }
 
-function svg(children,viewBox='0 0 40 40'){return `<svg viewBox="${viewBox}" class="puzzle-cell-svg">${children}</svg>`;}
-const MID={[N]:'20,3',[E]:'37,20',[S]:'20,37',[W]:'3,20'};
-function pipeSvg(type,rot){
- const SHAPES={empty:0,straight:N|S,elbow:N|E,t:N|E|S,cross:N|E|S|W};
- const bits=SHAPES[type];
- let lines='';
- for(const d of [N,E,S,W])if(bits&d)lines+=`<line x1="20" y1="20" x2="${MID[d].split(',')[0]}" y2="${MID[d].split(',')[1]}"/>`;
- if(bits)lines+='<circle cx="20" cy="20" r="3.4"/>';
- return `<div class="puzzle-pipe" style="transform:rotate(${rot*90}deg)">${svg(lines)}</div>`;
-}
-
 function renderPipes(){
  boardEl.className='puzzle-board pipes'+(puzzle.solved?' solved':' unsolved');
  let grid=`<div class="pipes-grid" style="grid-template-columns:repeat(${puzzle.cols},1fr);grid-template-rows:repeat(${puzzle.rows},1fr)">`;
  for(let r=0;r<puzzle.rows;r++)for(let c=0;c<puzzle.cols;c++){
   const cell=puzzle.cells[r][c];
-  grid+=`<button class="puzzle-cell" data-row="${r}" data-col="${c}" aria-label="أنبوب">${pipeSvg(cell.type,cell.rot)}</button>`;
+  const rot=cell.rot+(PIPE_VISUAL_OFFSET[cell.type]||0);
+  grid+=`<button class="puzzle-cell" data-row="${r}" data-col="${c}" aria-label="أنبوب"><img class="puzzle-pipe-img" src="${PIPE_IMG(cell.type)}" style="transform:rotate(${rot*90}deg)" alt=""></button>`;
  }
  grid+='</div>';
- boardEl.innerHTML=`<div class="pipes-row"><span class="pipes-port">◀ START</span>${grid}<span class="pipes-port">END ▶</span></div>`;
+ boardEl.innerHTML=`<div class="pipes-row"><img class="pipes-port" src="${PIPE_IMG('start')}" alt="START"><div class="pipes-grid-wrap">${grid}</div><img class="pipes-port" src="${PIPE_IMG('end')}" alt="END"></div>`;
 }
 
 function renderCubes(){
  boardEl.className='puzzle-board cubes'+(puzzle.solved?' solved':' unsolved');
  let html='';
  puzzle.cells.forEach((cell,i)=>{
-  html+=`<button class="puzzle-cell cube-${cell.type}" data-index="${i}" aria-label="${cell.type}">${CUBE_GLYPH[cell.type]}</button>`;
+  html+=`<button class="puzzle-cell cube-${cell.type}" data-index="${i}" aria-label="${cell.type}"><img class="cube-img" src="${CUBE_IMG(cell.type)}" alt=""></button>`;
  });
  boardEl.innerHTML=html;
 }
@@ -57,8 +52,8 @@ function renderCubes(){
 function renderMatch(){
  boardEl.className='puzzle-board match'+(puzzle.solved?' solved':' unsolved');
  let leftNodes='',rightNodes='';
- puzzle.left.forEach((sym,i)=>{leftNodes+=`<button class="puzzle-node left${selection===i?' selected':''}" data-side="left" data-idx="${i}" style="--nc:${SYMBOL_COLOR[sym]}">${SYMBOL_GLYPH[sym]}</button>`;});
- puzzle.right.forEach((sym,i)=>{rightNodes+=`<button class="puzzle-node right" data-side="right" data-idx="${i}" style="--nc:${SYMBOL_COLOR[sym]}">${SYMBOL_GLYPH[sym]}</button>`;});
+ puzzle.left.forEach((sym,i)=>{leftNodes+=`<button class="puzzle-node left${selection===i?' selected':''}" data-side="left" data-idx="${i}"><img src="${MATCH_IMG(sym)}" alt=""></button>`;});
+ puzzle.right.forEach((sym,i)=>{rightNodes+=`<button class="puzzle-node right" data-side="right" data-idx="${i}"><img src="${MATCH_IMG(sym)}" alt=""></button>`;});
  const nodes=`<div class="match-col">${leftNodes}</div><div class="match-col">${rightNodes}</div>`;
  let wires='';
  puzzle.left.forEach((sym,i)=>{

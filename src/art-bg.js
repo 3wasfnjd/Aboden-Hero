@@ -8,6 +8,8 @@ const FLOATING_PLATFORM2_URL='./assets/ui/level/platform2.png';
 const CHECKPOINT_URL='./assets/ui/level/checkpoint.png';
 const GOAL_URL='./assets/ui/level/goal.png';
 const GOAL2_URL='./assets/ui/level/goal2.png';
+const ELEVATOR_CLOSED_URL='./assets/elevator/closed.png';
+const ELEVATOR_OPEN_URL='./assets/elevator/open.png';
 
 function loadImage(url){
  const img=new Image();
@@ -27,8 +29,11 @@ const floatingPlatform2Asset=loadImage(FLOATING_PLATFORM2_URL);
 const checkpointAsset=loadImage(CHECKPOINT_URL);
 const goalAsset=loadImage(GOAL_URL);
 const goal2Asset=loadImage(GOAL2_URL);
+const elevatorClosedAsset=loadImage(ELEVATOR_CLOSED_URL);
+const elevatorOpenAsset=loadImage(ELEVATOR_OPEN_URL);
 const CHECKPOINT_DISPLAY_H=100;
 const GOAL_DISPLAY_H=175;
+const ELEVATOR_DISPLAY_W=190;
 
 function drawCity(ctx){
  if(!cityAsset.ready)return false;
@@ -66,7 +71,7 @@ function drawCity(ctx){
 // of chapter 1's tall portrait skyline. Cover-fit on height and center-crop
 // the width instead, so the storm and skyline fill the tall phone canvas
 // rather than shrinking to a thin strip anchored at the bottom.
-function drawCity2(ctx){
+function drawCity2(ctx,climbShift=0){
  if(!city2Asset.ready)return false;
  const img=city2Asset.img,W=ctx.canvas.width||960,H=ctx.canvas.height||540;
  ctx.save();
@@ -75,7 +80,14 @@ function drawCity2(ctx){
  const scale=H/img.naturalHeight;
  const srcW=Math.min(img.naturalWidth,W/scale);
  const sx=(img.naturalWidth-srcW)/2;
- ctx.drawImage(img,sx,0,srcW,img.naturalHeight,0,0,W,H);
+ // Climbing a vertical floor slowly sinks the skyline and reveals more sky
+ // above — a cheap parallax cue that altitude is actually increasing.
+ if(climbShift>0){
+  const sky=ctx.createLinearGradient(0,0,0,climbShift);
+  sky.addColorStop(0,'#060b14');sky.addColorStop(1,'#0d1826');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,climbShift);
+ }
+ ctx.drawImage(img,sx,0,srcW,img.naturalHeight,0,climbShift,W,H);
  ctx.restore();
  return true;
 }
@@ -161,14 +173,17 @@ function drawTerminal(ctx,term,time){
  ctx.restore();
 }
 function drawElevator(ctx,el,time,ready){
- const cx=el.x+el.w/2,ink=ready?'#0ecbfd':'#93a8bb';
+ const asset=ready?elevatorOpenAsset:elevatorClosedAsset;
+ if(!asset.ready){
+  // Flat placeholder while the real art loads, so the car is never invisible.
+  ctx.save();ctx.fillStyle='#0d1620';ctx.fillRect(el.x,el.y-140,el.w,140);ctx.restore();
+  return;
+ }
+ const img=asset.img,dw=ELEVATOR_DISPLAY_W,dh=dw*(img.naturalHeight/img.naturalWidth);
+ const cx=el.x+el.w/2,bottom=el.y+18;
  ctx.save();
- ctx.fillStyle='#0d1620';ctx.fillRect(el.x,el.y,el.w,el.h);
- ctx.strokeStyle='#4a6a86';ctx.lineWidth=3;ctx.strokeRect(el.x+2,el.y+2,el.w-4,el.h-4);
- ctx.strokeStyle='#26364a';ctx.lineWidth=1;
- ctx.beginPath();ctx.moveTo(cx,el.y+4);ctx.lineTo(cx,el.y+el.h-4);ctx.stroke();
- const glow=ready?.7+Math.sin(time*4)*.3:.4;
- ctx.globalAlpha=glow;ctx.fillStyle=ink;ctx.beginPath();ctx.arc(el.x+el.w/2,el.y+14,4,0,Math.PI*2);ctx.fill();
+ if(!ready)ctx.filter='saturate(.7) brightness(.85)';
+ ctx.drawImage(img,cx-dw/2,bottom-dh,dw,dh);
  ctx.restore();
 }
 function drawGoal(ctx,g,time,locked){
@@ -187,8 +202,8 @@ function drawGoal(ctx,g,time,locked){
 export function createArt(ctx){
  const base=createCharacterArt(ctx);
 
- function background(camera,time,chapter=1){
-  if(chapter===2)drawCity2(ctx);
+ function background(camera,time,chapter=1,camY=396){
+  if(chapter===2)drawCity2(ctx,Math.max(0,(396-camY)*.12));
   else drawCity(ctx);
 
   // Light separation only around the gameplay plane. The city remains crisp,
