@@ -21,6 +21,16 @@ const CABLE_RECTS=Object.freeze({
   orange:Object.freeze([.238,.405,.455,.376])
 });
 
+const SUCCESS_LIGHTS=Object.freeze([
+  Object.freeze({id:'top',x:.50,y:.067,width:.205,height:.018}),
+  Object.freeze({id:'upper-left',x:.238,y:.118,width:.047,height:.019}),
+  Object.freeze({id:'upper-right',x:.762,y:.118,width:.047,height:.019}),
+  Object.freeze({id:'mid-left',x:.132,y:.392,width:.017,height:.072}),
+  Object.freeze({id:'mid-right',x:.868,y:.392,width:.017,height:.072}),
+  Object.freeze({id:'bottom-left',x:.294,y:.833,width:.047,height:.019}),
+  Object.freeze({id:'bottom-right',x:.706,y:.833,width:.047,height:.019})
+]);
+
 export class MatchingPuzzle extends PuzzleCore {
   constructor({root,assets=matchingAssets,debugHitAreas=false,audio=true,audioOptions={}}={}){
     super({id:'matching',root,assets});
@@ -30,6 +40,7 @@ export class MatchingPuzzle extends PuzzleCore {
     this.connectedColors=new Set();
     this.portButtons=new Map();
     this.cableImages=new Map();
+    this.successLights=[];
     this.statusEl=null;
     this.resetButton=null;
     this.audioButton=null;
@@ -50,6 +61,7 @@ export class MatchingPuzzle extends PuzzleCore {
     this.root.classList.add('matching-stage');
     this.buildCables();
     this.buildPorts();
+    this.buildSuccessLights();
     this.buildControls();
 
     if(this.audioEngine){
@@ -108,6 +120,23 @@ export class MatchingPuzzle extends PuzzleCore {
       this.stage.hitLayer.append(button);
       this.portButtons.set(port.id,button);
     }
+  }
+
+  buildSuccessLights(){
+    const {naturalWidth:width,naturalHeight:height}=this.stage;
+    this.successLights=SUCCESS_LIGHTS.map(light=>{
+      const el=document.createElement('span');
+      el.className=`matching-success-light matching-success-light--${light.id}`;
+      el.ariaHidden='true';
+      Object.assign(el.style,{
+        left:`${light.x*width}px`,
+        top:`${light.y*height}px`,
+        width:`${light.width*width}px`,
+        height:`${light.height*height}px`
+      });
+      this.stage.scene.append(el);
+      return el;
+    });
   }
 
   buildControls(){
@@ -203,7 +232,7 @@ export class MatchingPuzzle extends PuzzleCore {
 
   flashError(){
     clearTimeout(this.errorTimer);
-    this.root.classList.remove('matching-error');
+    this.root.classList.remove('matching-error','matching-complete');
     void this.root.offsetWidth;
     this.root.classList.add('matching-error');
     this.errorTimer=setTimeout(()=>this.root.classList.remove('matching-error'),240);
@@ -220,6 +249,8 @@ export class MatchingPuzzle extends PuzzleCore {
     for(const [color,image] of this.cableImages){
       image.classList.toggle('connected',this.connectedColors.has(color));
     }
+
+    this.root.classList.toggle('matching-complete',this.solved);
 
     if(this.statusEl){
       const count=this.connectedColors.size;
@@ -263,7 +294,7 @@ export class MatchingPuzzle extends PuzzleCore {
       this.audioUnlockHandler=null;
     }
     this.audioEngine?.destroy();
-    this.root.classList.remove('matching-stage','matching-error');
+    this.root.classList.remove('matching-stage','matching-error','matching-complete');
     super.destroy();
   }
 }
