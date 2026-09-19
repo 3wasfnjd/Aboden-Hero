@@ -1,13 +1,14 @@
+const here=import.meta.url;
+const asset=name=>new URL(`./assets/original/${name}`,here).href;
+
 export const wiringAssets=Object.freeze({
-  // Original board artwork. Stored and served unchanged.
-  base:'./assets/original/board.png',
-
-  // Optional final solved-state artwork, if supplied later.
+  base:asset('board.png'),
   solved:null,
-
-  // Original transparent source sheet containing the pipe pieces.
-  sourceSheet:'./assets/original/pipe-pieces.png',
-
-  // Individual transparent pieces can be added later without changing the source sheet.
-  pieces:Object.freeze([])
+  sourceSheet:asset('pipe-pieces.png'),
+  pieces:Object.freeze({
+    straight:asset('pipe-straight.png'),
+    elbow:asset('pipe-elbow.png'),
+    cross:asset('pipe-cross.png'),
+    tee:asset('pipe-tee.png')
+  })
 });
