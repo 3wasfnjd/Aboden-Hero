@@ -1,14 +1,13 @@
 export const wiringAssets=Object.freeze({
-  // board.png is the intended base board asset. It is left disabled until
-  // the uploaded file is a valid PNG image.
-  base:null,
+  // Original board artwork. Stored and served unchanged.
+  base:'./assets/original/board.png',
 
   // Optional final solved-state artwork, if supplied later.
   solved:null,
 
-  // Original source sheet containing the transparent pipe pieces.
+  // Original transparent source sheet containing the pipe pieces.
   sourceSheet:'./assets/original/pipe-pieces.png',
 
-  // Individual transparent pieces will be referenced here once uploaded.
+  // Individual transparent pieces can be added later without changing the source sheet.
   pieces:Object.freeze([])
 });
