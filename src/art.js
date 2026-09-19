@@ -13,6 +13,9 @@ const ENEMY_BULLET_URL='./assets/ui/projectiles/bullet-red2.png';
 const ROCKET_SMOKE_URL='./assets/ui/projectiles/rocket-smoke.png';
 const ENERGY_CRYSTAL_URL='./assets/ui/items/energy-crystal.png';
 const HEALTH_CROSS_URL='./assets/ui/items/health-cross.png';
+const SHIELD_GUARD_URL='./assets/enemies/shield-guard.png';
+const SKY_WATCHER_URL='./assets/enemies/sky-watcher.png';
+const COMMANDER_URL='./assets/bosses/commander.png';
 
 function loadImage(url){
  const img=new Image();
@@ -35,6 +38,12 @@ const enemyBulletAsset=loadImage(ENEMY_BULLET_URL);
 const rocketSmokeAsset=loadImage(ROCKET_SMOKE_URL);
 const energyCrystalAsset=loadImage(ENERGY_CRYSTAL_URL);
 const healthCrossAsset=loadImage(HEALTH_CROSS_URL);
+const shieldGuardAsset=loadImage(SHIELD_GUARD_URL);
+const skyWatcherAsset=loadImage(SKY_WATCHER_URL);
+const commanderAsset=loadImage(COMMANDER_URL);
+const SHIELD_FRAMES={idle:[8,12,172,201],walk:[200,9,167,204],block:[384,18,177,195],shoot:[570,30,183,183],hurt:[763,3,175,210]};
+const SKY_FRAMES={idle:[10,3,330,190],firing:[353,3,344,189],damaged:[734,3,282,190]};
+const COMMANDER_FRAMES={main:[28,3,225,460],combat:[284,4,275,459]};
 const ROCKET_DISPLAY_H=34;
 const HERO_BULLET_DISPLAY_H=17;
 const ENEMY_BULLET_DISPLAY_H=15;
@@ -117,12 +126,13 @@ export function createArt(ctx){
   const center=e.x+e.w/2;
   const facing=e.windup>0&&e.aimX?e.aimX<center?-1:1:e.vx<0?-1:1;
   if(e.flying){drawChopper(e,center,facing,time);return;}
+  if(e.shield){drawShieldGuard(e,center,facing);return;}
   const type=enemyKind(e);
   const asset=type==='city'?cityAsset:type==='sniper'?sniperAsset:heavyAsset;
   const frames=type==='city'?CITY_FRAMES:type==='sniper'?SNIPER_FRAMES:HEAVY_FRAMES;
   const img=asset.img;
   const attack=enemyAttackPose(e);
-  if(attack){const frame=scaledFrames([attack.frame],img,ENEMY_BASE_W,ENEMY_BASE_H)[0];drawSprite(ctx,img,frame,e.x+e.w/2,e.y+e.h,attack.facing,attack.height);if(e.shield)drawShield(e,center,attack.facing);return;}
+  if(attack){const frame=scaledFrames([attack.frame],img,ENEMY_BASE_W,ENEMY_BASE_H)[0];drawSprite(ctx,img,frame,e.x+e.w/2,e.y+e.h,attack.facing,attack.height);return;}
   let state='idle',rate=4,displayH=enemyDisplayHeight(e);
   if(e.hit>0){state='hit';rate=12;}
   else if(Math.abs(e.vx)>5){state='run';rate=4.5;}
@@ -137,45 +147,33 @@ export function createArt(ctx){
   ctx.beginPath();ctx.ellipse(center,e.y+e.h+2,type==='heavy'?27:21,4,0,0,Math.PI*2);ctx.fill();
   ctx.restore();
   drawSprite(ctx,img,scaled[i],center,e.y+e.h,facing,displayH);
-  if(e.shield)drawShield(e,center,facing);
  }
 
- // Placeholder riot shield for guards awaiting dedicated art: blocks frontal
- // hits, so it is drawn on whichever side the guard is currently facing.
- function drawShield(e,center,facing){
-  const y=e.y+e.h-46;
+ // Elite guard carrying a riot shield: idle/walk while patrolling, block
+ // while telegraphing a shot, shoot at the muzzle flash, hurt when a shot
+ // lands on its unshielded side.
+ function drawShieldGuard(e,center,facing){
+  const img=shieldGuardAsset.img;
+  const pose=e.hit>0?'hurt':e.shotFlash>0?'shoot':e.windup>0?'block':Math.abs(e.vx)>5?'walk':'idle';
+  const frame=SHIELD_FRAMES[pose];
   ctx.save();
-  ctx.translate(center+facing*20,y);
-  ctx.fillStyle='#5b7a8caa';
-  ctx.strokeStyle='#e8c877';
-  ctx.lineWidth=2;
-  ctx.beginPath();ctx.roundRect(-9,-34,18,58,6);ctx.fill();ctx.stroke();
+  ctx.globalAlpha=.24;ctx.fillStyle='#071220';ctx.beginPath();ctx.ellipse(center,e.y+e.h+2,27,4,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
   ctx.restore();
+  drawSprite(ctx,img,frame,center,e.y+e.h,facing,88);
  }
 
- // Placeholder hovering gunner mini-boss, awaiting dedicated art: a simple
- // metal-body silhouette with a spinning rotor, distinct from any ground guard.
+ // Hovering gunner mini-boss: idle hover, firing burst, damaged (smoking).
  function drawChopper(e,center,facing,time){
-  const y=e.y+e.h/2;
+  const img=skyWatcherAsset.img;
+  const pose=e.hit>0?'damaged':e.shotFlash>0||e.windup>0?'firing':'idle';
+  const [fx,fy,fw,fh]=SKY_FRAMES[pose];
+  const displayH=54,dw=displayH*(fw/fh);
+  const y=e.y+e.h/2+Math.sin(time*2.4)*4;
   ctx.save();
-  ctx.globalAlpha=.28;ctx.fillStyle='#050a12';ctx.beginPath();ctx.ellipse(center,e.y+e.h+70,26,6,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
-  ctx.translate(center,y+Math.sin(time*2.4)*4);
+  ctx.globalAlpha=.22;ctx.fillStyle='#050a12';ctx.beginPath();ctx.ellipse(center,e.y+e.h+70,22,5,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+  ctx.translate(center,y);
   ctx.scale(facing,1);
-  ctx.fillStyle='#6d7d8c';
-  ctx.strokeStyle='#e0663c';
-  ctx.lineWidth=2.5;
-  ctx.beginPath();ctx.roundRect(-22,-11,44,22,10);ctx.fill();ctx.stroke();
-  ctx.fillStyle=e.hit>0?'#ffdca0':'#bfe3f2';
-  ctx.beginPath();ctx.ellipse(14,-2,8,7,0,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle='#12181f';ctx.lineWidth=2;ctx.stroke();
-  ctx.strokeStyle='#f4c25f';ctx.lineWidth=3;
-  ctx.beginPath();ctx.moveTo(-24,-18);ctx.lineTo(-6,-18);ctx.stroke();
-  const spin=time*22;
-  ctx.strokeStyle='#d8e4ec';ctx.lineWidth=2.4;
-  ctx.beginPath();ctx.moveTo(-15-Math.cos(spin)*22,-18-Math.sin(spin)*4);ctx.lineTo(-15+Math.cos(spin)*22,-18+Math.sin(spin)*4);ctx.stroke();
-  ctx.fillStyle='#e0663c';
-  ctx.beginPath();ctx.roundRect(-8,9,10,7,2);ctx.fill();
-  ctx.beginPath();ctx.roundRect(6,9,10,7,2);ctx.fill();
+  ctx.drawImage(img,fx,fy,fw,fh,-dw/2,-displayH/2,dw,displayH);
   ctx.restore();
  }
 
@@ -204,26 +202,22 @@ export function createArt(ctx){
   drawSprite(ctx,gatekeeper,frames[i],b.x+b.w/2,b.y+b.h,facing,displayH);
  }
 
- // Placeholder final-boss silhouette for chapter 2's captain, awaiting
- // dedicated art: a lean armored officer, visually distinct from the
- // Gatekeeper mech so the two finales don't look identical.
+ // Chapter 2's final boss: the guard commander. No death frames are
+ // available yet, so he simply vanishes once defeated, like the mini-boss.
  function drawCaptain(b,time){
   if(b.hp<=0)return;
+  const img=commanderAsset.img;
   const cx=b.x+b.w/2,base=b.y+b.h,facing=(b.aimX||0)<b.x?-1:1,enraged=b.hp<b.maxHP/2;
+  const pose=b.windup>0||b.shotFlash>0?'combat':'main';
+  const [fx,fy,fw,fh]=COMMANDER_FRAMES[pose];
+  const displayH=150,dw=displayH*(fw/fh);
   ctx.save();
+  ctx.globalAlpha=.3;ctx.fillStyle='#081220';ctx.beginPath();ctx.ellipse(cx,base+3,40,7,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+  if(b.hit>0)ctx.filter='brightness(1.7) saturate(1.2)';
+  else if(enraged)ctx.filter=`saturate(1.6) brightness(${1.1+Math.sin(time*8)*.08})`;
   ctx.translate(cx,base);
   ctx.scale(facing,1);
-  ctx.globalAlpha=.3;ctx.fillStyle='#081220';ctx.beginPath();ctx.ellipse(0,3,40,7,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
-  const flicker=b.hit>0?'#e8b98f':enraged?'#8a2e2e':'#33424f';
-  ctx.fillStyle='#141b22';ctx.beginPath();ctx.moveTo(-20,0);ctx.lineTo(20,0);ctx.lineTo(30,-70);ctx.lineTo(-30,-70);ctx.closePath();ctx.fill();
-  ctx.fillStyle=flicker;ctx.beginPath();ctx.roundRect(-24,-96,48,34,8);ctx.fill();
-  ctx.strokeStyle='#12181f';ctx.lineWidth=3;ctx.strokeRect(-24,-96,48,34);
-  ctx.fillStyle='#101418';ctx.beginPath();ctx.roundRect(-14,-118,28,26,10);ctx.fill();
-  ctx.fillStyle=enraged?'#ff6b5c':'#e8c877';
-  ctx.beginPath();ctx.ellipse(-facing*6,-108,3.4,3.4,0,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.ellipse(facing*6,-108,3.4,3.4,0,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle='#e8c877';ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(24,-90);ctx.lineTo(46,-70+Math.sin(time*10)*4);ctx.stroke();
+  ctx.drawImage(img,fx,fy,fw,fh,-dw/2,-displayH,dw,displayH);
   ctx.restore();
  }
 
