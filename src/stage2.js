@@ -3,7 +3,7 @@ import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?
 import {stepCombat} from './combat.js?v=20260917-straight-1';
 import {createArt} from './art.js?v=20260917-cleanup-2';
 import {createMusic} from './music.js?v=20260917-music-1';
-import {createWiringPuzzle} from '../puzzle-kit/wiring/wiring.js?v=20260919-stage2-embed-1';
+import {createWiringPuzzle} from '../puzzle-kit/wiring/wiring.js?v=20260919-stage2-embed-2';
 import {
   FLOOR_DEFS,FLOOR_COUNT,createProgress,completeFloor,beginElevator,updateElevator,
   MATCH_SYMBOLS,isMatchSolved,CUBE_INITIAL,isCubeSolved
@@ -333,11 +333,14 @@ async function mountWiringPuzzle(){
   mount.className='puzzle-root embedded-puzzle-root';
   body.append(mount);
 
-  // Let the dedicated puzzle soundscape take over while the panel is open.
-  musicCtl?.setMuted(true);
-
   try{
-    const puzzle=await createWiringPuzzle({root:mount,audio:!muted});
+    const puzzle=await createWiringPuzzle({
+      root:mount,
+      audio:!muted,
+      // Keep Stage 2 music playing. Disable only the puzzle's own ambient bed;
+      // rotation and success SFX remain active.
+      audioOptions:{musicVolume:0,sfxVolume:.20}
+    });
     if(session!==puzzleSession||!puzzleOpen||FLOOR_DEFS[progress.currentFloor].puzzle!=='wiring'){
       puzzle.destroy();
       return;
@@ -356,7 +359,6 @@ async function mountWiringPuzzle(){
     console.error('Failed to mount reusable Wiring Puzzle',error);
     if(session!==puzzleSession)return;
     body.innerHTML='<div class="embedded-puzzle-error">تعذر تحميل لوحة دائرة الطاقة.</div>';
-    musicCtl?.setMuted(muted);
   }
 }
 const CUBE_META={start:['ϟ','START','start'],right:['→','',''],down:['↓','',''],lock:['×','LOCK','lock'],junction:['╋','','junction'],down2:['↓','',''],straight:['┃','',''],right2:['→','',''],goal:['◯','GOAL','goal']};
@@ -373,9 +375,7 @@ function openPuzzle(){
   if(def.puzzle==='match')renderMatch();else if(def.puzzle==='wiring')mountWiringPuzzle();else renderCubes();
 }
 function closePuzzle(){
-  const wasWiring=$('puzzle').dataset.type==='wiring';
   puzzleOpen=false;destroyActivePuzzle();$('puzzle').hidden=true;clearInput();
-  if(wasWiring)musicCtl?.setMuted(muted);
   updateAction();
 }
 function doAction(){
