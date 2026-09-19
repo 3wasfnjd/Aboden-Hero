@@ -1,7 +1,7 @@
 import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260917-muzzle-1';
 import {stepCombat} from './combat.js?v=20260919-assets-1';
-import {CHAPTER_COUNT,CHAPTER2_FLOORS,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260919-floors-2';
-import {createArt} from './art-bg.js?v=20260919-floors-2';
+import {CHAPTER_COUNT,CHAPTER2_FLOORS,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260919-floors-3';
+import {createArt} from './art-bg.js?v=20260919-floors-3';
 import {createMusic} from './music.js?v=20260917-music-1';
 import {openPuzzle,close as closePuzzle} from './puzzle-ui.js?v=20260919-puzzles-2';
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx);
@@ -123,7 +123,7 @@ function tick(dt){if(state==='riding')return tickRiding(dt);if(state!=='playing'
  if(toastTime>0){toastTime-=dt;if(toastTime<=0)$('toast').classList.remove('show');}
  updateHUD();updateCombatHUD();
 }
-function draw(){ctx.clearRect(0,0,W,H);art.background(cameraX,reducedMotion?0:time,level.chapter,level.vertical?cameraY:BASE_Y);art.scenery(cameraX);ctx.save();ctx.translate(-cameraX,GROUND_SHIFT-(cameraY-BASE_Y));
+function draw(){ctx.clearRect(0,0,W,H);art.background(cameraX,reducedMotion?0:time,level.chapter,level.vertical?cameraY:BASE_Y,level.tint);art.scenery(cameraX);ctx.save();ctx.translate(-cameraX,GROUND_SHIFT-(cameraY-BASE_Y));
  const visible=(x,w=100)=>x+w>cameraX-100&&x<cameraX+W+100;
  for(const cp of level.checkpoints)if(visible(cp.x))art.checkpoint(cp,time);
  for(const [x,text] of level.signs)art.sign(x,text);

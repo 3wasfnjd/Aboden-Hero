@@ -23,12 +23,14 @@ test('movement, collecting, simultaneous controls, cancellation, pause, checkpoi
  g.pause();assert.equal(g.state,'paused');assert(!g.input.right&&!g.input.shoot);const x=g.player.x;steps(120);assert.equal(g.player.x,x);g.play();
  g.player.x=1650;g.player.y=396;g.player.vy=0;g.player.vx=0;g.player.grounded=true;steps(1);assert.equal(g.checkpoint,1650);g.player.y=700;steps(1);assert.equal(g.player.x,1650);assert.equal(g.player.hp,5);assert.equal(g.stats.deaths,1);
  g.player.x=6415;g.player.y=396;steps(1);assert.equal(g.state,'playing','exit stays locked while boss lives');g.level.boss.hp=0;steps(1);assert.equal(g.state,'chapterEnd','chapter 1 ends before the final mission');g.play();assert.equal(g.state,'playing');assert.equal(g.chapter,2);assert.equal(g.floor,1);assert.equal(g.stats.collected,0);assert.equal(g.checkpoint,110);assert.equal(g.stats.deaths,0);
- for(let f=1;f<4;f++){
-  g.player.x=g.level.terminal.x+5;g.player.y=g.level.terminal.y+5;g.player.grounded=true;steps(1);
-  assert.equal(g.state,'puzzle',`floor ${f} terminal opens the puzzle overlay`);
-  g.debugSolveTerminal();
-  assert.equal(g.state,'playing',`floor ${f} puzzle close resumes play`);
-  assert(g.level.terminal.solved);
+ for(let f=1;f<7;f++){
+  if(g.level.terminal){
+   g.player.x=g.level.terminal.x+5;g.player.y=g.level.terminal.y+5;g.player.grounded=true;steps(1);
+   assert.equal(g.state,'puzzle',`floor ${f} terminal opens the puzzle overlay`);
+   g.debugSolveTerminal();
+   assert.equal(g.state,'playing',`floor ${f} puzzle close resumes play`);
+   assert(g.level.terminal.solved);
+  }
   g.player.x=g.level.elevator.x+10;g.player.y=g.level.elevator.restY-g.player.h;g.player.vy=0;g.player.grounded=true;steps(1);
   assert.equal(g.state,'riding',`floor ${f} stepping onto the car starts the ride`);
   steps(320); // real elevator ride: physically rises from restY to topY over time
@@ -56,9 +58,9 @@ test('dash evades hostile projectiles, normal contact costs health',()=>{
 
 
 test('shielded chapter-2 guards block frontal shots but take damage from behind',()=>{
- g.reset(2);g.play();
+ g.reset(2,3);g.play();
  const e=g.level.enemies.find(x=>x.shield);
- assert(e,'chapter 2 has at least one shielded guard');
+ assert(e,'chapter 2 floor 3 (the workshop) has at least one shielded guard');
  e.windup=0;e.vx=-48;e.hp=3; // facing left: front toward -x, back toward +x
  g.bullets.length=0;g.bullets.push({x:e.x+5,y:e.y+e.h-20,w:13,h:8,vx:620,life:1});
  g.tick(1/60);
@@ -67,12 +69,12 @@ test('shielded chapter-2 guards block frontal shots but take damage from behind'
  g.tick(1/60);
  assert.equal(e.hp,2,'a shot from behind the shield still damages the guard');
 });
-test('the hovering mini-boss appears on floor 2 and the floor-4 captain uses the shared boss escalation',()=>{
- g.reset(2,2);g.play();
+test('the hovering mini-boss appears on floor 5 (the lab) and the rooftop captain uses the shared boss escalation',()=>{
+ g.reset(2,5);g.play();
  const chopper=g.level.enemies.find(x=>x.flying);
- assert(chopper,'chapter 2 floor 2 has a flying mini-boss');
+ assert(chopper,'chapter 2 floor 5 has a flying mini-boss');
  assert(chopper.hp>3,'the mini-boss is tougher than a regular guard');
- g.reset(2,4);g.play();
+ g.reset(2,7);g.play();
  assert.equal(g.level.boss.kind,'captain');
  assert.equal(g.level.boss.maxHP,30);
 });

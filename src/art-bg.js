@@ -11,6 +11,18 @@ const GOAL2_URL='./assets/ui/level/goal2.png';
 const ELEVATOR_CLOSED_URL='./assets/elevator/closed.png';
 const ELEVATOR_OPEN_URL='./assets/elevator/open.png';
 
+// Ambient color grade per building floor theme (lobby/offices/workshop/power/
+// lab/control-room), from the reference cutaway — no bespoke interior art yet,
+// so a tint over the shared rooftop backdrop is what tells floors apart.
+const TINTS={
+ lobby:'rgba(150,130,95,.28)',
+ offices:'rgba(90,170,230,.32)',
+ workshop:'rgba(230,130,30,.34)',
+ power:'rgba(240,200,20,.36)',
+ lab:'rgba(30,225,175,.34)',
+ control:'rgba(230,25,40,.38)',
+};
+
 function loadImage(url){
  const img=new Image();
  img.decoding='async';
@@ -202,7 +214,7 @@ function drawGoal(ctx,g,time,locked){
 export function createArt(ctx){
  const base=createCharacterArt(ctx);
 
- function background(camera,time,chapter=1,camY=396){
+ function background(camera,time,chapter=1,camY=396,tint=null){
   if(chapter===2)drawCity2(ctx,Math.max(0,(396-camY)*.12));
   else drawCity(ctx);
 
@@ -216,6 +228,18 @@ export function createArt(ctx){
   haze.addColorStop(1,'rgba(4,10,18,.18)');
   ctx.fillStyle=haze;
   ctx.fillRect(0,shift+280,W,260);
+
+  // Each building floor gets a distinct ambient color grade — a lightweight
+  // way to tell "the offices" from "the lab" apart without bespoke interior
+  // art for every floor. 'color' blend keeps the scene's shapes/lighting but
+  // shifts its hue, reading as colored light rather than a flat haze.
+  const floorTint=TINTS[tint];
+  if(floorTint){
+   ctx.save();
+   ctx.globalCompositeOperation='color';
+   ctx.fillStyle=floorTint;ctx.globalAlpha=1;ctx.fillRect(0,0,W,H);
+   ctx.restore();
+  }
  }
 
  function scenery(){}
