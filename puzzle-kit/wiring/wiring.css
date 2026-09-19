@@ -45,7 +45,7 @@
 .wiring-status{
   position:absolute;
   left:50%;
-  top:5.4%;
+  top:18.4%;
   z-index:4;
   transform:translateX(-50%);
   min-width:24%;
@@ -80,3 +80,54 @@
   cursor:pointer;
 }
 .wiring-reset:active{transform:translateY(1px)}
+
+.wiring-success-light{
+  position:absolute;
+  z-index:3;
+  transform:translate(-50%,-50%) scale(.86);
+  border-radius:999px;
+  opacity:0;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,
+      rgba(236,255,242,.98) 0%,
+      rgba(112,255,157,.98) 28%,
+      rgba(27,238,91,.98) 58%,
+      rgba(0,139,45,.98) 100%);
+  border:1px solid rgba(175,255,202,.95);
+  box-shadow:
+    0 0 5px 2px rgba(130,255,171,.95),
+    0 0 14px 5px rgba(54,255,118,.82),
+    0 0 34px 10px rgba(0,255,90,.55);
+  filter:saturate(1.35) brightness(1.2);
+  transition:opacity .22s ease,transform .28s ease;
+}
+.wiring-success-light::after{
+  content:"";
+  position:absolute;
+  inset:-55% -18%;
+  border-radius:999px;
+  background:radial-gradient(ellipse at center,rgba(70,255,128,.42) 0%,rgba(29,255,103,.18) 42%,rgba(0,255,85,0) 75%);
+  filter:blur(4px);
+}
+.wiring-complete .wiring-success-light{
+  opacity:1;
+  transform:translate(-50%,-50%) scale(1);
+  animation:wiring-success-pulse 1.15s ease-in-out infinite alternate;
+}
+@keyframes wiring-success-pulse{
+  from{
+    filter:saturate(1.28) brightness(1.12);
+    box-shadow:
+      0 0 5px 2px rgba(130,255,171,.9),
+      0 0 14px 5px rgba(54,255,118,.72),
+      0 0 30px 9px rgba(0,255,90,.48);
+  }
+  to{
+    filter:saturate(1.5) brightness(1.38);
+    box-shadow:
+      0 0 7px 3px rgba(205,255,219,1),
+      0 0 20px 7px rgba(62,255,124,.98),
+      0 0 46px 14px rgba(0,255,90,.7);
+  }
+}
