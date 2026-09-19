@@ -32,11 +32,20 @@ def alpha_bbox(image: Image.Image, quadrant: tuple[int, int]) -> tuple[int, int,
 
     quad = image.crop((left, top, right, bottom))
     alpha = quad.getchannel("A")
-    local = alpha.getbbox()
+    # Ignore near-zero alpha residue when finding the visual bounds. The actual
+    # pixels inside the final crop remain untouched. Keep a transparent margin
+    # so antialiasing and the original soft edge are retained.
+    visible = alpha.point(lambda value: 255 if value >= 16 else 0)
+    local = visible.getbbox()
     if local is None:
         raise RuntimeError(f"No visible pixels found in quadrant {quadrant}")
 
+    padding = 10
     lx0, ly0, lx1, ly1 = local
+    lx0 = max(0, lx0 - padding)
+    ly0 = max(0, ly0 - padding)
+    lx1 = min(quad.width, lx1 + padding)
+    ly1 = min(quad.height, ly1 + padding)
     return left + lx0, top + ly0, left + lx1, top + ly1
 
 
@@ -56,7 +65,7 @@ def main() -> None:
     manifest = {
         "source": SOURCE.name,
         "sourceSize": {"width": source.width, "height": source.height},
-        "method": "lossless alpha-bounds crop; no resize; no recolor",
+        "method": "lossless crop using alpha>=16 visual bounds + 10px transparent margin; no resize; no recolor",
         "pieces": {},
     }
 
