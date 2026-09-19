@@ -11,16 +11,26 @@ const GOAL2_URL='./assets/ui/level/goal2.png';
 const ELEVATOR_CLOSED_URL='./assets/elevator/closed.png';
 const ELEVATOR_OPEN_URL='./assets/elevator/open.png';
 
-// Ambient color grade per building floor theme (lobby/offices/workshop/power/
-// lab/control-room), from the reference cutaway — no bespoke interior art yet,
-// so a tint over the shared rooftop backdrop is what tells floors apart.
+// Each building floor's own interior slice, cropped directly from the
+// reference building cutaway (lobby at the bottom to the control room at
+// the top) — the real room art per floor, not a color-graded placeholder.
+const FLOOR_BG_URLS={
+ lobby:'./assets/backgrounds/floor-lobby.png',
+ offices:'./assets/backgrounds/floor-offices.png',
+ workshop:'./assets/backgrounds/floor-workshop.png',
+ power:'./assets/backgrounds/floor-power.png',
+ lab:'./assets/backgrounds/floor-lab.png',
+ control:'./assets/backgrounds/floor-control.png',
+};
+// A light color accent per floor on top of its real art, mainly for the
+// glow cast onto the platforms/ledges the player actually stands on.
 const TINTS={
- lobby:'rgba(150,130,95,.28)',
- offices:'rgba(90,170,230,.32)',
- workshop:'rgba(230,130,30,.34)',
- power:'rgba(240,200,20,.36)',
- lab:'rgba(30,225,175,.34)',
- control:'rgba(230,25,40,.38)',
+ lobby:'rgba(150,130,95,.10)',
+ offices:'rgba(90,170,230,.12)',
+ workshop:'rgba(230,130,30,.12)',
+ power:'rgba(240,200,20,.14)',
+ lab:'rgba(30,225,175,.13)',
+ control:'rgba(230,25,40,.15)',
 };
 
 function loadImage(url){
@@ -43,6 +53,7 @@ const goalAsset=loadImage(GOAL_URL);
 const goal2Asset=loadImage(GOAL2_URL);
 const elevatorClosedAsset=loadImage(ELEVATOR_CLOSED_URL);
 const elevatorOpenAsset=loadImage(ELEVATOR_OPEN_URL);
+const floorBgAssets=Object.fromEntries(Object.entries(FLOOR_BG_URLS).map(([k,url])=>[k,loadImage(url)]));
 const CHECKPOINT_DISPLAY_H=100;
 const GOAL_DISPLAY_H=175;
 const ELEVATOR_DISPLAY_W=190;
@@ -100,6 +111,34 @@ function drawCity2(ctx,climbShift=0){
   ctx.fillStyle=sky;ctx.fillRect(0,0,W,climbShift);
  }
  ctx.drawImage(img,sx,0,srcW,img.naturalHeight,0,climbShift,W,H);
+ ctx.restore();
+ return true;
+}
+
+// A building floor's own interior slice, framed like a mural behind the
+// climbing shaft rather than stretched to fill the whole tall canvas (the
+// source crop is short and wide — stretching it vertically would blur it
+// badly). Sky/void above and below is filled with a dark gradient tinted to
+// the floor's theme, and the whole thing drifts slightly with climbShift so
+// climbing still reads as upward motion.
+function drawFloorInterior(ctx,key,climbShift){
+ const asset=floorBgAssets[key];
+ const W=ctx.canvas.width||960,H=ctx.canvas.height||540;
+ const dark='#0a0f18';
+ ctx.save();
+ ctx.fillStyle=dark;ctx.fillRect(0,0,W,H);
+ if(asset&&asset.ready){
+  const img=asset.img,dw=W,dh=dw*(img.naturalHeight/img.naturalWidth);
+  const cy=H*.4-climbShift*.4,top=cy-dh/2,bottom=cy+dh/2,fade=90;
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  ctx.drawImage(img,0,top,dw,dh);
+  const fadeTop=ctx.createLinearGradient(0,top-fade,0,top+fade);
+  fadeTop.addColorStop(0,dark);fadeTop.addColorStop(1,'rgba(10,15,24,0)');
+  ctx.fillStyle=fadeTop;ctx.fillRect(0,0,W,top+fade);
+  const fadeBottom=ctx.createLinearGradient(0,bottom-fade,0,bottom+fade);
+  fadeBottom.addColorStop(0,'rgba(10,15,24,0)');fadeBottom.addColorStop(1,dark);
+  ctx.fillStyle=fadeBottom;ctx.fillRect(0,bottom-fade,W,H-(bottom-fade));
+ }
  ctx.restore();
  return true;
 }
@@ -215,7 +254,10 @@ export function createArt(ctx){
  const base=createCharacterArt(ctx);
 
  function background(camera,time,chapter=1,camY=396,tint=null){
-  if(chapter===2)drawCity2(ctx,Math.max(0,(396-camY)*.12));
+  const climbShift=Math.max(0,(396-camY)*.12);
+  const isBuildingFloor=chapter===2&&FLOOR_BG_URLS[tint];
+  if(isBuildingFloor)drawFloorInterior(ctx,tint,climbShift);
+  else if(chapter===2)drawCity2(ctx,climbShift);
   else drawCity(ctx);
 
   // Light separation only around the gameplay plane. The city remains crisp,
@@ -229,12 +271,11 @@ export function createArt(ctx){
   ctx.fillStyle=haze;
   ctx.fillRect(0,shift+280,W,260);
 
-  // Each building floor gets a distinct ambient color grade — a lightweight
-  // way to tell "the offices" from "the lab" apart without bespoke interior
-  // art for every floor. 'color' blend keeps the scene's shapes/lighting but
-  // shifts its hue, reading as colored light rather than a flat haze.
+  // A light color accent on top of the real floor art (or, if that art
+  // hasn't loaded yet, on the shared rooftop backdrop as a fallback) — tells
+  // "the offices" from "the lab" apart even before/without bespoke art.
   const floorTint=TINTS[tint];
-  if(floorTint){
+  if(floorTint&&!isBuildingFloor){
    ctx.save();
    ctx.globalCompositeOperation='color';
    ctx.fillStyle=floorTint;ctx.globalAlpha=1;ctx.fillRect(0,0,W,H);

@@ -1,7 +1,7 @@
 import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260917-muzzle-1';
 import {stepCombat} from './combat.js?v=20260919-assets-1';
 import {CHAPTER_COUNT,CHAPTER2_FLOORS,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260919-floors-3';
-import {createArt} from './art-bg.js?v=20260919-floors-3';
+import {createArt} from './art-bg.js?v=20260919-floors-4';
 import {createMusic} from './music.js?v=20260917-music-1';
 import {openPuzzle,close as closePuzzle} from './puzzle-ui.js?v=20260919-puzzles-2';
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx);
