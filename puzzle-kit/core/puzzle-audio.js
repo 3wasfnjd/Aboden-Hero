@@ -1,8 +1,8 @@
 export class PuzzleAudio {
   constructor({
     masterVolume=.9,
-    musicVolume=.055,
-    sfxVolume=.16,
+    musicVolume=.08,
+    sfxVolume=.20,
     ambientInterval=2400
   }={}){
     this.masterVolume=masterVolume;
