@@ -123,6 +123,7 @@ export class WiringPuzzle extends PuzzleCore {
   reset(){
     super.reset();
     this.rotations=[...INITIAL_ROTATIONS];
+    this.started=true;
     this.render();
     return true;
   }
