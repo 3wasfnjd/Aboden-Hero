@@ -5,6 +5,13 @@ import {
   WIRING_LAYOUT,INITIAL_ROTATIONS,connectedFromStart,isWiringSolved,normalizeRotation
 } from './wiring-logic.js';
 
+const PIECE_DISPLAY_SCALE=Object.freeze({
+  straight:.82,
+  elbow:1,
+  cross:1,
+  tee:1
+});
+
 const SLOT_RECTS=Object.freeze([
   [0.198,0.226,0.144,0.157],[0.347,0.226,0.144,0.157],[0.497,0.226,0.144,0.157],[0.646,0.226,0.144,0.157],
   [0.198,0.397,0.144,0.157],[0.347,0.397,0.144,0.157],[0.497,0.397,0.144,0.157],[0.646,0.397,0.144,0.157],
@@ -51,6 +58,7 @@ export class WiringPuzzle extends PuzzleCore {
       button.type='button';
       button.className='wiring-piece';
       button.dataset.index=String(index);
+      button.dataset.type=tile.type;
       button.ariaLabel=`قطعة توصيل ${index+1} — اضغط للتدوير`;
       Object.assign(button.style,{
         left:`${rx*width}px`,
@@ -101,7 +109,9 @@ export class WiringPuzzle extends PuzzleCore {
     this.pieceButtons.forEach((button,index)=>{
       const rotation=normalizeRotation(this.rotations[index]);
       const image=button.querySelector('img');
-      image.style.transform=`rotate(${rotation*90}deg)`;
+      const tile=WIRING_LAYOUT[index];
+      const displayScale=PIECE_DISPLAY_SCALE[tile.type]??1;
+      image.style.transform=`rotate(${rotation*90}deg) scale(${displayScale})`;
       button.classList.toggle('powered',powered.has(index));
       button.classList.toggle('solved',this.solved&&powered.has(index));
       button.disabled=this.solved;
