@@ -5,11 +5,13 @@ import {
   WIRING_LAYOUT,INITIAL_ROTATIONS,connectedFromStart,isWiringSolved,normalizeRotation
 } from './wiring-logic.js';
 
-const PIECE_DISPLAY_SCALE=Object.freeze({
-  straight:.82,
-  elbow:1,
-  cross:1,
-  tee:1
+const PIECE_DISPLAY_TRANSFORM=Object.freeze({
+  // The straight source is much taller/narrower (229×477) than the other
+  // pieces. Normalize its connector thickness without shortening it too much.
+  straight:Object.freeze({x:.72,y:.89}),
+  elbow:Object.freeze({x:1,y:1}),
+  cross:Object.freeze({x:1,y:1}),
+  tee:Object.freeze({x:1,y:1})
 });
 
 const SLOT_RECTS=Object.freeze([
@@ -110,8 +112,8 @@ export class WiringPuzzle extends PuzzleCore {
       const rotation=normalizeRotation(this.rotations[index]);
       const image=button.querySelector('img');
       const tile=WIRING_LAYOUT[index];
-      const displayScale=PIECE_DISPLAY_SCALE[tile.type]??1;
-      image.style.transform=`rotate(${rotation*90}deg) scale(${displayScale})`;
+      const display=PIECE_DISPLAY_TRANSFORM[tile.type]??{x:1,y:1};
+      image.style.transform=`rotate(${rotation*90}deg) scaleX(${display.x}) scaleY(${display.y})`;
       button.classList.toggle('powered',powered.has(index));
       button.classList.toggle('solved',this.solved&&powered.has(index));
       button.disabled=this.solved;
