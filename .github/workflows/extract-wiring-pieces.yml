@@ -1,0 +1,48 @@
+name: Extract Wiring Puzzle Assets
+
+on:
+  push:
+    branches:
+      - main
+      - feature/wiring-puzzle-v1-20260919
+    paths:
+      - 'puzzle-kit/wiring/assets/original/pipe-pieces.png'
+      - 'scripts/extract_wiring_pieces.py'
+      - '.github/workflows/extract-wiring-pieces.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Pillow
+        run: python -m pip install --disable-pip-version-check pillow
+      - name: Crop original transparent pipe sheet
+        run: python scripts/extract_wiring_pieces.py
+      - name: Verify generated PNG assets
+        run: |
+          test -s puzzle-kit/wiring/assets/original/pipe-straight.png
+          test -s puzzle-kit/wiring/assets/original/pipe-elbow.png
+          test -s puzzle-kit/wiring/assets/original/pipe-cross.png
+          test -s puzzle-kit/wiring/assets/original/pipe-tee.png
+          test -s puzzle-kit/wiring/assets/original/pieces-manifest.json
+      - name: Commit generated lossless crops
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add             puzzle-kit/wiring/assets/original/pipe-straight.png             puzzle-kit/wiring/assets/original/pipe-elbow.png             puzzle-kit/wiring/assets/original/pipe-cross.png             puzzle-kit/wiring/assets/original/pipe-tee.png             puzzle-kit/wiring/assets/original/pieces-manifest.json
+          if git diff --cached --quiet; then
+            echo "Generated assets are already current."
+          else
+            git commit -m "Generate lossless wiring puzzle piece crops"
+            git push origin "HEAD:${{ github.ref_name }}"
+          fi
