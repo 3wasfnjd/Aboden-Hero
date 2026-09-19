@@ -15,6 +15,14 @@ sprite/image assets under `assets/`.
   opens once it's defeated.
 - Background music and SFX start automatically once the mission begins.
 
+## Chapter 2 — Rooftop Elevator
+- Play directly: https://3wasfnjd.github.io/Aboden-Hero/stage2.html
+- Six vertically stacked floors connected by a dedicated elevator sequence.
+- Floors 1, 3 and 5 are combat encounters using the existing City, Sniper and Heavy guards.
+- Floors 2, 4 and 6 are interactive puzzles: symbol matching, power wiring and cube arrangement.
+- Completing a floor powers its indicator green and unlocks the elevator to the next floor.
+- Chapter 1 victory now continues into Chapter 2 instead of immediately restarting.
+
 ## Controls
 - Move: arrows or A/D. Jump: Up or K. Shoot: J or Space. Dash: L or Shift.
 - Pause/resume: Escape or the pause button.
@@ -38,6 +46,6 @@ module/CSS query strings avoid mixing files between releases.
 - `assets/` — sprite sheets, backgrounds and UI art.
 
 ## Validation
-`npm test` runs 29 Node tests covering movement, jumps, dash, combat, checkpoints,
+`npm test` runs the Node test suite covering movement, jumps, dash, combat, checkpoints,
 pickups, pause/respawn, boss defeat and the locked/unlocked exit. Integration tests
 use a minimal DOM adapter, not a real device; manual browser/mobile checks are separate.
