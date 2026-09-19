@@ -41,9 +41,25 @@ const healthCrossAsset=loadImage(HEALTH_CROSS_URL);
 const shieldGuardAsset=loadImage(SHIELD_GUARD_URL);
 const skyWatcherAsset=loadImage(SKY_WATCHER_URL);
 const commanderAsset=loadImage(COMMANDER_URL);
-const SHIELD_FRAMES={idle:[8,12,172,201],walk:[200,9,167,204],block:[384,18,177,195],shoot:[570,30,183,183],hurt:[763,3,175,210]};
 const SKY_FRAMES={idle:[10,3,330,190],firing:[353,3,344,189],damaged:[734,3,282,190]};
-const COMMANDER_FRAMES={main:[28,3,225,460],combat:[284,4,275,459]};
+// Full animation sheets (idle/aim/charge/fire/hit/enraged[/death]), cropped
+// from the delivered reference sheets at their native resolution.
+const SHIELD_FRAMES={
+ idle:[[79,4,148,192],[386,3,146,193],[691,4,147,192],[997,4,147,192]],
+ aim:[[68,202,169,192],[371,202,175,192],[675,202,180,192]],
+ charge:[[63,400,179,197],[354,423,210,174],[643,415,244,182]],
+ fire:[[44,603,217,211],[349,604,219,210],[644,603,242,211],[946,618,250,196]],
+ hit:[[74,820,157,197],[377,820,163,197]]
+};
+const COMMANDER_FRAMES={
+ idle:[[180,3,201,202],[736,14,210,191],[1292,4,220,201],[1840,5,247,200]],
+ aim:[[150,220,261,182],[681,220,320,182],[1232,211,340,191]],
+ charge:[[153,408,254,191],[681,418,320,181],[1233,418,338,181]],
+ fire:[[188,605,185,182],[721,614,240,173],[1282,614,240,173],[1807,614,313,173]],
+ hit:[[174,793,212,179],[564,793,555,179]],
+ enraged:[[148,978,265,195],[698,978,286,195],[1243,986,318,187]],
+ death:[[238,1196,85,141],[781,1179,120,158],[1342,1225,120,112],[1903,1179,120,158],[2459,1179,130,158],[3020,1268,130,69],[3585,1179,122,158],[4140,1274,134,63]]
+};
 const ROCKET_DISPLAY_H=34;
 const HERO_BULLET_DISPLAY_H=17;
 const ENEMY_BULLET_DISPLAY_H=15;
@@ -126,7 +142,7 @@ export function createArt(ctx){
   const center=e.x+e.w/2;
   const facing=e.windup>0&&e.aimX?e.aimX<center?-1:1:e.vx<0?-1:1;
   if(e.flying){drawChopper(e,center,facing,time);return;}
-  if(e.shield){drawShieldGuard(e,center,facing);return;}
+  if(e.shield){drawShieldGuard(e,center,facing,time);return;}
   const type=enemyKind(e);
   const asset=type==='city'?cityAsset:type==='sniper'?sniperAsset:heavyAsset;
   const frames=type==='city'?CITY_FRAMES:type==='sniper'?SNIPER_FRAMES:HEAVY_FRAMES;
@@ -149,17 +165,31 @@ export function createArt(ctx){
   drawSprite(ctx,img,scaled[i],center,e.y+e.h,facing,displayH);
  }
 
- // Elite guard carrying a riot shield: idle/walk while patrolling, block
- // while telegraphing a shot, shoot at the muzzle flash, hurt when a shot
- // lands on its unshielded side.
- function drawShieldGuard(e,center,facing){
+ // Picks a state name from the shared idle/aim/charge/fire/hit[/enraged]
+ // vocabulary: charge is the early, dashing half of the windup telegraph,
+ // aim is the settled half right before the shot fires.
+ function pickAnimState(e,enraged){
+  if(e.hit>0)return 'hit';
+  if(e.shotFlash>0)return 'fire';
+  if(e.windup>0)return e.windup>(e.windupDuration??.48)*.45?'charge':'aim';
+  return enraged?'enraged':'idle';
+ }
+ function animFrame(frames,state,time,rate){
+  const set=frames[state]||frames.idle;
+  return set[Math.floor(time*rate)%set.length];
+ }
+
+ // Elite guard carrying a riot shield: blocks frontal hits (see main.js),
+ // with its own idle/aim/charge/fire/hit animation cycle.
+ function drawShieldGuard(e,center,facing,time){
   const img=shieldGuardAsset.img;
-  const pose=e.hit>0?'hurt':e.shotFlash>0?'shoot':e.windup>0?'block':Math.abs(e.vx)>5?'walk':'idle';
-  const frame=SHIELD_FRAMES[pose];
+  const state=pickAnimState(e,false);
+  const rate=state==='fire'?16:state==='charge'?11:state==='aim'?8:state==='hit'?10:3;
+  const frame=animFrame(SHIELD_FRAMES,state,time,rate);
   ctx.save();
   ctx.globalAlpha=.24;ctx.fillStyle='#071220';ctx.beginPath();ctx.ellipse(center,e.y+e.h+2,27,4,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
   ctx.restore();
-  drawSprite(ctx,img,frame,center,e.y+e.h,facing,88);
+  drawSprite(ctx,img,frame,center,e.y+e.h,facing,enemyDisplayHeight(e));
  }
 
  // Hovering gunner mini-boss: idle hover, firing burst, damaged (smoking).
@@ -202,22 +232,31 @@ export function createArt(ctx){
   drawSprite(ctx,gatekeeper,frames[i],b.x+b.w/2,b.y+b.h,facing,displayH);
  }
 
- // Chapter 2's final boss: the guard commander. No death frames are
- // available yet, so he simply vanishes once defeated, like the mini-boss.
+ // Chapter 2's final boss: the guard commander, with the same idle/aim/
+ // charge/fire/hit/enraged/death cycle as the shield guard, at boss scale.
  function drawCaptain(b,time){
-  if(b.hp<=0)return;
-  const img=commanderAsset.img;
-  const cx=b.x+b.w/2,base=b.y+b.h,facing=(b.aimX||0)<b.x?-1:1,enraged=b.hp<b.maxHP/2;
-  const pose=b.windup>0||b.shotFlash>0?'combat':'main';
-  const [fx,fy,fw,fh]=COMMANDER_FRAMES[pose];
-  const displayH=150,dw=displayH*(fw/fh);
+  const cx=b.x+b.w/2,base=b.y+b.h,facing=(b.aimX||0)<b.x?-1:1;
+  const displayH=150;
+  if(b.hp<=0){
+   if(!bossDeathStart.has(b))bossDeathStart.set(b,time);
+   const elapsed=time-bossDeathStart.get(b);
+   const duration=1.35;
+   if(elapsed>=duration)return;
+   const set=COMMANDER_FRAMES.death;
+   const i=Math.min(set.length-1,Math.floor(elapsed/duration*set.length));
+   drawSprite(ctx,commanderAsset.img,set[i],cx,base,facing,displayH*.9);
+   return;
+  }
+  bossDeathStart.delete(b);
+  const enraged=b.hp<b.maxHP/2;
+  const state=pickAnimState(b,enraged);
+  const rate=state==='fire'?18:state==='charge'?12:state==='aim'?9:state==='hit'?12:state==='enraged'?9:3.2;
+  const frame=animFrame(COMMANDER_FRAMES,state,time,rate);
   ctx.save();
   ctx.globalAlpha=.3;ctx.fillStyle='#081220';ctx.beginPath();ctx.ellipse(cx,base+3,40,7,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
   if(b.hit>0)ctx.filter='brightness(1.7) saturate(1.2)';
   else if(enraged)ctx.filter=`saturate(1.6) brightness(${1.1+Math.sin(time*8)*.08})`;
-  ctx.translate(cx,base);
-  ctx.scale(facing,1);
-  ctx.drawImage(img,fx,fy,fw,fh,-dw/2,-displayH,dw,displayH);
+  drawSprite(ctx,commanderAsset.img,frame,cx,base,facing,displayH);
   ctx.restore();
  }
 
