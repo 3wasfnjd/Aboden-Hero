@@ -14,6 +14,12 @@ const PIECE_DISPLAY_TRANSFORM=Object.freeze({
   tee:Object.freeze({x:1,y:1})
 });
 
+const SUCCESS_LIGHTS=Object.freeze([
+  Object.freeze({id:'top',x:.48,y:.09,width:.22,height:.024}),
+  Object.freeze({id:'left',x:.24,y:.15,width:.068,height:.024}),
+  Object.freeze({id:'right',x:.77,y:.16,width:.068,height:.024})
+]);
+
 const SLOT_RECTS=Object.freeze([
   [0.198,0.226,0.144,0.157],[0.347,0.226,0.144,0.157],[0.497,0.226,0.144,0.157],[0.646,0.226,0.144,0.157],
   [0.198,0.397,0.144,0.157],[0.347,0.397,0.144,0.157],[0.497,0.397,0.144,0.157],[0.646,0.397,0.144,0.157],
@@ -28,6 +34,7 @@ export class WiringPuzzle extends PuzzleCore {
     this.pieceLayer=null;
     this.statusEl=null;
     this.resetButton=null;
+    this.successLights=[];
     this.rotations=[...INITIAL_ROTATIONS];
     this.pieceButtons=[];
   }
@@ -80,6 +87,20 @@ export class WiringPuzzle extends PuzzleCore {
       return button;
     });
 
+    this.successLights=SUCCESS_LIGHTS.map(light=>{
+      const el=document.createElement('span');
+      el.className=`wiring-success-light wiring-success-light--${light.id}`;
+      el.ariaHidden='true';
+      Object.assign(el.style,{
+        left:`${light.x*width}px`,
+        top:`${light.y*height}px`,
+        width:`${light.width*width}px`,
+        height:`${light.height*height}px`
+      });
+      this.stage.scene.append(el);
+      return el;
+    });
+
     this.statusEl=document.createElement('div');
     this.statusEl.className='wiring-status';
     this.statusEl.textContent='SYSTEM OFFLINE';
@@ -118,6 +139,8 @@ export class WiringPuzzle extends PuzzleCore {
       button.classList.toggle('solved',this.solved&&powered.has(index));
       button.disabled=this.solved;
     });
+
+    this.root.classList.toggle('wiring-complete',this.solved);
 
     if(this.statusEl){
       this.statusEl.textContent=this.solved?'SYSTEM ONLINE':'SYSTEM OFFLINE';
