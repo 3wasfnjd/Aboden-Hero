@@ -31,7 +31,7 @@ function showOverlay(kind){state=kind;clearInput();$('overlay').hidden=false;$('
  if(kind==='won'){poster.src='./assets/victory-poster.jpeg';poster.alt='البطل واقف منتصرًا فوق حارس البوابة المحطم';}
  else{poster.src='./assets/aboden-poster.jpeg';poster.alt='بوستر Aboden Hero: البطل بالجاكيت الأحمر';}
  if(kind==='paused'){$('eyebrow').textContent='MISSION PAUSED';$('title').innerHTML='المهمة<br><em>متوقفة.</em>';$('description').textContent='توقفت اللعبة. أكمل من مكانك عندما تكون جاهزًا.';$('play').textContent='نكمل المغامرة ◀';}
- if(kind==='won'){$('eyebrow').textContent='MISSION COMPLETE';$('title').innerHTML='المدينة<br><em>بأمان.</em>';$('description').textContent=`هزمت حارس البوابة. جمعت ${collected} شحنة وأسقطت ${kills} خصوم. الوقت ${Math.floor(elapsed/60)}:${String(Math.floor(elapsed%60)).padStart(2,'0')} • مرات العودة ${deaths}`;$('play').textContent='العب من جديد ↻';}
+ if(kind==='won'){$('eyebrow').textContent='MISSION COMPLETE';$('title').innerHTML='المدينة<br><em>بأمان.</em>';$('description').textContent=`هزمت حارس البوابة. جمعت ${collected} شحنة وأسقطت ${kills} خصوم. الوقت ${Math.floor(elapsed/60)}:${String(Math.floor(elapsed%60)).padStart(2,'0')} • مرات العودة ${deaths}`;$('play').textContent='ابدأ الفصل الثاني ↑';}
  $('pause').textContent='▶';$('pause').setAttribute('aria-label','متابعة اللعب');updateCombatHUD();
 }
 function play(){unlockAudio();if(state==='menu'||state==='won')reset();state='playing';$('overlay').hidden=true;$('hud').hidden=false;$('controls').hidden=false;$('pause').textContent='Ⅱ';$('pause').setAttribute('aria-label','إيقاف مؤقت');clearInput();last=performance.now();accumulator=0;updateCombatHUD();}
@@ -92,7 +92,7 @@ for(const button of buttons){button.addEventListener('pointerdown',e=>{e.prevent
 window.addEventListener('blur',()=>{clearInput();if(state==='playing')showOverlay('paused');});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){clearInput();if(state==='playing')showOverlay('paused');}});
 document.addEventListener('contextmenu',e=>{if(e.target.closest('#controls'))e.preventDefault();});
-$('play').addEventListener('click',()=>{play();$('play').blur();});$('pause').addEventListener('click',()=>{pause();$('pause').blur();});
+$('play').addEventListener('click',()=>{if(state==='won'){location.href='./stage2.html';return;}play();$('play').blur();});$('pause').addEventListener('click',()=>{pause();$('pause').blur();});
 $('sound').addEventListener('click',()=>{muted=!muted;unlockAudio();musicCtl?.setMuted(muted);$('sound').textContent=muted?'♪':'♫';$('sound').setAttribute('aria-label',muted?'تشغيل الصوت':'كتم الصوت');$('sound').setAttribute('aria-pressed',String(!muted));if(!muted)sound(660,.15);$('sound').blur();});
 reset();updateCombatHUD();requestAnimationFrame(frame);
 // Opt-in local test harness; absent from normal game sessions.
