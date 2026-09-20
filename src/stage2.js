@@ -9,43 +9,82 @@ import {createCubesPuzzle} from '../puzzle-kit/cubes/cubes.js?v=20260920-stage2-
 import {
   FLOOR_DEFS,FLOOR_COUNT,createProgress,completeFloor,beginElevator,updateElevator
 } from './stage2-state.js?v=20260919-stage2-2';
+import {
+  TOWER_WIDTH,TOWER_HEIGHT,FLOOR_LEFT,FLOOR_RIGHT,
+  ELEVATOR_X,ELEVATOR_WIDTH,ELEVATOR_PLATFORM_HEIGHT,
+  PUZZLE_X,FLOOR_LABEL_X,groundY,makeFloorPlatforms,elevatorGround
+} from './stage2-tower.js?v=20260920-tower-1';
 
 const $=id=>document.getElementById(id);
 const canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx);
-const W=720,H=1280,STEP=1/120,ZOOM=1.34;
-const VIEW_W=W/ZOOM,VIEW_H=H/ZOOM;
-
-const FLOOR_W=960,FLOOR_H=320,FLOOR_PITCH=320,GROUND_OFFSET=274;
-const TOWER_X=960,TOWER_W=640,WORLD_W=TOWER_X+TOWER_W,WORLD_H=FLOOR_PITCH*FLOOR_COUNT;
-const SHAFT_X=1112,SHAFT_W=220,CABIN_X=1136,CABIN_W=172,CABIN_H=218,ELEVATOR_ENTRY_X=1120;
-const ELEVATOR_DURATION=3.05;
-const PUZZLE_X={2:455,4:365,6:430};
-const floorY=f=>(FLOOR_COUNT-f)*FLOOR_PITCH;
-const groundY=f=>floorY(f)+GROUND_OFFSET;
-const floorSourceY=(img,f)=>(f-1)*(img.naturalHeight/FLOOR_COUNT);
-const floorSourceH=img=>img.naturalHeight/FLOOR_COUNT;
-const cameraFloorY=f=>clamp(groundY(f)-VIEW_H*.67,0,WORLD_H-VIEW_H);
+const W=720,H=1280,STEP=1/120;
+const WORLD_W=TOWER_WIDTH,WORLD_H=TOWER_HEIGHT;
+const FIT_ZOOM=Math.min(W/WORLD_W,H/WORLD_H);
+const GAME_ZOOM=1.90;
+const INTRO_DURATION=3.2;
+const ELEVATOR_DURATION=2.75;
 const lerp=(a,b,t)=>a+(b-a)*t;
 const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+const viewW=zoom=>W/zoom;
+const viewH=zoom=>H/zoom;
 
 const keys=new Set(),touch=new Map(),buttons=[...document.querySelectorAll('[data-action]')];
 const moveStick=$('move-stick'),moveStickBase=moveStick?.querySelector('.move-stick-base'),moveStickKnob=moveStick?.querySelector('.move-stick-knob');
 const STICK_RANGE=44,STICK_DEADZONE=.16;
 let stickPointerId=null,stickCenterX=0,stickCenterY=0,stickX=0,stickY=0;
-let progress=createProgress(),player=createPlayer(105,groundY(1)-44),state='menu',time=0,elapsed=0;
-let cameraX=0,cameraY=cameraFloorY(1),bullets=[],enemyShots=[],particles=[],enemySets=new Map();
+let progress=createProgress(),player=createPlayer(FLOOR_LEFT+90,groundY(1)-44),state='menu',time=0,elapsed=0;
+let cameraX=0,cameraY=0,cameraZoom=FIT_ZOOM,introTime=0,introActive=false;
+let bullets=[],enemyShots=[],particles=[],enemySets=new Map();
 let kills=0,deaths=0,toastTime=0,accumulator=0,last=0,elevatorTime=0,puzzleOpen=false;
 let activePuzzleModule=null,puzzleSession=0;
 let muted=false,audio=null,musicCtl=null;
 
 
-function loadImage(url){const img=new Image();img.decoding='async';img.src=url;return img;}
-const floorAtlas=loadImage('./assets/stage2/floors-atlas.webp?v=20260919-hi2');
-const elevatorImage=loadImage('./assets/stage2/elevator.webp?v=20260919-hi2');
+function loadImage(url){const img=new Image();img.decoding='async';if(url)img.src=url;return img;}
+const towerBackground=loadImage();
+const TOWER_BG_PARTS=Array.from({length:4},(_,i)=>`./assets/stage2/tower-bg/part-${i}.b64?v=20260920-tower-1`);
 
-const solids=Array.from({length:FLOOR_COUNT},(_,i)=>({
-  x:30,y:groundY(i+1),w:ELEVATOR_ENTRY_X+80,h:90,ground:true
-}));
+async function loadTowerBackground(){
+  try{
+    const chunks=await Promise.all(TOWER_BG_PARTS.map(async url=>{
+      const response=await fetch(url,{cache:'force-cache'});
+      if(!response.ok)throw new Error(`Tower background chunk failed: ${response.status}`);
+      return (await response.text()).trim();
+    }));
+    towerBackground.src=`data:image/webp;base64,${chunks.join('')}`;
+    await towerBackground.decode();
+  }catch(error){
+    console.error('Failed to load Chapter 2 tower background',error);
+  }
+}
+loadTowerBackground();
+
+const floorPlatforms=makeFloorPlatforms();
+const elevatorSolid={
+  x:ELEVATOR_X,
+  y:groundY(1),
+  w:ELEVATOR_WIDTH,
+  h:ELEVATOR_PLATFORM_HEIGHT,
+  ground:true,
+  oneWay:true
+};
+const solids=[...floorPlatforms,elevatorSolid];
+
+function setElevatorGround(y){
+  elevatorSolid.y=y;
+  return y;
+}
+function fullTowerCamera(){
+  const vw=viewW(FIT_ZOOM),vh=viewH(FIT_ZOOM);
+  return {x:(WORLD_W-vw)/2,y:(WORLD_H-vh)/2};
+}
+function followTarget(zoom=GAME_ZOOM){
+  const vw=viewW(zoom),vh=viewH(zoom);
+  return {
+    x:clamp(player.x+player.w/2-vw*.50,0,Math.max(0,WORLD_W-vw)),
+    y:clamp(player.y+player.h/2-vh*.62,0,Math.max(0,WORLD_H-vh))
+  };
+}
 
 function makeEnemy(kind,x,floor,index){
   const g=groundY(floor),span=kind==='sniper'?135:105;
