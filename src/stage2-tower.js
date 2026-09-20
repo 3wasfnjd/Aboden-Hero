@@ -42,7 +42,8 @@ export function makeFloorPlatforms(){
     y,
     w:ELEVATOR_X-FLOOR_LEFT+2,
     h:92,
-    ground:true
+    ground:true,
+    oneWay:true
   }));
 }
 
