@@ -20,6 +20,7 @@ jobs:
         run: |
           node --check src/stage2.js
           node --check src/stage2-state.js
+          node --check src/stage2-tower.js
           node --check puzzle-kit/wiring/demo.js
           node --check puzzle-kit/wiring/wiring.js
           node --check puzzle-kit/wiring/wiring-logic.js
@@ -37,6 +38,7 @@ jobs:
         run: |
           test -s assets/stage2/floors-atlas.webp
           test -s assets/stage2/elevator.webp
+          test -s assets/stage2/tower-background.webp
           test -s stage2.html
           test -s puzzle-kit/wiring/assets/original/board.png
           test -s puzzle-kit/wiring/assets/original/pipe-straight.png
