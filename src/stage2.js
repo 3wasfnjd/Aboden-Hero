@@ -191,7 +191,7 @@ function play(){
 }
 function pause(){
   if(state==='playing'){state='paused';clearInput();$('overlay').hidden=false;$('overlay').querySelector('.chapter-tag').textContent='MISSION PAUSED';$('overlay').querySelector('.eyebrow').textContent='CHAPTER 02';$('overlay').querySelector('h1').innerHTML='المهمة<br><em>متوقفة.</em>';$('overlay-description').textContent='أكمل من نفس الطابق عندما تكون جاهزًا.';$('play').textContent='متابعة ◀';$('controls').hidden=true;$('hud').hidden=true;$('action').hidden=true;$('pause').textContent='▶';}
-  else if(state==='paused'){state='playing';$('overlay').hidden=true;$('controls').hidden=false;$('pause').textContent='Ⅱ';last=performance.now();accumulator=0;updateHUD();}
+  else if(state==='paused'){state='playing';$('overlay').hidden=true;$('controls').hidden=introActive;$('pause').textContent='Ⅱ';last=performance.now();accumulator=0;updateHUD();}
 }
 function win(){
   state='won';clearInput();$('overlay').hidden=false;$('controls').hidden=true;$('hud').hidden=true;$('action').hidden=true;
@@ -350,7 +350,7 @@ function drawElevatorPlatform(){
   const gy=elevatorSolid.y;
   const active=progress.mode==='elevator'||progress.floors[progress.currentFloor]?.complete;
   const color=active?'#61ffa7':'#ff3d49';
-  const pulse=active?.78+.16*Math.sin(time*5):.70;
+  const pulse=active ? .78+.16*Math.sin(time*5) : .70;
   ctx.save();
   ctx.fillStyle='rgba(5,10,14,.78)';
   ctx.strokeStyle=color;ctx.lineWidth=1.5;
@@ -419,7 +419,7 @@ function drawWorld(){
 
 function draw(){
   ctx.clearRect(0,0,W,H);drawBackdrop();drawWorld();
-  const strength=introActive?.18:.32;
+  const strength=introActive ? .18 : .32;
   const v=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.12,W/2,H/2,Math.max(W,H)*.62);
   v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,`rgba(0,0,0,${strength})`);
   ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
