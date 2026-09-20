@@ -166,6 +166,12 @@ export class CubesPuzzle extends PuzzleCore {
     this.solutionImage.decoding='async';
     this.solutionImage.width=this.stage.naturalWidth;
     this.solutionImage.height=this.stage.naturalHeight;
+    Object.assign(this.solutionImage.style,{
+      left:'0px',
+      top:'0px',
+      width:`${this.stage.naturalWidth}px`,
+      height:`${this.stage.naturalHeight}px`
+    });
     this.stage.scene.insertBefore(this.solutionImage,this.stage.hitLayer);
   }
 
