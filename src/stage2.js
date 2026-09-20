@@ -41,23 +41,7 @@ let muted=false,audio=null,musicCtl=null;
 
 
 function loadImage(url){const img=new Image();img.decoding='async';if(url)img.src=url;return img;}
-const towerBackground=loadImage();
-const TOWER_BG_PARTS=Array.from({length:4},(_,i)=>`./assets/stage2/tower-bg/part-${i}.b64?v=20260920-tower-1`);
-
-async function loadTowerBackground(){
-  try{
-    const chunks=await Promise.all(TOWER_BG_PARTS.map(async url=>{
-      const response=await fetch(url,{cache:'force-cache'});
-      if(!response.ok)throw new Error(`Tower background chunk failed: ${response.status}`);
-      return (await response.text()).trim();
-    }));
-    towerBackground.src=`data:image/webp;base64,${chunks.join('')}`;
-    await towerBackground.decode();
-  }catch(error){
-    console.error('Failed to load Chapter 2 tower background',error);
-  }
-}
-loadTowerBackground();
+const towerBackground=loadImage('./assets/stage2/tower-background.webp?v=20260920-tower-2');
 
 const floorPlatforms=makeFloorPlatforms();
 const elevatorSolid={
