@@ -87,13 +87,19 @@ function followTarget(zoom=GAME_ZOOM){
 }
 
 function makeEnemy(kind,x,floor,index){
-  const g=groundY(floor),span=kind==='sniper'?135:105;
-  return {x,y:g-32,w:34,h:32,min:Math.max(125,x-span),max:Math.min(825,x+span),vx:index%2?48:-48,hp:3,hit:0,fire:.9+index*.25,windup:0,aimX:0,aimY:0,kind,shotFlash:0};
+  const g=groundY(floor),span=kind==='sniper'?120:95;
+  return {
+    x,y:g-32,w:34,h:32,
+    min:Math.max(FLOOR_LEFT+35,x-span),
+    max:Math.min(ELEVATOR_X-28,x+span),
+    vx:index%2?48:-48,hp:3,hit:0,fire:.9+index*.25,
+    windup:0,aimX:0,aimY:0,kind,shotFlash:0
+  };
 }
 function spawnFloorEnemies(floor){
   const def=FLOOR_DEFS[floor];
   if(def.type!=='combat'){enemySets.set(floor,[]);return;}
-  const positions=def.enemies.length===2?[350,680]:[250,500,740];
+  const positions=def.enemies.length===2?[340,625]:[270,470,670];
   enemySets.set(floor,def.enemies.map((kind,i)=>makeEnemy(kind,positions[i],floor,i)));
 }
 function resetEnemies(){for(let f=1;f<=FLOOR_COUNT;f++)spawnFloorEnemies(f);}
@@ -147,7 +153,7 @@ function updateHUD(){
   const floor=progress.currentFloor,def=FLOOR_DEFS[floor];
   $('floor-label').textContent=`الطابق ${floor} / ${FLOOR_COUNT}`;$('floor-title').textContent=def.title;
   $('health').textContent='♥'.repeat(player.hp)+'♡'.repeat(5-player.hp);$('challenge').textContent=challengeLabel();
-  $('hud').hidden=state!=='playing';
+  $('hud').hidden=state!=='playing'||introActive;
 }
 function near(x,range=90){return Math.abs((player.x+player.w/2)-x)<=range;}
 function currentPuzzleX(){return PUZZLE_X[progress.currentFloor]??430;}
@@ -156,12 +162,15 @@ function updateAction(){
   if(state!=='playing'||progress.mode!=='floor'||puzzleOpen)return;
   const floor=progress.currentFloor,def=FLOOR_DEFS[floor],done=progress.floors[floor].complete;
   if(!done&&def.type==='puzzle'&&near(currentPuzzleX(),105)){btn.textContent='فتح لوحة النظام';btn.hidden=false;return;}
-  if(done&&floor<FLOOR_COUNT&&near(ELEVATOR_ENTRY_X,105)){btn.textContent='دخول المصعد ↑';btn.classList.add('ready-elevator');btn.hidden=false;}
+  if(done&&floor<FLOOR_COUNT&&near(ELEVATOR_X+ELEVATOR_WIDTH/2,90)){btn.textContent='تشغيل المصعد ↑';btn.classList.add('ready-elevator');btn.hidden=false;}
 }
 
 function reset(){
-  progress=createProgress();player=createPlayer(105,groundY(1)-44);player.facing=1;state='menu';time=0;elapsed=0;
-  destroyActivePuzzle();cameraX=0;cameraY=cameraFloorY(1);bullets=[];enemyShots=[];particles=[];kills=0;deaths=0;elevatorTime=0;puzzleOpen=false;
+  progress=createProgress();player=createPlayer(FLOOR_LEFT+90,groundY(1)-44);player.facing=1;state='menu';time=0;elapsed=0;
+  destroyActivePuzzle();bullets=[];enemyShots=[];particles=[];kills=0;deaths=0;elevatorTime=0;puzzleOpen=false;
+  introTime=0;introActive=false;cameraZoom=FIT_ZOOM;
+  const full=fullTowerCamera();cameraX=full.x;cameraY=full.y;
+  setElevatorGround(groundY(1));
   $('puzzle').hidden=true;
   resetEnemies();clearInput();updateHUD();updateAction();
 }
@@ -172,7 +181,14 @@ function setIntroCopy(){
   $('overlay-description').textContent='ستة طوابق مركبة فوق بعضها ومصعد واحد يربطها. أنهِ تحدي كل طابق لتشغيل المصعد.';
   $('play').textContent='ابدأ الفصل الثاني ◀';
 }
-function play(){unlockAudio();if(state==='menu'||state==='won')reset();state='playing';$('overlay').hidden=true;$('controls').hidden=false;$('pause').textContent='Ⅱ';clearInput();last=performance.now();accumulator=0;updateHUD();updateAction();}
+function play(){
+  unlockAudio();
+  if(state==='menu'||state==='won')reset();
+  state='playing';introActive=true;introTime=0;cameraZoom=FIT_ZOOM;
+  const full=fullTowerCamera();cameraX=full.x;cameraY=full.y;
+  $('overlay').hidden=true;$('controls').hidden=true;$('pause').textContent='Ⅱ';
+  clearInput();last=performance.now();accumulator=0;updateHUD();updateAction();
+}
 function pause(){
   if(state==='playing'){state='paused';clearInput();$('overlay').hidden=false;$('overlay').querySelector('.chapter-tag').textContent='MISSION PAUSED';$('overlay').querySelector('.eyebrow').textContent='CHAPTER 02';$('overlay').querySelector('h1').innerHTML='المهمة<br><em>متوقفة.</em>';$('overlay-description').textContent='أكمل من نفس الطابق عندما تكون جاهزًا.';$('play').textContent='متابعة ◀';$('controls').hidden=true;$('hud').hidden=true;$('action').hidden=true;$('pause').textContent='▶';}
   else if(state==='paused'){state='playing';$('overlay').hidden=true;$('controls').hidden=false;$('pause').textContent='Ⅱ';last=performance.now();accumulator=0;updateHUD();}
@@ -187,14 +203,16 @@ function win(){
 }
 
 function respawn(){
-  deaths++;const floor=progress.currentFloor;player=createPlayer(floor===1?105:1040,groundY(floor)-44);player.facing=floor===1?1:-1;player.invulnerable=1.8;
+  deaths++;const floor=progress.currentFloor;
+  player=createPlayer(FLOOR_LEFT+70,groundY(floor)-44);player.facing=1;player.invulnerable=1.8;
   bullets=[];enemyShots=[];if(FLOOR_DEFS[floor].type==='combat'&&!progress.floors[floor].complete)spawnFloorEnemies(floor);
+  setElevatorGround(groundY(floor));
   toast('عدت إلى بداية الطابق');sound(170,.2,'triangle');updateHUD();
 }
 function hurt(){if(player.invulnerable>0||player.dashTime>0)return;player.hp--;player.invulnerable=1.25;burst(player.x+15,player.y+22,'#ff646d',10);sound(150,.16,'sawtooth',.04);if(player.hp<=0)respawn();else updateHUD();}
 function finishChallenge(){
   const floor=progress.currentFloor;if(!completeFloor(progress,floor))return;
-  enemyShots=[];bullets=[];burst(ELEVATOR_ENTRY_X,groundY(floor)-78,'#61ffa7',24);sound(920,.26,'triangle',.055);
+  enemyShots=[];bullets=[];burst(ELEVATOR_X+ELEVATOR_WIDTH/2,groundY(floor)-36,'#61ffa7',24);sound(920,.26,'triangle',.055);
   if(floor===FLOOR_COUNT){toast('غرفة التحكم تعمل — اكتمل الفصل');setTimeout(()=>{if(state==='playing'&&progress.currentFloor===FLOOR_COUNT)win();},1150);}
   else toast(`اكتمل الطابق ${floor} — أضيء المصعد بالأخضر`);
   updateHUD();updateAction();
@@ -202,12 +220,15 @@ function finishChallenge(){
 function useElevator(){
   if(!beginElevator(progress))return;
   elevatorTime=0;enemyShots=[];bullets=[];clearInput();$('action').hidden=true;
-  player.x=ELEVATOR_ENTRY_X+12;player.vx=0;player.vy=0;
+  const gy=setElevatorGround(groundY(progress.elevator.from));
+  player.x=ELEVATOR_X+ELEVATOR_WIDTH/2-player.w/2;player.y=gy-player.h;player.vx=0;player.vy=0;
   toast(`المصعد إلى الطابق ${progress.elevator.to}`);sound(210,.4,'sawtooth',.035);
 }
 function arriveNextFloor(){
-  const floor=progress.currentFloor;player=createPlayer(1040,groundY(floor)-44);player.facing=-1;player.invulnerable=.9;enemyShots=[];bullets=[];
-  cameraX=clamp(1020-VIEW_W*.48,0,WORLD_W-VIEW_W);cameraY=cameraFloorY(floor);
+  const floor=progress.currentFloor,gy=setElevatorGround(groundY(floor));
+  player.x=ELEVATOR_X+ELEVATOR_WIDTH/2-player.w/2;player.y=gy-player.h;
+  player.vx=0;player.vy=0;player.facing=-1;player.invulnerable=.9;enemyShots=[];bullets=[];
+  const target=followTarget(cameraZoom);cameraX=target.x;cameraY=target.y;
   toast(`الطابق ${floor} — ${FLOOR_DEFS[floor].title}`);sound(740,.18,'triangle');updateHUD();updateAction();
 }
 
@@ -235,30 +256,52 @@ function tickCombat(dt){
 
 function tickElevator(dt){
   elevatorTime+=dt;
-  const raw=clamp((elevatorTime-.42)/(ELEVATOR_DURATION-.84),0,1),move=ease(raw);
-  updateElevator(progress,move);
   const e=progress.elevator;
-  if(e){
-    const cabGround=lerp(groundY(e.from),groundY(e.to),move);
-    cameraX=clamp(CABIN_X+CABIN_W/2-VIEW_W*.5,0,WORLD_W-VIEW_W);
-    cameraY=clamp(cabGround-VIEW_H*.56,0,WORLD_H-VIEW_H);
-  }else arriveNextFloor();
+  if(!e){arriveNextFloor();return;}
+  const raw=clamp((elevatorTime-.28)/(ELEVATOR_DURATION-.50),0,1),move=ease(raw);
+  const gy=setElevatorGround(elevatorGround(e.from,e.to,move));
+  player.x=ELEVATOR_X+ELEVATOR_WIDTH/2-player.w/2;player.y=gy-player.h;player.vx=0;player.vy=0;
+  const target=followTarget(cameraZoom);
+  cameraX+=(target.x-cameraX)*(1-Math.exp(-6*dt));
+  cameraY+=(target.y-cameraY)*(1-Math.exp(-6*dt));
+  if(updateElevator(progress,move))arriveNextFloor();
 }
 
 function tick(dt){
   if(state!=='playing'||puzzleOpen)return;
-  time+=dt;elapsed+=dt;
+  time+=dt;
+
+  if(introActive){
+    introTime+=dt;
+    const hold=.18;
+    const normalized=clamp(introTime/INTRO_DURATION,0,1);
+    const zoomT=ease(clamp((normalized-hold)/(1-hold),0,1));
+    cameraZoom=lerp(FIT_ZOOM,GAME_ZOOM,zoomT);
+    const full=fullTowerCamera(),target=followTarget(cameraZoom);
+    cameraX=lerp(full.x,target.x,zoomT);
+    cameraY=lerp(full.y,target.y,zoomT);
+    if(normalized>=1){
+      introActive=false;cameraZoom=GAME_ZOOM;
+      $('controls').hidden=false;updateHUD();updateAction();
+      toast('الطابق 1 — ابدأ الصعود');
+    }
+    return;
+  }
+
+  elapsed+=dt;
   if(progress.mode==='elevator'){tickElevator(dt);updateHUD();return;}
+  setElevatorGround(groundY(progress.currentFloor));
   const controls=input(),{jumped,landed}=stepPlayer(player,controls,solids,dt);
-  player.x=clamp(player.x,40,ELEVATOR_ENTRY_X+45-player.w);
+  player.x=clamp(player.x,FLOOR_LEFT,FLOOR_RIGHT-player.w);
   if(jumped){burst(player.x+15,player.y+44,'#d9d2b2',5);sound(500,.1,'triangle');}if(landed)burst(player.x+15,player.y+44,'#d9d2b2',4);
-  if(player.y>groundY(progress.currentFloor)+145){respawn();return;}
+  if(player.y>groundY(progress.currentFloor)+150){respawn();return;}
   if(controls.shoot&&player.shot<=0){player.shot=SHOT_INTERVAL;bullets.push(makeHeroBullet(art.heroMuzzle(player,time),player.facing));sound(660,.055,'triangle',.035);}
   if(FLOOR_DEFS[progress.currentFloor].type==='combat'&&!progress.floors[progress.currentFloor].complete)tickCombat(dt);
   else{for(const b of bullets){b.x+=b.vx*dt;b.life-=dt;}bullets=bullets.filter(b=>b.life>0);enemyShots=[];}
   for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=180*dt;p.life-=dt;}particles=particles.filter(p=>p.life>0);
-  const tx=clamp(player.x-VIEW_W*.43,0,WORLD_W-VIEW_W),ty=cameraFloorY(progress.currentFloor);
-  cameraX+=(tx-cameraX)*(1-Math.exp(-7*dt));cameraY+=(ty-cameraY)*(1-Math.exp(-7*dt));
+  cameraZoom+=(GAME_ZOOM-cameraZoom)*(1-Math.exp(-5*dt));
+  const target=followTarget(cameraZoom);
+  cameraX+=(target.x-cameraX)*(1-Math.exp(-7*dt));cameraY+=(target.y-cameraY)*(1-Math.exp(-7*dt));
   if(toastTime>0){toastTime-=dt;if(toastTime<=0)$('toast').classList.remove('show');}
   updateHUD();updateAction();
 }
@@ -480,7 +523,7 @@ function doAction(){
   if(state!=='playing'||progress.mode!=='floor'||puzzleOpen)return;
   const floor=progress.currentFloor,def=FLOOR_DEFS[floor],done=progress.floors[floor].complete;
   if(!done&&def.type==='puzzle'&&near(currentPuzzleX(),105))openPuzzle();
-  else if(done&&floor<FLOOR_COUNT&&near(ELEVATOR_ENTRY_X,105))useElevator();
+  else if(done&&floor<FLOOR_COUNT&&near(ELEVATOR_X+ELEVATOR_WIDTH/2,90))useElevator();
 }
 
 if(moveStick&&moveStickBase&&moveStickKnob){
