@@ -29,6 +29,10 @@ jobs:
           node --check puzzle-kit/matching/matching.js
           node --check puzzle-kit/matching/matching-logic.js
           node --check puzzle-kit/matching/assets.js
+          node --check puzzle-kit/cubes/demo.js
+          node --check puzzle-kit/cubes/cubes.js
+          node --check puzzle-kit/cubes/cubes-logic.js
+          node --check puzzle-kit/cubes/assets.js
       - name: Verify game assets
         run: |
           test -s assets/stage2/floors-atlas.webp
@@ -44,3 +48,12 @@ jobs:
           test -s puzzle-kit/matching/assets/original/cable-orange.png
           test -s puzzle-kit/matching/assets/original/cable-purple.png
           test -s puzzle-kit/matching/assets/original/solution.png
+          test -s puzzle-kit/cubes/assets/original/board.png
+          test -s puzzle-kit/cubes/assets/original/solution.png
+          test -s puzzle-kit/cubes/assets/original/start.png
+          test -s puzzle-kit/cubes/assets/original/right.png
+          test -s puzzle-kit/cubes/assets/original/down.png
+          test -s puzzle-kit/cubes/assets/original/straight.png
+          test -s puzzle-kit/cubes/assets/original/junction.png
+          test -s puzzle-kit/cubes/assets/original/lock.png
+          test -s puzzle-kit/cubes/assets/original/goal.png

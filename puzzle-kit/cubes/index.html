@@ -5,18 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Cubes Puzzle • ABODEN Puzzle Kit</title>
 <link rel="stylesheet" href="../core/puzzle-host.css">
+<link rel="stylesheet" href="./cubes.css?v=1">
 </head>
 <body>
 <main class="puzzle-demo">
-  <header class="puzzle-demo-header"><div><h1>Cubes Puzzle</h1><small>Standalone Puzzle Module</small></div><a href="../" style="color:#8ddcff">Puzzle Kit</a></header>
+  <header class="puzzle-demo-header">
+    <div><h1>Cubes Puzzle</h1><small>Standalone Puzzle Module</small></div>
+    <a href="../" style="color:#8ddcff">Puzzle Kit</a>
+  </header>
   <section id="puzzle-root" class="puzzle-root" aria-label="Cubes Puzzle"></section>
 </main>
-<script type="module">
-import {createCubesPuzzle} from './cubes.js';
-const root=document.getElementById('puzzle-root');
-const puzzle=await createCubesPuzzle({root});
-window.puzzle=puzzle;
-puzzle.start();
-</script>
+<script type="module" src="./demo.js?v=1"></script>
 </body>
 </html>
