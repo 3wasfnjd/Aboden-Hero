@@ -7,8 +7,7 @@ import {createMatchingPuzzle} from '../puzzle-kit/matching/matching.js?v=2026092
 import {createWiringPuzzle} from '../puzzle-kit/wiring/wiring.js?v=20260919-stage2-embed-2';
 import {createCubesPuzzle} from '../puzzle-kit/cubes/cubes.js?v=20260920-stage2-embed-1';
 import {
-  FLOOR_DEFS,FLOOR_COUNT,createProgress,completeFloor,beginElevator,updateElevator,
-
+  FLOOR_DEFS,FLOOR_COUNT,createProgress,completeFloor,beginElevator,updateElevator
 } from './stage2-state.js?v=20260919-stage2-2';
 
 const $=id=>document.getElementById(id);
