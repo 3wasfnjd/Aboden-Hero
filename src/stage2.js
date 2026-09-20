@@ -5,9 +5,9 @@ import {createArt} from './art.js?v=20260917-cleanup-2';
 import {createMusic} from './music.js?v=20260917-music-1';
 import {createMatchingPuzzle} from '../puzzle-kit/matching/matching.js?v=20260920-stage2-embed-1';
 import {createWiringPuzzle} from '../puzzle-kit/wiring/wiring.js?v=20260919-stage2-embed-2';
+import {createCubesPuzzle} from '../puzzle-kit/cubes/cubes.js?v=20260920-stage2-embed-1';
 import {
-  FLOOR_DEFS,FLOOR_COUNT,createProgress,completeFloor,beginElevator,updateElevator,
-  CUBE_INITIAL,isCubeSolved
+  FLOOR_DEFS,FLOOR_COUNT,createProgress,completeFloor,beginElevator,updateElevator
 } from './stage2-state.js?v=20260919-stage2-2';
 
 const $=id=>document.getElementById(id);
@@ -37,7 +37,7 @@ let cameraX=0,cameraY=cameraFloorY(1),bullets=[],enemyShots=[],particles=[],enem
 let kills=0,deaths=0,toastTime=0,accumulator=0,last=0,elevatorTime=0,puzzleOpen=false;
 let activePuzzleModule=null,puzzleSession=0;
 let muted=false,audio=null,musicCtl=null;
-let cubeOrder=[...CUBE_INITIAL],cubeSelected=null;
+
 
 function loadImage(url){const img=new Image();img.decoding='async';img.src=url;return img;}
 const floorAtlas=loadImage('./assets/stage2/floors-atlas.webp?v=20260919-hi2');
@@ -123,7 +123,7 @@ function updateAction(){
 function reset(){
   progress=createProgress();player=createPlayer(105,groundY(1)-44);player.facing=1;state='menu';time=0;elapsed=0;
   destroyActivePuzzle();cameraX=0;cameraY=cameraFloorY(1);bullets=[];enemyShots=[];particles=[];kills=0;deaths=0;elevatorTime=0;puzzleOpen=false;
-  $('puzzle').hidden=true;cubeOrder=[...CUBE_INITIAL];cubeSelected=null;
+  $('puzzle').hidden=true;
   resetEnemies();clearInput();updateHUD();updateAction();
 }
 function setIntroCopy(){
@@ -309,12 +309,6 @@ function draw(){
 }
 function frame(now){if(!last)last=now;const dt=Math.min((now-last)/1000,.1);last=now;if(state==='playing'){accumulator+=dt;while(accumulator>=STEP){tick(STEP);accumulator-=STEP;}}else time+=dt;draw();requestAnimationFrame(frame);}
 
-function puzzleSolved(type){return type==='cubes'?isCubeSolved(cubeOrder):false;}
-function solveCurrentPuzzle(){
-  const type=FLOOR_DEFS[progress.currentFloor].puzzle;if(!puzzleSolved(type))return;
-  $('puzzle-status').textContent='SYSTEM ONLINE';$('puzzle-status').classList.add('online');sound(960,.25,'triangle',.06);
-  setTimeout(()=>{closePuzzle();finishChallenge();},600);
-}
 async function mountMatchingPuzzle(){
   const session=++puzzleSession;
   const body=$('puzzle-body');
@@ -393,18 +387,51 @@ async function mountWiringPuzzle(){
     body.innerHTML='<div class="embedded-puzzle-error">تعذر تحميل لوحة دائرة الطاقة.</div>';
   }
 }
-const CUBE_META={start:['ϟ','START','start'],right:['→','',''],down:['↓','',''],lock:['×','LOCK','lock'],junction:['╋','','junction'],down2:['↓','',''],straight:['┃','',''],right2:['→','',''],goal:['◯','GOAL','goal']};
-function renderCubes(){
-  $('puzzle-title').textContent='ترتيب المكعبات';$('puzzle-help').textContent='اختر مكعبين لتبديل موقعيهما. رتّب المسار من START حتى GOAL. المكعب LOCK ثابت.';
-  $('puzzle-body').innerHTML=`<div class="cube-grid">${cubeOrder.map((id,i)=>{const [icon,label,cls]=CUBE_META[id];return `<button class="cube-tile ${cls} ${cubeSelected===i?'selected':''}" data-cube="${i}" ${id==='lock'?'disabled':''}><span><strong>${icon}</strong>${label}</span></button>`;}).join('')}</div>`;
-  $('puzzle-body').querySelectorAll('[data-cube]').forEach(b=>b.addEventListener('click',()=>{const i=Number(b.dataset.cube);if(cubeOrder[i]==='lock')return;if(cubeSelected===null){cubeSelected=i;renderCubes();return;}if(cubeSelected===i){cubeSelected=null;renderCubes();return;}[cubeOrder[cubeSelected],cubeOrder[i]]=[cubeOrder[i],cubeOrder[cubeSelected]];cubeSelected=null;renderCubes();solveCurrentPuzzle();}));
+async function mountCubesPuzzle(){
+  const session=++puzzleSession;
+  const body=$('puzzle-body');
+  $('puzzle-title').textContent='مسار التحكم';
+  $('puzzle-help').textContent='اختر قطعتين لتبديل موقعيهما، ثم رتّب المسار الصحيح من START إلى GOAL.';
+  body.replaceChildren();
+
+  const mount=document.createElement('div');
+  mount.className='puzzle-root embedded-puzzle-root';
+  body.append(mount);
+
+  try{
+    const puzzle=await createCubesPuzzle({
+      root:mount,
+      audio:!muted,
+      // Keep Chapter 2 music playing; use only Cubes Puzzle interaction/success SFX.
+      audioOptions:{musicVolume:0,sfxVolume:.20}
+    });
+    if(session!==puzzleSession||!puzzleOpen||FLOOR_DEFS[progress.currentFloor].puzzle!=='cubes'){
+      puzzle.destroy();
+      return;
+    }
+    activePuzzleModule=puzzle;
+    puzzle.onSolved(()=>{
+      if(session!==puzzleSession||!puzzleOpen)return;
+      // Keep the solved board visible briefly before completing the final floor.
+      setTimeout(()=>{
+        if(session!==puzzleSession||!puzzleOpen)return;
+        closePuzzle();
+        finishChallenge();
+      },1000);
+    });
+    puzzle.start();
+  }catch(error){
+    console.error('Failed to mount reusable Cubes Puzzle',error);
+    if(session!==puzzleSession)return;
+    body.innerHTML='<div class="embedded-puzzle-error">تعذر تحميل لوحة مسار التحكم.</div>';
+  }
 }
 function openPuzzle(){
   const def=FLOOR_DEFS[progress.currentFloor];if(def.type!=='puzzle'||progress.floors[progress.currentFloor].complete)return;
   destroyActivePuzzle();
   puzzleOpen=true;clearInput();$('puzzle').hidden=false;$('action').hidden=true;$('puzzle-status').textContent='SYSTEM OFFLINE';$('puzzle-status').classList.remove('online');
   $('puzzle').dataset.type=def.puzzle;
-  if(def.puzzle==='match')mountMatchingPuzzle();else if(def.puzzle==='wiring')mountWiringPuzzle();else renderCubes();
+  if(def.puzzle==='match')mountMatchingPuzzle();else if(def.puzzle==='wiring')mountWiringPuzzle();else if(def.puzzle==='cubes')mountCubesPuzzle();
 }
 function closePuzzle(){
   puzzleOpen=false;destroyActivePuzzle();$('puzzle').hidden=true;clearInput();
