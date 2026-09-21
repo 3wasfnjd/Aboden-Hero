@@ -1,8 +1,9 @@
 import {lockSafariZoom} from './gesture-lock.js?v=20260921-safari-lock-1';
 import {clamp,overlaps,createPlayer,stepPlayer} from './world.js?v=20260916-action-1';
 import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260921-stage2-new-enemies-1';
+import {hitsShieldFromFront} from './enemy-weapon.js?v=20260921-shield-guard-2';
 import {stepCombat} from './combat.js?v=20260921-stage2-new-enemies-1';
-import {createArt} from './art.js?v=20260921-stage2-new-enemies-1';
+import {createArt} from './art.js?v=20260921-shield-guard-2';
 import {createMusic} from './music.js?v=20260917-music-1';
 import {createMatchingPuzzle} from '../puzzle-kit/matching/matching.js?v=20260920-stage2-embed-1';
 import {createWiringPuzzle} from '../puzzle-kit/wiring/wiring.js?v=20260919-stage2-embed-2';
@@ -129,7 +130,7 @@ function makeEnemy(kind,x,floor,index){
     min:Math.max(FLOOR_LEFT+35,x-span),
     max:Math.min(FLOOR_RIGHT-35,x+span),
     vx:index%2?48:-48,hp:isDrone?2:3,hit:0,fire:.9+index*.25,
-    windup:0,aimX:0,aimY:0,kind,shotFlash:0,
+    windup:0,aimX:0,aimY:0,kind,shotFlash:0,shieldFlash:0,
     hoverY:y,hoverPhase:index*1.37+floor*.61
   };
 }
@@ -164,6 +165,7 @@ function tickEnemyPatrol(dt){
       if(e.windup<=0)e.x+=e.vx*dt;
       if(e.kind==='drone')e.y=e.hoverY+Math.sin(time*2.8+e.hoverPhase)*5;
       e.hit=Math.max(0,e.hit-dt);
+      e.shieldFlash=Math.max(0,(e.shieldFlash??0)-dt);
       if(e.x<e.min){e.x=e.min;e.vx=Math.abs(e.vx);}
       if(e.x+e.w>e.max){e.x=e.max-e.w;e.vx=-Math.abs(e.vx);}
     }
@@ -398,7 +400,14 @@ function tickCombat(dt){
   for(const b of bullets){
     b.x+=b.vx*dt;b.life-=dt;if(b.life<=0)continue;
     for(const e of allEnemies)if(e.hp>0&&overlaps(b,bulletTargetBounds(e))){
-      b.life=0;e.hp--;e.hit=.12;burst(b.x,b.y,'#e6c878',5);
+      b.life=0;
+      if(hitsShieldFromFront(e,b.vx)){
+        e.shieldFlash=.18;
+        burst(b.x+b.w/2,b.y+b.h/2,'#9ed8ff',8);
+        sound(980,.06,'square',.026);
+        break;
+      }
+      e.hp--;e.hit=.12;burst(b.x,b.y,'#e6c878',5);
       if(e.hp<=0){kills++;burst(e.x+17,e.y+16,'#ef874f',14);sound(260,.12,'triangle');}
       break;
     }
