@@ -258,7 +258,6 @@ function updateAction(){
   const btn=$('action');btn.hidden=true;
   if(state!=='playing'||puzzleOpen)return;
   if(scene!=='tower'||progress.mode!=='floor')return;
-  if(scene!=='tower'||progress.mode!=='floor')return;
   if(rooftopUnlocked&&progress.currentFloor===FLOOR_COUNT&&playerFloor()===FLOOR_COUNT&&near(ROOFTOP_LADDER_X,100)){
     btn.textContent='الصعود إلى السطح';btn.hidden=false;return;
   }
@@ -358,7 +357,6 @@ function enterRooftop(){
   scene='rooftop-intro';enemyShots=[];bullets=[];clearInput();
   rooftop.start(player.hp);sound(190,.28,'sawtooth',.035);updateHUD();updateAction();
 }
-function tickRooftop(dt){
 function tickRooftop(dt){
   elapsed+=dt;
   if(scene==='ending'){
