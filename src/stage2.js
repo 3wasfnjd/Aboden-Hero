@@ -24,10 +24,11 @@ const W=720,H=1280,STEP=1/120;
 const WORLD_W=TOWER_WIDTH,WORLD_H=TOWER_HEIGHT;
 const FIT_ZOOM=Math.min(W/WORLD_W,H/WORLD_H);
 const GAME_ZOOM=1.90;
-const INTRO_DURATION=3.2;
+const INTRO_DURATION=3.8;
 const ELEVATOR_DURATION=2.75;
 const lerp=(a,b,t)=>a+(b-a)*t;
 const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+const smoother=t=>t*t*t*(t*(t*6-15)+10);
 const viewW=zoom=>W/zoom;
 const viewH=zoom=>H/zoom;
 
@@ -134,6 +135,21 @@ function followTarget(zoom=GAME_ZOOM){
     x:clamp(player.x+player.w/2-vw*.50,0,Math.max(0,WORLD_W-vw)),
     y:clamp(player.y+player.h/2-vh*.62,0,Math.max(0,WORLD_H-vh))
   };
+}
+function cameraCenter(camera,zoom){
+  return {x:camera.x+viewW(zoom)/2,y:camera.y+viewH(zoom)/2};
+}
+function setIntroCamera(progress){
+  const t=smoother(clamp(progress,0,1));
+  const start=fullTowerCamera();
+  const end=followTarget(GAME_ZOOM);
+  const startCenter=cameraCenter(start,FIT_ZOOM);
+  const endCenter=cameraCenter(end,GAME_ZOOM);
+  cameraZoom=lerp(FIT_ZOOM,GAME_ZOOM,t);
+  const centerX=lerp(startCenter.x,endCenter.x,t);
+  const centerY=lerp(startCenter.y,endCenter.y,t);
+  cameraX=centerX-viewW(cameraZoom)/2;
+  cameraY=centerY-viewH(cameraZoom)/2;
 }
 
 function makeEnemy(kind,x,floor,index){
@@ -335,15 +351,13 @@ function tick(dt){
 
   if(introActive){
     introTime+=dt;
-    const hold=.18;
     const normalized=clamp(introTime/INTRO_DURATION,0,1);
-    const zoomT=ease(clamp((normalized-hold)/(1-hold),0,1));
-    cameraZoom=lerp(FIT_ZOOM,GAME_ZOOM,zoomT);
-    const full=fullTowerCamera(),target=followTarget(cameraZoom);
-    cameraX=lerp(full.x,target.x,zoomT);
-    cameraY=lerp(full.y,target.y,zoomT);
+    setIntroCamera(normalized);
     if(normalized>=1){
-      introActive=false;cameraZoom=GAME_ZOOM;
+      introActive=false;
+      cameraZoom=GAME_ZOOM;
+      const target=followTarget(GAME_ZOOM);
+      cameraX=target.x;cameraY=target.y;
       $('controls').hidden=false;updateHUD();updateAction();
       toast('الطابق 1 — ابدأ الصعود');
     }
@@ -395,7 +409,7 @@ function drawFloorNumber(floor){
 
 function drawPuzzleDevice(floor){
   const def=FLOOR_DEFS[floor];
-  if(def.type!=='puzzle'||!progress.floors[floor].unlocked)return;
+  if(def.type!=='puzzle')return;
   const artState=puzzleDeviceArt.get(floor);
   if(!artState?.ready||!artState.canvas)return;
   const src=artState.canvas;
@@ -404,10 +418,11 @@ function drawPuzzleDevice(floor){
   // Mount the control head on the back wall instead of standing it on the floor.
   const x=PUZZLE_X[floor]-dw/2,y=groundY(floor)-dh-28;
   const complete=progress.floors[floor].complete;
+  const unlocked=progress.floors[floor].unlocked;
   const active=floor===progress.currentFloor&&!complete;
   ctx.save();
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-  ctx.globalAlpha=complete ? .78 : 1;
+  ctx.globalAlpha=complete ? .78 : unlocked ? 1 : .72;
   if(complete){ctx.shadowColor='#61ffa7';ctx.shadowBlur=12;}
   else if(active&&near(PUZZLE_X[floor],104)){ctx.shadowColor='#54d7ff';ctx.shadowBlur=8;}
   ctx.drawImage(src,0,0,src.width,cropH,x,y,dw,dh);
@@ -466,8 +481,18 @@ function drawWorld(){
   drawElevatorPlatform();
   drawCollisionDebug();
 
-  const floor=progress.currentFloor,enemies=enemySets.get(floor)??[];
-  if(!introActive)for(const e of enemies)if(e.hp>0)art.enemy(e,time);
+  const floor=progress.currentFloor;
+  // Keep every combat floor populated from the first full-tower shot.
+  // Future-floor guards are visual previews only: they stay idle and cannot
+  // move, aim, fire or damage the player until that floor becomes current.
+  for(let f=1;f<=FLOOR_COUNT;f++){
+    const enemies=enemySets.get(f)??[];
+    for(const e of enemies){
+      if(e.hp<=0)continue;
+      if(f===floor)art.enemy(e,time);
+      else art.enemy({...e,vx:0,windup:0,shotFlash:0,hit:0},time);
+    }
+  }
   for(const s of enemyShots){
     const cx=s.x+s.w/2,cy=s.y+s.h/2;
     art.enemyBullet(cx,cy,Math.atan2(s.vy,s.vx));
