@@ -5,7 +5,7 @@ import {readFileSync} from 'node:fs';
 test('floor arrival keeps the player continuous on the elevator instead of respawning them',()=>{
   const js=readFileSync(new URL('../src/stage2.js',import.meta.url),'utf8');
   const start=js.indexOf('function arriveNextFloor(){');
-  const end=js.indexOf('function tickCombat',start);
+  const end=js.indexOf('function startClimb',start);
   const arrive=js.slice(start,end);
   assert.match(arrive,/player\.y\+=gy-previousY/);
   assert.match(arrive,/elevatorDockFloor=floor/);
