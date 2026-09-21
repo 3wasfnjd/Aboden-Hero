@@ -16,6 +16,9 @@ import {
   groundY,makeFloorPlatforms,elevatorGround,puzzleInteraction,
   elevatorXForFloor,floorLabelX,floorLabelY,arrivalXForFloor
 } from './stage2-tower.js?v=20260921-alternating-1';
+import {
+  ROOFTOP_LADDER_X,createRooftopBattle,drawRooftopLadder,drawRooftopClimber
+} from './stage2-rooftop.js?v=20260921-rooftop-boss-1';
 
 lockSafariZoom();
 const $=id=>document.getElementById(id);
@@ -40,11 +43,13 @@ let kills=0,toastTime=0,accumulator=0,last=0,puzzleOpen=false;
 let elevatorAuto=null,elevatorDockFloor=null,elevatorPendingFloor=null;
 let activePuzzleModule=null,puzzleSession=0,activePuzzleFloor=null;
 let muted=false,audio=null,musicCtl=null;
+let scene='tower',rooftopUnlocked=false,climbTime=0,climbStartX=0,climbStartY=0,endingTime=0;
 
 
 function loadImage(url){const img=new Image();img.decoding='async';if(url)img.src=url;return img;}
 const towerBackground=loadImage('./assets/stage2/tower-background-with-puzzles.png?v=20260921-embedded-puzzles-1');
 const elevatorPlatformImage=loadImage('./assets/ui/level/platform.png?v=20260921-stage2-elevator-1');
+const rooftop=createRooftopBattle(ctx,{width:W,height:H});
 
 const floorPlatforms=makeFloorPlatforms();
 const elevatorSolid={
@@ -186,18 +191,46 @@ function destroyActivePuzzle(){
 }
 function burst(x,y,color='#6de0ff',count=8){for(let i=0;i<count;i++){const a=i*Math.PI*2/count;particles.push({x,y,vx:Math.cos(a)*(30+i*5),vy:Math.sin(a)*55-25,life:.45,max:.45,color});}}
 
+function isRooftopScene(){
+  return scene.startsWith('rooftop')||scene==='ending';
+}
 function challengeLabel(){
+  if(scene==='rooftop-fight')return 'اهزم حارس السطح';
+  if(scene==='rooftop-victory')return 'المواجهة انتهت';
+  if(scene==='rooftop-after')return 'ادخل غرفة التحكم';
+  if(scene==='ending')return 'تشغيل غرفة التحكم';
   const floor=progress.currentFloor,def=FLOOR_DEFS[floor],done=progress.floors[floor].complete;
-  if(done)return floor===FLOOR_COUNT?'النظام يعمل — اكتمل الفصل':'المصعد جاهز';
+  if(done)return floor===FLOOR_COUNT?'ممر السطح مفتوح':'المصعد جاهز';
   if(def.type==='combat')return 'اقضِ على جميع الحراس';
   return def.puzzle==='match'?'صل الرموز المتطابقة':def.puzzle==='wiring'?'أكمل دائرة الطاقة':'رتّب المكعبات';
 }
+function syncControls(){
+  const scripted=introActive||scene==='climbing'||scene==='rooftop-intro'||scene==='rooftop-victory'||scene==='ending'||rooftop.mode==='hero-ko';
+  $('controls').hidden=state!=='playing'||puzzleOpen||scripted;
+  document.body.classList.toggle('rooftop-melee',scene==='rooftop-fight'&&rooftop.mode==='fight'&&state==='playing');
+  document.body.classList.toggle('rooftop-after',scene==='rooftop-after'&&state==='playing');
+}
 function updateHUD(){
+  const bossHud=$('boss-hud');
+  if(isRooftopScene()){
+    const stats=rooftop.stats();
+    $('area-name').textContent='السطح — المواجهة الأخيرة';
+    $('area-progress').style.width='100%';
+    $('health').textContent='♥'.repeat(Math.max(0,stats.heroHp))+'♡'.repeat(Math.max(0,stats.heroMax-stats.heroHp));
+    $('challenge').textContent=challengeLabel();
+    $('boss-health-fill').style.width=`${clamp(stats.bossHp/stats.bossMax*100,0,100)}%`;
+    bossHud.hidden=state!=='playing'||!(scene==='rooftop-fight'||scene==='rooftop-victory');
+    $('hud').hidden=state!=='playing'||scene==='rooftop-intro'||scene==='ending';
+    syncControls();
+    return;
+  }
+  bossHud.hidden=true;
   const floor=progress.currentFloor,def=FLOOR_DEFS[floor];
   $('area-name').textContent=`الطابق ${floor} — ${def.title}`;
   $('area-progress').style.width=`${clamp(floor/FLOOR_COUNT*100,0,100)}%`;
   $('health').textContent='♥'.repeat(player.hp)+'♡'.repeat(5-player.hp);$('challenge').textContent=challengeLabel();
-  $('hud').hidden=state!=='playing'||introActive;
+  $('hud').hidden=state!=='playing'||introActive||scene==='climbing';
+  syncControls();
 }
 function near(x,range=90){return Math.abs((player.x+player.w/2)-x)<=range;}
 function currentPuzzleInteraction(){
@@ -207,31 +240,39 @@ function currentPuzzleInteraction(){
 }
 function updateAction(){
   const btn=$('action');btn.hidden=true;
-  if(state!=='playing'||progress.mode!=='floor'||puzzleOpen)return;
+  if(state!=='playing'||puzzleOpen)return;
+  if(scene==='rooftop-after'){
+    if(rooftop.canEnterControlRoom()){btn.textContent='دخول غرفة التحكم';btn.hidden=false;}
+    return;
+  }
+  if(scene!=='tower'||progress.mode!=='floor')return;
+  if(rooftopUnlocked&&progress.currentFloor===FLOOR_COUNT&&playerFloor()===FLOOR_COUNT&&near(ROOFTOP_LADDER_X,100)){
+    btn.textContent='الصعود إلى السطح';btn.hidden=false;return;
+  }
   const interaction=currentPuzzleInteraction();
   if(!interaction)return;
   const {floor,spot}=interaction,def=FLOOR_DEFS[floor],done=progress.floors[floor].complete;
   if(!done&&def.type==='puzzle'&&near(spot.x,spot.range)){
     btn.textContent='فتح اللغز';btn.hidden=false;return;
   }
-  // The elevator moves automatically after the floor challenge is complete.
 }
-
 function reset(){
   progress=createProgress();player=createPlayer(arrivalXForFloor(1,30),groundY(1)-44);player.facing=1;state='menu';time=0;elapsed=0;
   destroyActivePuzzle();bullets=[];enemyShots=[];particles=[];kills=0;puzzleOpen=false;activePuzzleFloor=null;
   elevatorAuto=null;elevatorDockFloor=null;elevatorPendingFloor=null;
+  scene='tower';rooftopUnlocked=false;climbTime=0;climbStartX=0;climbStartY=0;endingTime=0;
+  rooftop.reset();document.body.classList.remove('rooftop-melee','rooftop-after');
   introTime=0;introActive=false;cameraZoom=FIT_ZOOM;
   const full=fullTowerCamera();cameraX=full.x;cameraY=full.y;
   setElevatorForFloor(1);
-  $('puzzle').hidden=true;
+  $('puzzle').hidden=true;$('boss-hud').hidden=true;
   resetEnemies();clearInput();updateHUD();updateAction();
 }
 function setIntroCopy(){
   $('overlay').querySelector('.chapter-tag').textContent='ABODEN HERO / CHAPTER 02';
   $('overlay').querySelector('.eyebrow').textContent='ROOFTOP ELEVATOR';
-  $('overlay').querySelector('h1').innerHTML='اصعد المبنى.<br><em>طابقًا بعد طابق.</em>';
-  $('overlay-description').textContent='ستة طوابق مركبة فوق بعضها ومصعد واحد يربطها. أنهِ تحدي كل طابق لتشغيل المصعد.';
+  $('overlay').querySelector('h1').innerHTML='اصعد المبنى.<br><em>حتى السطح.</em>';
+  $('overlay-description').textContent='أنه تحديات الطوابق الستة، افتح ممر السطح، ثم واجه الحارس الأخير.';
   $('play').textContent='ابدأ الفصل الثاني ◀';
 }
 function play(){
@@ -239,22 +280,30 @@ function play(){
   if(state==='menu'||state==='won')reset();
   state='playing';introActive=true;introTime=0;cameraZoom=FIT_ZOOM;
   const full=fullTowerCamera();cameraX=full.x;cameraY=full.y;
-  $('overlay').hidden=true;$('controls').hidden=true;$('pause').textContent='Ⅱ';
+  $('overlay').hidden=true;$('pause').textContent='Ⅱ';
   clearInput();last=performance.now();accumulator=0;updateHUD();updateAction();
 }
 function pause(){
-  if(state==='playing'){state='paused';clearInput();$('overlay').hidden=false;$('overlay').querySelector('.chapter-tag').textContent='MISSION PAUSED';$('overlay').querySelector('.eyebrow').textContent='CHAPTER 02';$('overlay').querySelector('h1').innerHTML='المهمة<br><em>متوقفة.</em>';$('overlay-description').textContent='أكمل من نفس الطابق عندما تكون جاهزًا.';$('play').textContent='متابعة ◀';$('controls').hidden=true;$('hud').hidden=true;$('action').hidden=true;$('pause').textContent='▶';}
-  else if(state==='paused'){state='playing';$('overlay').hidden=true;$('controls').hidden=introActive;$('pause').textContent='Ⅱ';last=performance.now();accumulator=0;updateHUD();}
+  if(state==='playing'){
+    state='paused';clearInput();$('overlay').hidden=false;
+    $('overlay').querySelector('.chapter-tag').textContent='MISSION PAUSED';
+    $('overlay').querySelector('.eyebrow').textContent='CHAPTER 02';
+    $('overlay').querySelector('h1').innerHTML='المهمة<br><em>متوقفة.</em>';
+    $('overlay-description').textContent='أكمل من نفس النقطة عندما تكون جاهزًا.';
+    $('play').textContent='متابعة ◀';$('hud').hidden=true;$('boss-hud').hidden=true;$('action').hidden=true;$('pause').textContent='▶';syncControls();
+  }else if(state==='paused'){
+    state='playing';$('overlay').hidden=true;$('pause').textContent='Ⅱ';last=performance.now();accumulator=0;updateHUD();updateAction();
+  }
 }
 function win(){
-  state='won';clearInput();$('overlay').hidden=false;$('controls').hidden=true;$('hud').hidden=true;$('action').hidden=true;
+  state='won';clearInput();document.body.classList.remove('rooftop-melee','rooftop-after');
+  $('overlay').hidden=false;$('controls').hidden=true;$('hud').hidden=true;$('boss-hud').hidden=true;$('action').hidden=true;
   $('overlay').querySelector('.chapter-tag').textContent='ABODEN HERO / CHAPTER 02 COMPLETE';
   $('overlay').querySelector('.eyebrow').textContent='CONTROL ROOM ONLINE';
-  $('overlay').querySelector('h1').innerHTML='وصلت للقمة.<br><em>النظام تحت سيطرتك.</em>';
-  $('overlay-description').textContent=`أكملت الطوابق الستة وأسقطت ${kills} حراس. زمن المهمة ${Math.floor(elapsed/60)}:${String(Math.floor(elapsed%60)).padStart(2,'0')}.`;
+  $('overlay').querySelector('h1').innerHTML='البرج تحت<br><em>سيطرتك.</em>';
+  $('overlay-description').textContent=`هزمت حارس السطح ووصلت إلى غرفة التحكم. أسقطت ${kills} حراس قبل المواجهة الأخيرة. زمن المهمة ${Math.floor(elapsed/60)}:${String(Math.floor(elapsed%60)).padStart(2,'0')}.`;
   $('play').textContent='إعادة الفصل الثاني ↻';sound(1080,.45,'triangle',.06);
 }
-
 function respawn(){
   const floor=progress.currentFloor;
   player=createPlayer(arrivalXForFloor(floor,30),groundY(floor)-44);
@@ -266,10 +315,14 @@ function respawn(){
 function hurt(){if(player.invulnerable>0||player.dashTime>0)return;player.hp--;player.invulnerable=1.25;burst(player.x+15,player.y+22,'#ff646d',10);sound(150,.16,'sawtooth',.04);if(player.hp<=0)respawn();else updateHUD();}
 function finishChallenge(floor=progress.currentFloor){
   if(!completeFloor(progress,floor))return;
-  enemyShots=[];bullets=[];burst(currentElevatorCenter(),groundY(floor)-36,'#61ffa7',24);sound(920,.26,'triangle',.055);
-  if(floor===progress.currentFloor){
-    if(floor===FLOOR_COUNT){toast('غرفة التحكم تعمل — اكتمل الفصل');setTimeout(()=>{if(state==='playing'&&progress.currentFloor===FLOOR_COUNT)win();},1150);}
-    else activateAutoElevator(floor);
+  enemyShots=[];bullets=[];sound(920,.26,'triangle',.055);
+  if(floor===FLOOR_COUNT){
+    rooftopUnlocked=true;
+    burst(ROOFTOP_LADDER_X,groundY(floor)-72,'#61ffa7',24);
+    toast('تم فتح ممر السطح');
+  }else{
+    burst(currentElevatorCenter(),groundY(floor)-36,'#61ffa7',24);
+    if(floor===progress.currentFloor)activateAutoElevator(floor);
   }
   updateHUD();updateAction();
 }
@@ -277,14 +330,50 @@ function arriveNextFloor(){
   const floor=progress.currentFloor;
   const previousY=elevatorSolid.y;
   const gy=setElevatorGround(groundY(floor));
-  // Continuous run: never recreate or snap the player at a floor transition.
-  // Carry only the elevator's remaining vertical delta; X and player identity stay untouched.
   player.y+=gy-previousY;
   player.vy=0;player.grounded=true;player.invulnerable=.45;enemyShots=[];bullets=[];
   elevatorDockFloor=floor;
   sound(740,.18,'triangle');updateHUD();updateAction();
 }
 
+function startClimb(){
+  if(scene!=='tower'||!rooftopUnlocked||progress.currentFloor!==FLOOR_COUNT)return;
+  scene='climbing';climbTime=0;climbStartX=player.x;climbStartY=player.y;
+  player.vx=0;player.vy=0;player.grounded=true;clearInput();sound(540,.16,'triangle');updateHUD();updateAction();
+}
+function enterRooftop(){
+  scene='rooftop-intro';enemyShots=[];bullets=[];clearInput();
+  rooftop.start(player.hp);sound(190,.28,'sawtooth',.035);updateHUD();updateAction();
+}
+function beginChapterEnd(){
+  if(scene!=='rooftop-after'||!rooftop.canEnterControlRoom())return;
+  scene='ending';endingTime=0;rooftop.finish();clearInput();
+  document.body.classList.remove('rooftop-melee','rooftop-after');sound(820,.35,'triangle',.05);updateHUD();updateAction();
+}
+function tickRooftop(dt){
+  elapsed+=dt;
+  if(scene==='ending'){
+    endingTime+=dt;
+    if(endingTime>=1.35){win();return;}
+    updateHUD();return;
+  }
+  const events=rooftop.tick(dt,input());
+  for(const ev of events){
+    if(ev==='fight-start'){scene='rooftop-fight';toast('قتال بالأيدي فقط');sound(310,.2,'sawtooth',.04);}
+    else if(ev==='hero-hit')sound(145,.13,'sawtooth',.04);
+    else if(ev==='boss-hit')sound(235,.10,'triangle',.045);
+    else if(ev==='boss-block')sound(105,.08,'square',.035);
+    else if(ev==='hero-dodge')sound(520,.07,'triangle',.025);
+    else if(ev==='hero-defeated')toast('المواجهة لم تنتهِ');
+    else if(ev==='fight-restart'){scene='rooftop-fight';toast('واجهه من جديد');}
+    else if(ev==='boss-defeated'){scene='rooftop-victory';sound(920,.32,'triangle',.06);}
+    else if(ev==='after-ready'){scene='rooftop-after';toast('ادخل غرفة التحكم');}
+  }
+  if(toastTime>0){toastTime-=dt;if(toastTime<=0)$('toast').classList.remove('show');}
+  updateHUD();updateAction();
+}
+
+function tickCombat
 function tickCombat(dt){
   const floor=playerFloor();
   const enemies=FLOOR_DEFS[floor].type==='combat'?(enemySets.get(floor)??[]):[];
@@ -344,6 +433,17 @@ function tick(dt){
   if(state!=='playing'||puzzleOpen)return;
   time+=dt;
 
+  if(scene==='climbing'){
+    elapsed+=dt;climbTime+=dt;
+    const align=ease(clamp(climbTime/.30,0,1));
+    const rise=ease(clamp((climbTime-.20)/2.35,0,1));
+    player.x=lerp(climbStartX,ROOFTOP_LADDER_X-player.w/2,align);
+    player.y=lerp(climbStartY,42,rise);
+    if(climbTime>=2.65){enterRooftop();return;}
+    updateHUD();updateAction();return;
+  }
+  if(isRooftopScene()){tickRooftop(dt);return;}
+
   tickEnemyPatrol(dt);
 
   if(introActive){
@@ -355,7 +455,7 @@ function tick(dt){
       cameraZoom=GAME_ZOOM;
       const target=followTarget(GAME_ZOOM);
       cameraX=target.x;cameraY=target.y;
-      $('controls').hidden=false;updateHUD();updateAction();
+      updateHUD();updateAction();
     }
     return;
   }
@@ -385,7 +485,6 @@ function tick(dt){
   if(toastTime>0){toastTime-=dt;if(toastTime<=0)$('toast').classList.remove('show');}
   updateHUD();updateAction();
 }
-
 function drawBackdrop(){
   const g=ctx.createLinearGradient(0,0,0,H);
   g.addColorStop(0,'#050913');g.addColorStop(.52,'#080d17');g.addColorStop(1,'#020408');
@@ -458,10 +557,9 @@ function drawWorld(){
 
   for(let floor=1;floor<=FLOOR_COUNT;floor++)drawFloorNumber(floor);
   drawElevatorPlatform();
+  drawRooftopLadder(ctx,{x:ROOFTOP_LADDER_X,bottomY:groundY(FLOOR_COUNT),unlocked:rooftopUnlocked,time});
   drawCollisionDebug();
 
-  // Every combat floor is live from the start. Guards render their real
-  // runtime state instead of waiting for a floor-arrival activation.
   for(let f=1;f<=FLOOR_COUNT;f++){
     const enemies=enemySets.get(f)??[];
     for(const e of enemies)if(e.hp>0)art.enemy(e,time);
@@ -474,7 +572,10 @@ function drawWorld(){
     const cx=b.x+b.w/2,cy=b.y+b.h/2;
     art.heroBullet(cx,cy,Math.atan2(b.vy||0,b.vx));
   }
-  if(player&&(player.invulnerable===0||Math.floor(time*14)%2===0))art.hero(player,time);
+  if(player&&(player.invulnerable===0||Math.floor(time*14)%2===0)){
+    if(scene==='climbing')drawRooftopClimber(ctx,{x:player.x+player.w/2,feetY:player.y+player.h,time:climbTime,facing:1});
+    else art.hero(player,time);
+  }
   for(const p of particles){
     ctx.globalAlpha=Math.max(0,p.life/p.max);
     art.ellipse(p.x,p.y,3,3,p.color,null);
@@ -482,9 +583,19 @@ function drawWorld(){
   ctx.globalAlpha=1;
   ctx.restore();
 }
-
 function draw(){
-  ctx.clearRect(0,0,W,H);drawBackdrop();drawWorld();
+  ctx.clearRect(0,0,W,H);
+  if(isRooftopScene()){
+    rooftop.draw(time);
+    const v=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.16,W/2,H/2,Math.max(W,H)*.68);
+    v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.38)');
+    ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
+    if(scene==='ending'){
+      ctx.fillStyle=`rgba(0,0,0,${clamp(endingTime/1.35,0,1)})`;ctx.fillRect(0,0,W,H);
+    }
+    return;
+  }
+  drawBackdrop();drawWorld();
   const strength=introActive ? .18 : .32;
   const v=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.12,W/2,H/2,Math.max(W,H)*.62);
   v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,`rgba(0,0,0,${strength})`);
@@ -625,14 +736,22 @@ function closePuzzle(){
   updateAction();
 }
 function doAction(){
-  if(state!=='playing'||progress.mode!=='floor'||puzzleOpen)return;
+  if(state!=='playing'||puzzleOpen)return;
+  if(scene==='rooftop-after'){
+    if(rooftop.canEnterControlRoom())beginChapterEnd();
+    return;
+  }
+  if(scene!=='tower'||progress.mode!=='floor')return;
+  if(rooftopUnlocked&&progress.currentFloor===FLOOR_COUNT&&playerFloor()===FLOOR_COUNT&&near(ROOFTOP_LADDER_X,100)){
+    startClimb();return;
+  }
   const interaction=currentPuzzleInteraction();
   if(!interaction)return;
   const {floor,spot}=interaction,def=FLOOR_DEFS[floor],done=progress.floors[floor].complete;
   if(!done&&def.type==='puzzle'&&near(spot.x,spot.range))openPuzzle(floor);
-
 }
 
+const mapped
 const mapped=new Set(['ArrowLeft','ArrowRight','ArrowUp','KeyA','KeyD','KeyK','KeyJ','Space','KeyL','ShiftLeft','ShiftRight']);
 window.addEventListener('keydown',e=>{if(mapped.has(e.code)){if(e.target instanceof HTMLButtonElement&&e.code==='Space')return;e.preventDefault();if(state==='playing'&&!puzzleOpen&&progress.mode==='floor')keys.add(e.code);}if(e.code==='KeyE'&&!e.repeat){e.preventDefault();doAction();}if(e.code==='Escape'&&!e.repeat){if(puzzleOpen)closePuzzle();else pause();}});
 window.addEventListener('keyup',e=>keys.delete(e.code));
@@ -651,4 +770,4 @@ $('sound').addEventListener('click',()=>{muted=!muted;unlockAudio();musicCtl?.se
 window.addEventListener('blur',()=>{clearInput();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){clearInput();if(state==='playing'&&!puzzleOpen)pause();}});
 reset();setIntroCopy();requestAnimationFrame(frame);
-if(new URLSearchParams(location.search).has('test'))window.__stage2={get progress(){return progress;},get player(){return player;},get enemies(){return enemySets.get(progress.currentFloor)??[];},get state(){return state;},get elevatorAuto(){return elevatorAuto;},tick,play,reset,finishChallenge,openPuzzle};
+if(new URLSearchParams(location.search).has('test'))window.__stage2={get progress(){return progress;},get player(){return player;},get enemies(){return enemySets.get(progress.currentFloor)??[];},get state(){return state;},get scene(){return scene;},get rooftop(){return rooftop.stats();},get elevatorAuto(){return elevatorAuto;},tick,play,reset,finishChallenge,openPuzzle,startClimb};

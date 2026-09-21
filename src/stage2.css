@@ -270,3 +270,52 @@ html,body,#app,#stage,#game,#controls,#puzzle{
   border-radius:999px;
   transition:width .35s ease;
 }
+
+
+/* Chapter 2 rooftop finale */
+#boss-hud{
+  position:absolute;
+  top:max(76px,calc(env(safe-area-inset-top) + 64px));
+  left:50%;
+  transform:translateX(-50%);
+  z-index:14;
+  width:min(390px,72vw);
+  padding:9px 12px 11px;
+  border:1px solid #6f2c34;
+  background:linear-gradient(180deg,#170a0dea,#080b10ef);
+  box-shadow:0 8px 28px #000b,inset 0 0 18px #7b111733;
+  pointer-events:none;
+}
+#boss-hud[hidden]{display:none}
+.boss-hud-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
+.boss-hud-head span{font:900 9px/1 system-ui;letter-spacing:1.4px;color:#ff6971}
+.boss-hud-head b{font-size:12px;color:#f5f7fa}
+.boss-health-track{height:10px;border:1px solid #73343a;background:#1b090c;overflow:hidden}
+#boss-health-fill{display:block;width:100%;height:100%;background:linear-gradient(90deg,#73141c,#ff3946);box-shadow:0 0 12px #ff394688;transition:width .16s linear}
+
+body.rooftop-melee #controls button[data-action="shoot"],
+body.rooftop-melee #controls button[data-action="jump"],
+body.rooftop-melee #controls button[data-action="dash"]{
+  position:relative!important;
+  border:1px solid #794047!important;
+  border-radius:50%!important;
+  background-image:none!important;
+  background:radial-gradient(circle at 45% 35%,#3a2025,#130b0e 72%)!important;
+  box-shadow:inset 0 0 0 3px #090a0e,0 0 14px #ed394844!important;
+}
+body.rooftop-melee #controls button[data-action="shoot"]::before,
+body.rooftop-melee #controls button[data-action="jump"]::before,
+body.rooftop-melee #controls button[data-action="dash"]::before{
+  display:grid!important;
+  position:absolute;
+  inset:0;
+  place-items:center;
+  color:#fff;
+  font:900 10px/1 system-ui;
+  letter-spacing:0;
+}
+body.rooftop-melee #controls button[data-action="shoot"]::before{content:"لكمة"}
+body.rooftop-melee #controls button[data-action="jump"]::before{content:"قوية"}
+body.rooftop-melee #controls button[data-action="dash"]::before{content:"مراوغة"}
+body.rooftop-after #controls .action-controls{display:none!important}
+body.rooftop-after #controls .movement-controls{bottom:calc(env(safe-area-inset-bottom) + var(--stage2-control-lift))!important}
