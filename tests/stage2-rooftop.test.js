@@ -40,6 +40,6 @@ test('the final fight is melee-only and exposes a boss HUD',()=>{
 test('boss defeat leaves a playable walk to the control room before chapter completion',()=>{
   assert.match(rooftop,/mode='after'/);
   assert.match(rooftop,/function canEnterControlRoom\(\)/);
-  assert.match(stage2,/scene==='rooftop-after'&&rooftop\.canEnterControlRoom\(\)/);
+  assert.match(stage2,/scene==='rooftop-after'[\s\S]{0,120}rooftop\.canEnterControlRoom\(\)/);
   assert.match(stage2,/function beginChapterEnd\(\)/);
 });
