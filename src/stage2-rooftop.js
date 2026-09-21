@@ -2,14 +2,20 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const lerp=(a,b,t)=>a+(b-a)*t;
 const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
 
-export const ROOFTOP_LADDER_X=820;
+export const ROOFTOP_LADDER_X=204;
 
 const BG_URL='./assets/stage2/rooftop/E254AA9A-004F-4581-B58B-1FF6F0427114.jpeg';
 const HERO_URL='./assets/stage2/rooftop/B78F8298-AC6E-4984-8171-6060AD95C1AD.png';
+const HERO_WALK_URL='./assets/aboden-hero-movement.png';
 const BOSS_URL='./assets/stage2/rooftop/0D1BD2D4-2C58-41AD-87C6-AF3454DDCD3D.png';
 
 const HERO_BASE={w:1536,h:1024};
 const BOSS_BASE={w:1122,h:1402};
+
+const HERO_WALK_FRAMES=Object.freeze([
+  [6,42,206,306],[194,42,209,307],[402,43,196,304],[583,38,239,309],
+  [808,42,208,306],[1008,39,208,310],[1220,43,211,306],[1436,42,217,307]
+]);
 
 const HERO_FRAMES=Object.freeze({
   climb:[[59,8,264,445],[477,9,171,443],[738,18,305,442],[1132,23,338,409]],
@@ -66,6 +72,7 @@ function removeWhiteMatte(img){
 
 const backgroundAsset=loadAsset(BG_URL,false);
 const heroAsset=loadAsset(HERO_URL,true);
+const heroWalkAsset=loadAsset(HERO_WALK_URL,false);
 const bossAsset=loadAsset(BOSS_URL,true);
 
 function scaledFrame(frame,asset,base){
@@ -78,6 +85,19 @@ function scaledFrame(frame,asset,base){
 function drawSprite(ctx,asset,base,frame,x,feetY,facing,displayH,alpha=1){
   if(!asset.ready)return false;
   const [sx,sy,sw,sh]=scaledFrame(frame,asset,base);
+  const dw=displayH*(sw/sh);
+  ctx.save();
+  ctx.globalAlpha*=alpha;
+  ctx.translate(x,feetY);
+  ctx.scale(facing,1);
+  ctx.drawImage(asset.source,sx,sy,sw,sh,-dw/2,-displayH,dw,displayH);
+  ctx.restore();
+  return true;
+}
+
+function drawRawSprite(ctx,asset,frame,x,feetY,facing,displayH,alpha=1){
+  if(!asset.ready)return false;
+  const [sx,sy,sw,sh]=frame;
   const dw=displayH*(sw/sh);
   ctx.save();
   ctx.globalAlpha*=alpha;
@@ -126,7 +146,7 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
   const ARENA_RIGHT=1330;
   const CONTROL_ROOM_X=626;
   const HERO_MAX_HP=5;
-  const BOSS_MAX_HP=18;
+  const BOSS_MAX_HP=12;
 
   let mode='idle',timer=0,cameraX=0,attackIndex=0,bossAttackIndex=0;
   let lastShoot=false,lastHeavy=false,lastDash=false;
@@ -164,7 +184,7 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
   function startHeroAttack(name){
     if(hero.attack||hero.hit>0||hero.dodge>0||hero.cooldown>0)return false;
     hero.attack=name;hero.attackTime=0;hero.attackHit=false;
-    hero.cooldown=name==='heavy'?.72:.32;
+    hero.cooldown=name==='heavy'?.62:.28;
     return true;
   }
 
@@ -177,7 +197,7 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
     if(boss.block>0){events.push('boss-block');return;}
     boss.hp=Math.max(0,boss.hp-damage);
     boss.hit=.24;
-    boss.x=clamp(boss.x+hero.facing*(damage===2?42:24),ARENA_LEFT,ARENA_RIGHT);
+    boss.x=clamp(boss.x+hero.facing*(damage>=3?42:28),ARENA_LEFT,ARENA_RIGHT);
     events.push('boss-hit');
     if(boss.hp<=0){
       boss.attack=null;boss.block=0;boss.walk=false;
@@ -224,11 +244,11 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
     if(hero.attack){
       hero.attackTime+=dt;
       if(hero.attack==='heavy'){
-        if(hero.attackTime>=.30&&!hero.attackHit)hitBoss(2,125,events);
-        if(hero.attackTime>=.62)hero.attack=null;
+        if(hero.attackTime>=.27&&!hero.attackHit)hitBoss(3,135,events);
+        if(hero.attackTime>=.56)hero.attack=null;
       }else{
-        if(hero.attackTime>=.11&&!hero.attackHit)hitBoss(1,105,events);
-        if(hero.attackTime>=.30)hero.attack=null;
+        if(hero.attackTime>=.10&&!hero.attackHit)hitBoss(2,115,events);
+        if(hero.attackTime>=.27)hero.attack=null;
       }
       return;
     }
@@ -243,7 +263,7 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
 
   function chooseBossAttack(){
     bossAttackIndex++;
-    if(bossAttackIndex%5===0){boss.block=.55;boss.cooldown=.7;return;}
+    if(bossAttackIndex%6===0){boss.block=.48;boss.cooldown=.72;return;}
     boss.attack=bossAttackIndex%4===0?'heavy':bossAttackIndex%2?'attack1':'attack2';
     boss.attackTime=0;boss.attackHit=false;
   }
@@ -355,6 +375,14 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
     return HERO_FRAMES.idle[0];
   }
 
+  function drawHeroSprite(time,facing){
+    if(hero.walk&&!hero.attack&&hero.hit<=0&&hero.dodge<=0&&mode!=='hero-ko'){
+      const frame=HERO_WALK_FRAMES[Math.floor(time*7.5)%HERO_WALK_FRAMES.length];
+      if(drawRawSprite(ctx,heroWalkAsset,frame,hero.x,FLOOR_Y,facing,188))return true;
+    }
+    return drawSprite(ctx,heroAsset,HERO_BASE,heroFrame(),hero.x,FLOOR_Y,facing,188);
+  }
+
   function bossFrame(){
     if(mode==='boss-defeat'||mode==='after'||boss.hp<=0)return BOSS_FRAMES.defeat[0];
     if(boss.hit>0)return BOSS_FRAMES.hurt[0];
@@ -428,7 +456,7 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
     ctx.beginPath();ctx.ellipse(boss.x,FLOOR_Y+4,72,10,0,0,Math.PI*2);ctx.fill();
     ctx.globalAlpha=1;
 
-    if(!drawSprite(ctx,heroAsset,HERO_BASE,heroFrame(),hero.x,FLOOR_Y,heroFacing,188)){
+    if(!drawHeroSprite(time,heroFacing)){
       ctx.fillStyle='#b73339';ctx.fillRect(hero.x-20,FLOOR_Y-100,40,100);
     }
     if(!drawSprite(ctx,bossAsset,BOSS_BASE,bossFrame(),boss.x,FLOOR_Y,bossFacing,248)){
