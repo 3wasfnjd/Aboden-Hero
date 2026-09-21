@@ -1,51 +1,27 @@
 # Aboden Hero — حصار المدينة
 
-Play: https://3wasfnjd.github.io/Aboden-Hero/
+A 2D action platformer with an Arabic interface, designed for portrait play on mobile.
 
-A side-scrolling action platformer set in a comic-book night city. Hero, guards,
-boss, bullets, pickups, checkpoints and the exit gate are all rendered from
-sprite/image assets under `assets/`.
+[Play Chapter 1](https://3wasfnjd.github.io/Aboden-Hero/) · [Play Chapter 2](https://3wasfnjd.github.io/Aboden-Hero/stage2.html)
 
-## Mission
-- ~6,600-unit route through industrial streets, rooftops and warehouses.
-- Armed patrols (three guard types) with a visible aim warning before each shot.
-- Automatic fire while holding shoot; a short invulnerable dash; unlimited ammo.
-- Four checkpoints (full heal + respawn point), health/energy pickups, forgiving jumps.
-- A gatekeeper boss with rocket volleys and a locked/unlocked exit gate that only
-  opens once it's defeated.
-- Background music and SFX start automatically once the mission begins.
+## Chapters
 
-## Chapter 2 — Rooftop Elevator
-- Play directly: https://3wasfnjd.github.io/Aboden-Hero/stage2.html
-- Six vertically stacked floors connected by a dedicated elevator sequence.
-- Floors 1, 3 and 5 are combat encounters using the existing City, Sniper and Heavy guards.
-- Floors 2, 4 and 6 are interactive puzzles: symbol matching, power wiring and cube arrangement.
-- Completing a floor powers its indicator green and unlocks the elevator to the next floor.
-- Chapter 1 victory now continues into Chapter 2 instead of immediately restarting.
+- **City Siege:** Cross the city, defeat the Gatekeeper and continue to Chapter 2.
+- **Rooftop Elevator:** Climb a six-floor tower through combat and puzzles. Automatic elevators alternate sides and carry the player continuously; puzzle devices are embedded in the tower artwork.
+
+| Floor | Challenge |
+| --- | --- |
+| 1, 3, 5 | Guard encounters |
+| 2 | Power Wiring — connect the energy path |
+| 4 | Power Connection — match the connectors |
+| 6 | Cube Arrangement — restore control and complete the chapter |
 
 ## Controls
-- Move: arrows or A/D. Jump: Up or K. Shoot: J or Space. Dash: L or Shift.
-- Pause/resume: Escape or the pause button.
-- Touch: on-screen buttons for movement, jump, fire and dash.
-- Portrait is the primary orientation (720×1280 canvas); landscape on short
-  viewports shows a rotate-back prompt instead of gameplay.
 
-## Run / deploy
-Serve the repo root over HTTP: `npm run serve` (or `python3 -m http.server 8000`).
-No build step — GitHub Pages serves the `main` branch root directly. Cache-busted
-module/CSS query strings avoid mixing files between releases.
+- Mobile: touch buttons for movement, jump, shooting and dash.
+- Keyboard: arrows/A/D to move, Up/K to jump, J/Space to shoot, L/Shift to dash, Escape to pause, E to interact in Chapter 2.
 
-## Source
-- `src/world.js` — level geometry, fixed-step movement, collision, dash.
-- `src/combat.js`, `enemy-weapon.js`, `hero-weapon.js` — aim, projectiles, muzzle poses.
-- `src/art-base.js`, `art.js`, `art-bg.js` — layered rendering: base primitives,
-  character/projectile/pickup sprites, then world/background images.
-- `src/music.js` — background score and mute control.
-- `src/main.js` — game loop, UI state, input, HUD, audio.
-- `src/style.css`, `controls.css` — responsive Arabic interface and touch dock.
-- `assets/` — sprite sheets, backgrounds and UI art.
+## Run
 
-## Validation
-`npm test` runs the Node test suite covering movement, jumps, dash, combat, checkpoints,
-pickups, pause/respawn, boss defeat and the locked/unlocked exit. Integration tests
-use a minimal DOM adapter, not a real device; manual browser/mobile checks are separate.
+`npm run serve` starts a local server; `npm test` runs the tests.
+GitHub Pages serves the `main` branch directly, with no build step.
