@@ -363,7 +363,6 @@ function tick(dt){
       const target=followTarget(GAME_ZOOM);
       cameraX=target.x;cameraY=target.y;
       $('controls').hidden=false;updateHUD();updateAction();
-      updateHUD();
     }
     return;
   }
