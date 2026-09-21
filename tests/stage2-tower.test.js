@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import {
   TOWER_WIDTH,TOWER_HEIGHT,FLOOR_GROUNDS,FLOOR_LEFT,FLOOR_RIGHT,
   ELEVATOR_LEFT_X,ELEVATOR_RIGHT_X,ELEVATOR_WIDTH,
-  FLOOR_LABEL_LEFT_X,FLOOR_LABEL_RIGHT_X,
+  FLOOR_LABEL_LEFT_X,FLOOR_LABEL_RIGHT_X,FLOOR_LABEL_Y,
   groundY,makeFloorPlatforms,elevatorGround,isFloorGeometryValid,
-  elevatorXForFloor,floorLabelX,arrivalXForFloor
+  elevatorXForFloor,floorLabelX,floorLabelY,arrivalXForFloor
 } from '../src/stage2-tower.js';
 
 test('tower geometry matches the supplied six-floor background',()=>{
@@ -38,11 +38,13 @@ test('onward elevators alternate sides floor by floor',()=>{
   assert.ok(ELEVATOR_RIGHT_X+ELEVATOR_WIDTH<=FLOOR_RIGHT);
 });
 
-test('floor numbers alternate opposite the onward elevator',()=>{
+test('floor numbers alternate opposite the onward elevator and match reference heights',()=>{
   assert.equal(floorLabelX(1),FLOOR_LABEL_LEFT_X);
   assert.equal(floorLabelX(2),FLOOR_LABEL_RIGHT_X);
   assert.equal(floorLabelX(3),FLOOR_LABEL_LEFT_X);
   assert.equal(floorLabelX(4),FLOOR_LABEL_RIGHT_X);
+  assert.deepEqual(FLOOR_LABEL_Y.slice(1),[1220,1015,802,590,383,190]);
+  assert.equal(floorLabelY(6),190);
 });
 
 test('arrival side is opposite the next elevator on upper floors',()=>{
