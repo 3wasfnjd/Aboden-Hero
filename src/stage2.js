@@ -221,7 +221,6 @@ function syncControls(){
   const scripted=introActive||scene==='climbing'||scene==='rooftop-intro'||scene==='rooftop-victory'||scene==='rooftop-dance'||scene==='ending'||rooftop.mode==='hero-ko';
   $('controls').hidden=state!=='playing'||puzzleOpen||scripted;
   document.body.classList.toggle('rooftop-melee',scene==='rooftop-fight'&&rooftop.mode==='fight'&&state==='playing');
-  document.body.classList.remove('rooftop-after');
 }
 function updateHUD(){
   const bossHud=$('boss-hud');
@@ -273,7 +272,7 @@ function reset(){
   destroyActivePuzzle();bullets=[];enemyShots=[];particles=[];kills=0;puzzleOpen=false;activePuzzleFloor=null;
   elevatorAuto=null;elevatorDockFloor=null;elevatorPendingFloor=null;
   scene='tower';rooftopUnlocked=false;climbTime=0;climbStartX=0;climbStartY=0;endingTime=0;
-  rooftop.reset();document.body.classList.remove('rooftop-melee','rooftop-after');
+  rooftop.reset();document.body.classList.remove('rooftop-melee');
   introTime=0;introActive=false;cameraZoom=FIT_ZOOM;
   const full=fullTowerCamera();cameraX=full.x;cameraY=full.y;
   setElevatorForFloor(1);
@@ -308,7 +307,7 @@ function pause(){
   }
 }
 function win(){
-  state='won';clearInput();document.body.classList.remove('rooftop-melee','rooftop-after');
+  state='won';clearInput();document.body.classList.remove('rooftop-melee');
   $('overlay').hidden=false;$('controls').hidden=true;$('hud').hidden=true;$('boss-hud').hidden=true;$('action').hidden=true;
   $('overlay').querySelector('.chapter-tag').textContent='ABODEN HERO / CHAPTER 02 COMPLETE';
   $('overlay').querySelector('.eyebrow').textContent='VICTORY DANCE COMPLETE';
