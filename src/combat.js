@@ -1,4 +1,4 @@
-import {enemyWeaponMuzzle,ENEMY_FLASH_TIME,enemyKind} from './enemy-weapon.js?v=20260921-cleanup-1';
+import {enemyWeaponMuzzle,ENEMY_FLASH_TIME,enemyKind} from './enemy-weapon.js?v=20260921-stage2-new-enemies-1';
 import {overlaps} from './world.js?v=20260917-guards-3';
 
 // Each guard type gets its own rhythm and range instead of an identical single shot:
@@ -6,6 +6,8 @@ import {overlaps} from './world.js?v=20260917-guards-3';
 // reacts quickly and sprays a short burst of slower, easier-to-read shots.
 const KIND_STATS={
  city:{windup:.48,speed:245,cooldown:1.75,range:530,burst:1,burstGap:0},
+ newguard:{windup:.44,speed:275,cooldown:1.65,range:570,burst:1,burstGap:0},
+ drone:{windup:.40,speed:285,cooldown:1.90,range:610,burst:1,burstGap:0},
  sniper:{windup:.85,speed:430,cooldown:2.3,range:720,burst:1,burstGap:0},
  heavy:{windup:.34,speed:190,cooldown:2.1,range:480,burst:3,burstGap:.12}
 };
