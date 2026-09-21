@@ -24,10 +24,11 @@ const W=720,H=1280,STEP=1/120;
 const WORLD_W=TOWER_WIDTH,WORLD_H=TOWER_HEIGHT;
 const FIT_ZOOM=Math.min(W/WORLD_W,H/WORLD_H);
 const GAME_ZOOM=1.90;
-const INTRO_DURATION=3.2;
+const INTRO_DURATION=3.8;
 const ELEVATOR_DURATION=2.75;
 const lerp=(a,b,t)=>a+(b-a)*t;
 const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+const smoother=t=>t*t*t*(t*(t*6-15)+10);
 const viewW=zoom=>W/zoom;
 const viewH=zoom=>H/zoom;
 
@@ -134,6 +135,21 @@ function followTarget(zoom=GAME_ZOOM){
     x:clamp(player.x+player.w/2-vw*.50,0,Math.max(0,WORLD_W-vw)),
     y:clamp(player.y+player.h/2-vh*.62,0,Math.max(0,WORLD_H-vh))
   };
+}
+function cameraCenter(camera,zoom){
+  return {x:camera.x+viewW(zoom)/2,y:camera.y+viewH(zoom)/2};
+}
+function setIntroCamera(progress){
+  const t=smoother(clamp(progress,0,1));
+  const start=fullTowerCamera();
+  const end=followTarget(GAME_ZOOM);
+  const startCenter=cameraCenter(start,FIT_ZOOM);
+  const endCenter=cameraCenter(end,GAME_ZOOM);
+  cameraZoom=lerp(FIT_ZOOM,GAME_ZOOM,t);
+  const centerX=lerp(startCenter.x,endCenter.x,t);
+  const centerY=lerp(startCenter.y,endCenter.y,t);
+  cameraX=centerX-viewW(cameraZoom)/2;
+  cameraY=centerY-viewH(cameraZoom)/2;
 }
 
 function makeEnemy(kind,x,floor,index){
@@ -335,15 +351,13 @@ function tick(dt){
 
   if(introActive){
     introTime+=dt;
-    const hold=.18;
     const normalized=clamp(introTime/INTRO_DURATION,0,1);
-    const zoomT=ease(clamp((normalized-hold)/(1-hold),0,1));
-    cameraZoom=lerp(FIT_ZOOM,GAME_ZOOM,zoomT);
-    const full=fullTowerCamera(),target=followTarget(cameraZoom);
-    cameraX=lerp(full.x,target.x,zoomT);
-    cameraY=lerp(full.y,target.y,zoomT);
+    setIntroCamera(normalized);
     if(normalized>=1){
-      introActive=false;cameraZoom=GAME_ZOOM;
+      introActive=false;
+      cameraZoom=GAME_ZOOM;
+      const target=followTarget(GAME_ZOOM);
+      cameraX=target.x;cameraY=target.y;
       $('controls').hidden=false;updateHUD();updateAction();
       toast('الطابق 1 — ابدأ الصعود');
     }
