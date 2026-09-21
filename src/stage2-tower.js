@@ -25,7 +25,7 @@ export const ELEVATOR_PLATFORM_HEIGHT=18;
 
 export const PUZZLE_INTERACTION=Object.freeze({
   2:Object.freeze({x:560,range:92}),
-  4:Object.freeze({x:360,range:92}),
+  4:Object.freeze({x:440,range:118}),
   6:Object.freeze({x:520,range:92})
 });
 
