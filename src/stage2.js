@@ -2,7 +2,7 @@ import {lockSafariZoom} from './gesture-lock.js?v=20260921-safari-lock-1';
 import {clamp,overlaps,createPlayer,stepPlayer} from './world.js?v=20260916-action-1';
 import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260917-muzzle-1';
 import {stepCombat} from './combat.js?v=20260921-guards-elevator-1';
-import {createArt} from './art.js?v=20260921-guards-elevator-1';
+import {createArt} from './art.js?v=20260921-full-shot-body-1';
 import {createMusic} from './music.js?v=20260917-music-1';
 import {createMatchingPuzzle} from '../puzzle-kit/matching/matching.js?v=20260920-stage2-embed-1';
 import {createWiringPuzzle} from '../puzzle-kit/wiring/wiring.js?v=20260919-stage2-embed-2';
@@ -32,9 +32,6 @@ const viewW=zoom=>W/zoom;
 const viewH=zoom=>H/zoom;
 
 const keys=new Set(),touch=new Map(),buttons=[...document.querySelectorAll('[data-action]')];
-const moveStick=$('move-stick'),moveStickBase=moveStick?.querySelector('.move-stick-base'),moveStickKnob=moveStick?.querySelector('.move-stick-knob');
-const STICK_RANGE=44,STICK_DEADZONE=.16;
-let stickPointerId=null,stickCenterX=0,stickCenterY=0,stickX=0,stickY=0;
 let progress=createProgress(),player=createPlayer(arrivalXForFloor(1,30),groundY(1)-44),state='menu',time=0,elapsed=0;
 let cameraX=0,cameraY=0,cameraZoom=FIT_ZOOM,introTime=0,introActive=false;
 let bullets=[],enemyShots=[],particles=[],enemySets=new Map();
@@ -53,7 +50,8 @@ const PUZZLE_DEVICE_SOURCES=Object.freeze({
   4:'./assets/stage2/puzzle-device-wiring.png?v=20260921-puzzle-devices-1',
   6:'./assets/stage2/puzzle-device-cubes.png?v=20260921-puzzle-devices-1'
 });
-const PUZZLE_DEVICE_H=184;
+const PUZZLE_DEVICE_H=96;
+const PUZZLE_DEVICE_CROP=.60;
 const puzzleDeviceArt=new Map();
 
 function preparePuzzleDevice(floor,src){
@@ -156,20 +154,14 @@ function spawnFloorEnemies(floor){
 }
 function resetEnemies(){for(let f=1;f<=FLOOR_COUNT;f++)spawnFloorEnemies(f);}
 
-function resetMoveStick(){
-  const id=stickPointerId;stickPointerId=null;stickX=0;stickY=0;
-  if(moveStickKnob)moveStickKnob.style.transform='translate3d(0,0,0)';
-  moveStick?.classList.remove('active');
-  if(id!==null&&moveStick?.hasPointerCapture?.(id)){try{moveStick.releasePointerCapture(id);}catch{}}
-}
 function clearInput(){
-  keys.clear();touch.clear();buttons.forEach(b=>b.classList.remove('held'));resetMoveStick();
+  keys.clear();touch.clear();buttons.forEach(b=>b.classList.remove('held'));
   if(player){player.jumpHeld=false;player.dashHeld=false;player.buffer=0;}
 }
 function activeTouch(action){return [...touch.values()].includes(action);}
 function input(){return {
-  left:keys.has('ArrowLeft')||keys.has('KeyA')||stickX<-STICK_DEADZONE,
-  right:keys.has('ArrowRight')||keys.has('KeyD')||stickX>STICK_DEADZONE,
+  left:keys.has('ArrowLeft')||keys.has('KeyA')||activeTouch('left'),
+  right:keys.has('ArrowRight')||keys.has('KeyD')||activeTouch('right'),
   jump:keys.has('ArrowUp')||keys.has('KeyK')||activeTouch('jump'),
   dash:keys.has('KeyL')||keys.has('ShiftLeft')||keys.has('ShiftRight')||activeTouch('dash'),
   shoot:keys.has('KeyJ')||keys.has('Space')||activeTouch('shoot')
@@ -407,16 +399,18 @@ function drawPuzzleDevice(floor){
   const artState=puzzleDeviceArt.get(floor);
   if(!artState?.ready||!artState.canvas)return;
   const src=artState.canvas;
-  const dh=PUZZLE_DEVICE_H,dw=dh*(src.width/src.height);
-  const x=PUZZLE_X[floor]-dw/2,y=groundY(floor)-dh+4;
+  const cropH=Math.max(1,Math.round(src.height*PUZZLE_DEVICE_CROP));
+  const dh=PUZZLE_DEVICE_H,dw=dh*(src.width/cropH);
+  // Mount the control head on the back wall instead of standing it on the floor.
+  const x=PUZZLE_X[floor]-dw/2,y=groundY(floor)-dh-28;
   const complete=progress.floors[floor].complete;
   const active=floor===progress.currentFloor&&!complete;
   ctx.save();
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
   ctx.globalAlpha=complete ? .78 : 1;
-  if(complete){ctx.shadowColor='#61ffa7';ctx.shadowBlur=18;}
-  else if(active&&near(PUZZLE_X[floor],118)){ctx.shadowColor='#54d7ff';ctx.shadowBlur=14;}
-  ctx.drawImage(src,x,y,dw,dh);
+  if(complete){ctx.shadowColor='#61ffa7';ctx.shadowBlur=12;}
+  else if(active&&near(PUZZLE_X[floor],104)){ctx.shadowColor='#54d7ff';ctx.shadowBlur=8;}
+  ctx.drawImage(src,0,0,src.width,cropH,x,y,dw,dh);
   ctx.restore();
 }
 
@@ -633,26 +627,6 @@ function doAction(){
   const floor=progress.currentFloor,def=FLOOR_DEFS[floor],done=progress.floors[floor].complete;
   if(!done&&def.type==='puzzle'&&near(currentPuzzleX(),105))openPuzzle();
 
-}
-
-if(moveStick&&moveStickBase&&moveStickKnob){
-  const updateStick=e=>{
-    let dx=(e.clientX-stickCenterX)/STICK_RANGE,dy=(e.clientY-stickCenterY)/STICK_RANGE;
-    const mag=Math.hypot(dx,dy);if(mag>1){dx/=mag;dy/=mag;}
-    stickX=dx;stickY=dy;
-    moveStickKnob.style.transform=`translate3d(${(dx*44).toFixed(1)}px,${(dy*44).toFixed(1)}px,0)`;
-  };
-  moveStick.addEventListener('pointerdown',e=>{
-    if(state!=='playing'||puzzleOpen||progress.mode==='elevator'||stickPointerId!==null)return;
-    e.preventDefault();unlockAudio();moveStick.setPointerCapture(e.pointerId);stickPointerId=e.pointerId;
-    const rect=moveStickBase.getBoundingClientRect();stickCenterX=rect.left+rect.width/2;stickCenterY=rect.top+rect.height/2;
-    stickX=0;stickY=0;moveStick.classList.add('active');updateStick(e);
-  });
-  moveStick.addEventListener('pointermove',e=>{if(e.pointerId!==stickPointerId)return;e.preventDefault();updateStick(e);});
-  const endStick=e=>{if(e.pointerId!==stickPointerId)return;resetMoveStick();};
-  moveStick.addEventListener('pointerup',endStick);
-  moveStick.addEventListener('pointercancel',endStick);
-  moveStick.addEventListener('lostpointercapture',endStick);
 }
 
 const mapped=new Set(['ArrowLeft','ArrowRight','ArrowUp','KeyA','KeyD','KeyK','KeyJ','Space','KeyL','ShiftLeft','ShiftRight']);
