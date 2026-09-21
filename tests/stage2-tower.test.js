@@ -61,7 +61,7 @@ test('elevator ground interpolates between adjacent floors',()=>{
 
 test('embedded puzzle devices use fixed interaction hotspots on puzzle floors',()=>{
   assert.deepEqual(puzzleInteraction(2),{x:560,range:92});
-  assert.deepEqual(puzzleInteraction(4),{x:360,range:92});
+  assert.deepEqual(puzzleInteraction(4),{x:440,range:118});
   assert.deepEqual(puzzleInteraction(6),{x:520,range:92});
   assert.equal(puzzleInteraction(1),null);
 });
