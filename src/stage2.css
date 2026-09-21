@@ -26,6 +26,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;-webkit-tap-highlight-
 #app{display:block!important;grid-template-rows:none!important}
 #stage{position:absolute!important;inset:0!important;width:100%!important;height:100%!important}
 #controls{
+  direction:ltr!important;
   position:fixed!important;
   inset:0!important;
   width:100%!important;
@@ -43,6 +44,8 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;-webkit-tap-highlight-
 #controls[hidden]{display:none!important}
 #controls::before{display:none!important}
 #controls>div{
+  direction:ltr!important;
+  flex-direction:row!important;
   position:fixed!important;
   bottom:calc(env(safe-area-inset-bottom) + var(--stage2-control-lift))!important;
   display:flex!important;
