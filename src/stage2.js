@@ -617,7 +617,10 @@ $('action').addEventListener('click',doAction);$('puzzle-close').addEventListene
 $('play').addEventListener('click',()=>{if(state==='paused'){pause();return;}play();setIntroCopy();});
 $('pause').addEventListener('click',pause);
 $('sound').addEventListener('click',()=>{muted=!muted;unlockAudio();musicCtl?.setMuted(muted);$('sound').textContent=muted?'♪':'♫';$('sound').setAttribute('aria-pressed',String(!muted));if(!muted)sound(660,.12);});
-window.addEventListener('blur',()=>{clearInput();if(state==='playing'&&!puzzleOpen)pause();});
+// iOS/Safari can emit transient window blur events while the player is dragging
+// touch controls. Clear held input, but do not pause gameplay unless the document
+// actually becomes hidden (handled by visibilitychange below).
+window.addEventListener('blur',()=>{clearInput();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){clearInput();if(state==='playing'&&!puzzleOpen)pause();}});
 reset();setIntroCopy();requestAnimationFrame(frame);
 if(new URLSearchParams(location.search).has('test'))window.__stage2={get progress(){return progress;},get player(){return player;},get enemies(){return enemySets.get(progress.currentFloor)??[];},get state(){return state;},get elevatorAuto(){return elevatorAuto;},tick,play,reset,finishChallenge,openPuzzle};
