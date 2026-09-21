@@ -1,3 +1,4 @@
+import {lockSafariZoom} from './gesture-lock.js?v=20260921-safari-lock-1';
 import {clamp,overlaps,createPlayer,stepPlayer} from './world.js?v=20260916-action-1';
 import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260917-muzzle-1';
 import {stepCombat} from './combat.js?v=20260921-guards-elevator-1';
@@ -16,6 +17,7 @@ import {
   elevatorXForFloor,floorLabelX,floorLabelY,arrivalXForFloor
 } from './stage2-tower.js?v=20260921-alternating-1';
 
+lockSafariZoom();
 const $=id=>document.getElementById(id);
 const canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx);
 const W=720,H=1280,STEP=1/120;

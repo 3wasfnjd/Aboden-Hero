@@ -20,6 +20,7 @@ jobs:
         run: |
           node --check src/stage2.js
           node --check src/stage2-state.js
+          node --check src/gesture-lock.js
           node --check src/stage2-tower.js
           node --check puzzle-kit/wiring/demo.js
           node --check puzzle-kit/wiring/wiring.js
