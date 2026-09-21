@@ -19,7 +19,7 @@ import {
 } from './stage2-tower.js?v=20260921-ui-crop-fix-1';
 import {
   ROOFTOP_LADDER_X,createRooftopBattle,drawRooftopLadder,drawRooftopClimber
-} from './stage2-rooftop.js?v=20260921-floss-ending-1';
+} from './stage2-rooftop.js?v=20260921-uploaded-floss-2';
 
 lockSafariZoom();
 const $=id=>document.getElementById(id);
