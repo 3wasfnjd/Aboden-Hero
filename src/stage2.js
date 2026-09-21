@@ -373,7 +373,6 @@ function tickRooftop(dt){
   updateHUD();updateAction();
 }
 
-function tickCombat
 function tickCombat(dt){
   const floor=playerFloor();
   const enemies=FLOOR_DEFS[floor].type==='combat'?(enemySets.get(floor)??[]):[];
@@ -751,7 +750,6 @@ function doAction(){
   if(!done&&def.type==='puzzle'&&near(spot.x,spot.range))openPuzzle(floor);
 }
 
-const mapped
 const mapped=new Set(['ArrowLeft','ArrowRight','ArrowUp','KeyA','KeyD','KeyK','KeyJ','Space','KeyL','ShiftLeft','ShiftRight']);
 window.addEventListener('keydown',e=>{if(mapped.has(e.code)){if(e.target instanceof HTMLButtonElement&&e.code==='Space')return;e.preventDefault();if(state==='playing'&&!puzzleOpen&&progress.mode==='floor')keys.add(e.code);}if(e.code==='KeyE'&&!e.repeat){e.preventDefault();doAction();}if(e.code==='Escape'&&!e.repeat){if(puzzleOpen)closePuzzle();else pause();}});
 window.addEventListener('keyup',e=>keys.delete(e.code));
