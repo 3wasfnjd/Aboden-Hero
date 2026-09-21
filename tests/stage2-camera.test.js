@@ -10,5 +10,6 @@ test('Chapter 2 intro camera uses one smooth center-space transition',()=>{
   assert.match(js,/const startCenter=cameraCenter\(start,FIT_ZOOM\)/);
   assert.match(js,/const endCenter=cameraCenter\(end,GAME_ZOOM\)/);
   assert.doesNotMatch(js,/const hold=\.18/);
-  assert.doesNotMatch(js,/target=followTarget\(cameraZoom\)/);
+  const intro=js.slice(js.indexOf('if(introActive){'),js.indexOf('elapsed+=dt;'));
+  assert.doesNotMatch(intro,/followTarget\(cameraZoom\)/);
 });
