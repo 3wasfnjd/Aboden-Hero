@@ -40,6 +40,9 @@ jobs:
           test -s assets/stage2/floors-atlas.webp
           test -s assets/stage2/elevator.webp
           test -s assets/stage2/tower-background.webp
+          test -s assets/stage2/puzzle-device-matching.png
+          test -s assets/stage2/puzzle-device-wiring.png
+          test -s assets/stage2/puzzle-device-cubes.png
           test -s assets/stage2/tower-background-hq.png
           test -s stage2.html
           test -s puzzle-kit/wiring/assets/original/board.png
