@@ -1,5 +1,5 @@
-import {BOSS_FRAMES,CITY_FRAMES,HEAVY_FRAMES,SNIPER_FRAMES,enemyKind,enemyAttackPose,fallbackEnemyMuzzle} from './enemy-weapon.js?v=20260921-cleanup-1';
-import {enemyDisplayHeight} from './hero-weapon.js?v=20260921-cleanup-1';
+import {BOSS_FRAMES,CITY_FRAMES,HEAVY_FRAMES,SNIPER_FRAMES,enemyKind,enemyAttackPose,fallbackEnemyMuzzle} from './enemy-weapon.js?v=20260921-stage2-new-enemies-1';
+import {enemyDisplayHeight} from './hero-weapon.js?v=20260921-stage2-new-enemies-1';
 import {createArt as createBaseArt} from './art-base.js?v=20260921-cleanup-1';
 
 const MOVEMENT_URL='./assets/aboden-hero-movement.png';
@@ -7,6 +7,9 @@ const BOSS_URL='./assets/Gatekeeper.png';
 const CITY_URL='./assets/City_Guard.png';
 const HEAVY_URL='./assets/Heavy_Guard.png';
 const SNIPER_URL='./assets/Sniper_Rooftop_Guard.png';
+const NEW_GUARD_URL='./assets/stage2/rooftop/712D453B-A752-4A91-BB87-AE9554BBF4FA.png';
+const DRONE_IDLE_URL='./assets/stage2/rooftop/CE321790-436E-4BF6-BF00-23D8E11F8635.png';
+const DRONE_ATTACK_URL='./assets/stage2/rooftop/152AB8BD-FD1C-44F8-BCBD-D043437BC255.png';
 const ROCKET_URL='./assets/ui/rocket.png';
 const HERO_BULLET_URL='./assets/ui/projectiles/bullet-hero.png';
 const ENEMY_BULLET_URL='./assets/ui/projectiles/bullet-red2.png';
@@ -28,6 +31,9 @@ const bossAsset=loadImage(BOSS_URL);
 const cityAsset=loadImage(CITY_URL);
 const heavyAsset=loadImage(HEAVY_URL);
 const sniperAsset=loadImage(SNIPER_URL);
+const newGuardAsset=loadImage(NEW_GUARD_URL);
+const droneIdleAsset=loadImage(DRONE_IDLE_URL);
+const droneAttackAsset=loadImage(DRONE_ATTACK_URL);
 const rocketAsset=loadImage(ROCKET_URL);
 const heroBulletAsset=loadImage(HERO_BULLET_URL);
 const enemyBulletAsset=loadImage(ENEMY_BULLET_URL);
@@ -112,10 +118,37 @@ export function createArt(ctx){
   baseHero(p,time);
  }
 
+ function drawDrone(e,time){
+  const attacking=e.windup>0||e.shotFlash>0;
+  const asset=attacking?droneAttackAsset:droneIdleAsset;
+  const centerX=e.x+e.w/2;
+  const centerY=e.y+e.h/2+Math.sin(time*3.4+(e.hoverPhase??0))*3.2;
+  const facing=e.windup>0&&e.aimX?e.aimX<centerX?-1:1:e.vx<0?-1:1;
+  const size=86;
+  ctx.save();
+  ctx.globalAlpha=.22;ctx.fillStyle='#071220';
+  ctx.beginPath();ctx.ellipse(centerX,e.y+e.h+13,31,5,0,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  if(asset.ready){
+   ctx.save();
+   ctx.translate(centerX,centerY);
+   ctx.scale(facing,1);
+   ctx.rotate(Math.sin(time*2.6+(e.hoverPhase??0))*.025);
+   ctx.drawImage(asset.img,-size/2,-size/2,size,size);
+   ctx.restore();
+  }else{
+   ctx.save();ctx.translate(centerX,centerY);
+   ctx.fillStyle='#26343e';ctx.strokeStyle='#8ad8ff';ctx.lineWidth=2;
+   ctx.fillRect(-24,-9,48,18);ctx.strokeRect(-24,-9,48,18);
+   ctx.restore();
+  }
+ }
+
  function enemy(e,time){
   const type=enemyKind(e);
-  const asset=type==='city'?cityAsset:type==='sniper'?sniperAsset:heavyAsset;
-  const frames=type==='city'?CITY_FRAMES:type==='sniper'?SNIPER_FRAMES:HEAVY_FRAMES;
+  if(type==='drone'){drawDrone(e,time);return;}
+  const asset=type==='city'?cityAsset:type==='newguard'?newGuardAsset:type==='sniper'?sniperAsset:heavyAsset;
+  const frames=(type==='city'||type==='newguard')?CITY_FRAMES:type==='sniper'?SNIPER_FRAMES:HEAVY_FRAMES;
   const img=asset.img;
   const attack=enemyAttackPose(e);
   if(attack){
