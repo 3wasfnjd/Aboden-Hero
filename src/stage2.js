@@ -254,8 +254,7 @@ function arriveNextFloor(){
   const gy=setElevatorGround(groundY(floor));
   // Continuous run: never recreate or snap the player at a floor transition.
   // Carry only the elevator's remaining vertical delta; X and player identity stay untouched.
-  const carryDelta=gy-previousY;
-  player.y+=carryDelta;
+  player.y+=gy-previousY;
   player.vy=0;player.grounded=true;player.invulnerable=.45;enemyShots=[];bullets=[];
   elevatorDockFloor=floor;
   sound(740,.18,'triangle');updateHUD();updateAction();
