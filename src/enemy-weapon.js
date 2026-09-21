@@ -35,6 +35,7 @@ export const SNIPER_FRAMES={
 // Guard atlases: 1122×1402. Gatekeeper atlas: 1254×1254.
 const MUZZLES={
  city:{aim:[[187,359],[388,337],[598,340]]},
+ newguard:{aim:[[187,359],[388,337],[598,340]]},
  heavy:{aim:[[231,350],[437,350],[656,350]]},
  sniper:{aim:[[445,385],[683,321],[936,316]]},
  boss:{aim:[[0,0],[581,276],[850,265]],charge:[[369,480],[632,482],[886,478]],fire:[[333,638],[581,636],[853,636],[1075,638]]}
@@ -69,7 +70,7 @@ export function enemyAttackPose(e,isBoss=false){
  }
  else return null;
  const kind=isBoss?'boss':enemyKind(e);
- const frames=isBoss?BOSS_FRAMES:kind==='city'?CITY_FRAMES:kind==='sniper'?SNIPER_FRAMES:HEAVY_FRAMES;
+ const frames=isBoss?BOSS_FRAMES:(kind==='city'||kind==='newguard')?CITY_FRAMES:kind==='sniper'?SNIPER_FRAMES:HEAVY_FRAMES;
  const frame=frames[state][index],[fx,fy,fw,fh]=frame;
  const [mx,my]=MUZZLES[kind][state][index];
  const facing=e.attackFacing??(e.aimX<e.x+e.w/2?-1:1);
@@ -85,7 +86,7 @@ export function enemyWeaponMuzzle(e,isBoss=false){
 }
 export function fallbackEnemyMuzzle(e,time,isBoss=false){
  const facing=e.attackFacing??(e.aimX<e.x+e.w/2?-1:1);
- // Match the procedural renderers while images are loading or unavailable.
+ if(!isBoss&&enemyKind(e)==='drone')return {x:e.x+e.w/2+facing*28,y:e.y+e.h/2+5};
  return isBoss?{x:e.x+e.w/2+facing*67,y:e.y+e.h-37}
   :{x:e.x+e.w/2+facing*35,y:e.y+e.h-22.5};
 }
