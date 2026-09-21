@@ -13,7 +13,7 @@ import {
   TOWER_WIDTH,TOWER_HEIGHT,FLOOR_LEFT,FLOOR_RIGHT,
   ELEVATOR_WIDTH,ELEVATOR_PLATFORM_HEIGHT,
   PUZZLE_X,groundY,makeFloorPlatforms,elevatorGround,
-  elevatorXForFloor,floorLabelX,arrivalXForFloor
+  elevatorXForFloor,floorLabelX,floorLabelY,arrivalXForFloor
 } from './stage2-tower.js?v=20260921-alternating-1';
 
 const $=id=>document.getElementById(id);
@@ -316,17 +316,17 @@ function floorSignalColor(floor){
 }
 
 function drawFloorNumber(floor){
-  const y=groundY(floor)+35,color=floorSignalColor(floor);
+  const y=floorLabelY(floor),color=floorSignalColor(floor);
   const unlocked=progress.floors[floor]?.unlocked;
   ctx.save();
-  ctx.globalAlpha=unlocked?1:.42;
+  ctx.globalAlpha=unlocked?1:.46;
   ctx.translate(floorLabelX(floor),y);
-  ctx.fillStyle='rgba(3,8,12,.84)';
-  ctx.strokeStyle=color;ctx.lineWidth=1.6;
-  ctx.shadowColor=color;ctx.shadowBlur=unlocked?13:5;
-  ctx.beginPath();ctx.roundRect(-22,-14,44,28,4);ctx.fill();ctx.stroke();
-  ctx.shadowBlur=10;ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.font='900 16px system-ui';ctx.fillText(String(floor),0,1);
+  ctx.fillStyle='rgba(7,8,12,.58)';
+  ctx.strokeStyle=color;ctx.lineWidth=1.4;
+  ctx.shadowColor=color;ctx.shadowBlur=unlocked?20:7;
+  ctx.beginPath();ctx.roundRect(-31,-34,62,68,7);ctx.fill();ctx.stroke();
+  ctx.shadowBlur=18;ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font='900 42px system-ui';ctx.fillText(String(floor),0,2);
   ctx.restore();
 }
 
