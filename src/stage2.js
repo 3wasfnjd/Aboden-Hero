@@ -1,15 +1,15 @@
 import {lockSafariZoom} from './gesture-lock.js?v=20260921-safari-lock-1';
 import {clamp,overlaps,createPlayer,stepPlayer} from './world.js?v=20260916-action-1';
-import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260921-cleanup-1';
-import {stepCombat} from './combat.js?v=20260921-cleanup-1';
-import {createArt} from './art.js?v=20260921-cleanup-1';
+import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260921-stage2-new-enemies-1';
+import {stepCombat} from './combat.js?v=20260921-stage2-new-enemies-1';
+import {createArt} from './art.js?v=20260921-stage2-new-enemies-1';
 import {createMusic} from './music.js?v=20260917-music-1';
 import {createMatchingPuzzle} from '../puzzle-kit/matching/matching.js?v=20260920-stage2-embed-1';
 import {createWiringPuzzle} from '../puzzle-kit/wiring/wiring.js?v=20260919-stage2-embed-2';
 import {createCubesPuzzle} from '../puzzle-kit/cubes/cubes.js?v=20260920-stage2-embed-1';
 import {
   FLOOR_DEFS,FLOOR_COUNT,createProgress,completeFloor,beginElevator,updateElevator
-} from './stage2-state.js?v=20260921-cleanup-1';
+} from './stage2-state.js?v=20260921-stage2-new-enemies-1';
 import {
   TOWER_WIDTH,TOWER_HEIGHT,FLOOR_LEFT,FLOOR_RIGHT,
   ELEVATOR_WIDTH,ELEVATOR_PLATFORM_HEIGHT,
@@ -121,19 +121,30 @@ function setIntroCamera(progress){
 }
 
 function makeEnemy(kind,x,floor,index){
-  const g=groundY(floor),span=kind==='sniper'?120:95;
+  const g=groundY(floor),isDrone=kind==='drone';
+  const span=kind==='sniper'?120:isDrone?135:95;
+  const y=isDrone?g-82:g-32;
   return {
-    x,y:g-32,w:34,h:32,
+    x,y,w:isDrone?48:34,h:isDrone?46:32,
     min:Math.max(FLOOR_LEFT+35,x-span),
     max:Math.min(FLOOR_RIGHT-35,x+span),
-    vx:index%2?48:-48,hp:3,hit:0,fire:.9+index*.25,
-    windup:0,aimX:0,aimY:0,kind,shotFlash:0
+    vx:index%2?48:-48,hp:isDrone?2:3,hit:0,fire:.9+index*.25,
+    windup:0,aimX:0,aimY:0,kind,shotFlash:0,
+    hoverY:y,hoverPhase:index*1.37+floor*.61
   };
+}
+function enemyPositions(count){
+  if(count===2)return [340,625];
+  if(count===3)return [270,470,670];
+  if(count===4)return [235,390,560,720];
+  if(count===5)return [215,345,480,615,750];
+  const gap=(FLOOR_RIGHT-FLOOR_LEFT-140)/Math.max(1,count-1);
+  return Array.from({length:count},(_,i)=>FLOOR_LEFT+70+i*gap);
 }
 function spawnFloorEnemies(floor){
   const def=FLOOR_DEFS[floor];
   if(def.type!=='combat'){enemySets.set(floor,[]);return;}
-  const positions=def.enemies.length===2?[340,625]:[270,470,670];
+  const positions=enemyPositions(def.enemies.length);
   enemySets.set(floor,def.enemies.map((kind,i)=>makeEnemy(kind,positions[i],floor,i)));
 }
 function resetEnemies(){for(let f=1;f<=FLOOR_COUNT;f++)spawnFloorEnemies(f);}
@@ -151,6 +162,7 @@ function tickEnemyPatrol(dt){
     for(const e of enemySets.get(floor)??[]){
       if(e.hp<=0)continue;
       if(e.windup<=0)e.x+=e.vx*dt;
+      if(e.kind==='drone')e.y=e.hoverY+Math.sin(time*2.8+e.hoverPhase)*5;
       e.hit=Math.max(0,e.hit-dt);
       if(e.x<e.min){e.x=e.min;e.vx=Math.abs(e.vx);}
       if(e.x+e.w>e.max){e.x=e.max-e.w;e.vx=-Math.abs(e.vx);}
@@ -201,7 +213,7 @@ function challengeLabel(){
   if(scene==='ending')return 'تشغيل غرفة التحكم';
   const floor=progress.currentFloor,def=FLOOR_DEFS[floor],done=progress.floors[floor].complete;
   if(done)return floor===FLOOR_COUNT?'ممر السطح مفتوح':'المصعد جاهز';
-  if(def.type==='combat')return 'اقضِ على جميع الحراس';
+  if(def.type==='combat')return 'اقضِ على جميع الأعداء';
   return def.puzzle==='match'?'صل الرموز المتطابقة':def.puzzle==='wiring'?'أكمل دائرة الطاقة':'رتّب المكعبات';
 }
 function syncControls(){
