@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {heroFirePose,makeHeroBullet,fallbackMuzzle,bulletTargetBounds} from '../src/hero-weapon.js';
+import {heroFirePose,makeHeroBullet,fallbackMuzzle,bulletTargetBounds,enemyDisplayHeight} from '../src/hero-weapon.js';
 import {createPlayer,overlaps} from '../src/world.js';
 const near=(a,b)=>assert(Math.abs(a-b)<1e-8,`${a} != ${b}`);
 test('first firing frame is anchored to the measured barrel at atlas 338,624',()=>{
@@ -34,4 +34,11 @@ test('bullets at corrected muzzle height hit visible guard heads and torsos',()=
   assert(overlaps(bullet,bulletTargetBounds(e)),kind);
   assert(!overlaps(bullet,e),'old short body would miss');
  }
+});
+
+test('Chapter 2 guards render larger than the hero combat sprite',()=>{
+ assert.equal(enemyDisplayHeight({kind:'city'}),96);
+ assert.equal(enemyDisplayHeight({kind:'sniper'}),100);
+ assert.equal(enemyDisplayHeight({kind:'heavy'}),112);
+ assert.ok(enemyDisplayHeight({kind:'city'})>82);
 });
