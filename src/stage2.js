@@ -3,7 +3,7 @@ import {clamp,overlaps,createPlayer,stepPlayer} from './world.js?v=20260916-acti
 import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260921-stage2-new-enemies-1';
 import {hitsShieldFromFront} from './enemy-weapon.js?v=20260921-shield-guard-2';
 import {stepCombat} from './combat.js?v=20260921-stage2-new-enemies-1';
-import {createArt} from './art.js?v=20260921-shield-guard-2';
+import {createArt} from './art.js?v=20260921-ui-crop-fix-1';
 import {createMusic} from './music.js?v=20260917-music-1';
 import {createMatchingPuzzle} from '../puzzle-kit/matching/matching.js?v=20260920-stage2-embed-1';
 import {createWiringPuzzle} from '../puzzle-kit/wiring/wiring.js?v=20260919-stage2-embed-2';
@@ -16,10 +16,10 @@ import {
   ELEVATOR_WIDTH,ELEVATOR_PLATFORM_HEIGHT,
   groundY,makeFloorPlatforms,elevatorGround,puzzleInteraction,
   elevatorXForFloor,floorLabelX,floorLabelY,arrivalXForFloor
-} from './stage2-tower.js?v=20260921-alternating-1';
+} from './stage2-tower.js?v=20260921-ui-crop-fix-1';
 import {
   ROOFTOP_LADDER_X,createRooftopBattle,drawRooftopLadder,drawRooftopClimber
-} from './stage2-rooftop.js?v=20260921-rooftop-assets-rain-3';
+} from './stage2-rooftop.js?v=20260921-ui-crop-fix-1';
 
 lockSafariZoom();
 const $=id=>document.getElementById(id);
@@ -231,6 +231,7 @@ function updateHUD(){
     $('area-name').textContent='السطح — المواجهة الأخيرة';
     $('area-progress').style.width='100%';
     $('health').textContent='♥'.repeat(Math.max(0,stats.heroHp))+'♡'.repeat(Math.max(0,stats.heroMax-stats.heroHp));
+    $('health-panel')?.setAttribute('data-hp',String(Math.max(0,stats.heroHp)));
     $('challenge').textContent=challengeLabel();
     $('boss-health-fill').style.width=`${clamp(stats.bossHp/stats.bossMax*100,0,100)}%`;
     bossHud.hidden=state!=='playing'||!(scene==='rooftop-fight'||scene==='rooftop-victory');
@@ -242,7 +243,9 @@ function updateHUD(){
   const floor=progress.currentFloor,def=FLOOR_DEFS[floor];
   $('area-name').textContent=`الطابق ${floor} — ${def.title}`;
   $('area-progress').style.width=`${clamp(floor/FLOOR_COUNT*100,0,100)}%`;
-  $('health').textContent='♥'.repeat(player.hp)+'♡'.repeat(5-player.hp);$('challenge').textContent=challengeLabel();
+  $('health').textContent='♥'.repeat(player.hp)+'♡'.repeat(5-player.hp);
+  $('health-panel')?.setAttribute('data-hp',String(Math.max(0,player.hp)));
+  $('challenge').textContent=challengeLabel();
   $('hud').hidden=state!=='playing'||introActive||scene==='climbing';
   syncControls();
 }
