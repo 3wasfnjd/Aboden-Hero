@@ -409,7 +409,7 @@ function drawFloorNumber(floor){
 
 function drawPuzzleDevice(floor){
   const def=FLOOR_DEFS[floor];
-  if(def.type!=='puzzle'||!progress.floors[floor].unlocked)return;
+  if(def.type!=='puzzle')return;
   const artState=puzzleDeviceArt.get(floor);
   if(!artState?.ready||!artState.canvas)return;
   const src=artState.canvas;
@@ -418,10 +418,11 @@ function drawPuzzleDevice(floor){
   // Mount the control head on the back wall instead of standing it on the floor.
   const x=PUZZLE_X[floor]-dw/2,y=groundY(floor)-dh-28;
   const complete=progress.floors[floor].complete;
+  const unlocked=progress.floors[floor].unlocked;
   const active=floor===progress.currentFloor&&!complete;
   ctx.save();
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-  ctx.globalAlpha=complete ? .78 : 1;
+  ctx.globalAlpha=complete ? .78 : unlocked ? 1 : .72;
   if(complete){ctx.shadowColor='#61ffa7';ctx.shadowBlur=12;}
   else if(active&&near(PUZZLE_X[floor],104)){ctx.shadowColor='#54d7ff';ctx.shadowBlur=8;}
   ctx.drawImage(src,0,0,src.width,cropH,x,y,dw,dh);
@@ -480,8 +481,18 @@ function drawWorld(){
   drawElevatorPlatform();
   drawCollisionDebug();
 
-  const floor=progress.currentFloor,enemies=enemySets.get(floor)??[];
-  if(!introActive)for(const e of enemies)if(e.hp>0)art.enemy(e,time);
+  const floor=progress.currentFloor;
+  // Keep every combat floor populated from the first full-tower shot.
+  // Future-floor guards are visual previews only: they stay idle and cannot
+  // move, aim, fire or damage the player until that floor becomes current.
+  for(let f=1;f<=FLOOR_COUNT;f++){
+    const enemies=enemySets.get(f)??[];
+    for(const e of enemies){
+      if(e.hp<=0)continue;
+      if(f===floor)art.enemy(e,time);
+      else art.enemy({...e,vx:0,windup:0,shotFlash:0,hit:0},time);
+    }
+  }
   for(const s of enemyShots){
     const cx=s.x+s.w/2,cy=s.y+s.h/2;
     art.enemyBullet(cx,cy,Math.atan2(s.vy,s.vx));
