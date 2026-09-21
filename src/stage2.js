@@ -11,8 +11,9 @@ import {
 } from './stage2-state.js?v=20260919-stage2-2';
 import {
   TOWER_WIDTH,TOWER_HEIGHT,FLOOR_LEFT,FLOOR_RIGHT,
-  ELEVATOR_X,ELEVATOR_WIDTH,ELEVATOR_PLATFORM_HEIGHT,
-  PUZZLE_X,FLOOR_LABEL_X,groundY,makeFloorPlatforms,elevatorGround
+  ELEVATOR_WIDTH,ELEVATOR_PLATFORM_HEIGHT,
+  PUZZLE_X,groundY,makeFloorPlatforms,elevatorGround,
+  elevatorXForFloor,floorLabelX,arrivalXForFloor
 } from './stage2-tower.js?v=20260920-tower-1';
 
 const $=id=>document.getElementById(id);
@@ -32,7 +33,7 @@ const keys=new Set(),touch=new Map(),buttons=[...document.querySelectorAll('[dat
 const moveStick=$('move-stick'),moveStickBase=moveStick?.querySelector('.move-stick-base'),moveStickKnob=moveStick?.querySelector('.move-stick-knob');
 const STICK_RANGE=44,STICK_DEADZONE=.16;
 let stickPointerId=null,stickCenterX=0,stickCenterY=0,stickX=0,stickY=0;
-let progress=createProgress(),player=createPlayer(FLOOR_LEFT+90,groundY(1)-44),state='menu',time=0,elapsed=0;
+let progress=createProgress(),player=createPlayer(arrivalXForFloor(1,30),groundY(1)-44),state='menu',time=0,elapsed=0;
 let cameraX=0,cameraY=0,cameraZoom=FIT_ZOOM,introTime=0,introActive=false;
 let bullets=[],enemyShots=[],particles=[],enemySets=new Map();
 let kills=0,deaths=0,toastTime=0,accumulator=0,last=0,elevatorTime=0,puzzleOpen=false;
@@ -41,11 +42,11 @@ let muted=false,audio=null,musicCtl=null;
 
 
 function loadImage(url){const img=new Image();img.decoding='async';if(url)img.src=url;return img;}
-const towerBackground=loadImage('./assets/stage2/tower-background.webp?v=20260920-tower-2');
+const towerBackground=loadImage('./assets/stage2/tower-background-hq.png?v=20260921-tower-hq-1');
 
 const floorPlatforms=makeFloorPlatforms();
 const elevatorSolid={
-  x:ELEVATOR_X,
+  x:elevatorXForFloor(1),
   y:groundY(1),
   w:ELEVATOR_WIDTH,
   h:ELEVATOR_PLATFORM_HEIGHT,
@@ -57,6 +58,14 @@ const solids=[...floorPlatforms,elevatorSolid];
 function setElevatorGround(y){
   elevatorSolid.y=y;
   return y;
+}
+function setElevatorForFloor(floor){
+  elevatorSolid.x=elevatorXForFloor(floor);
+  elevatorSolid.y=groundY(floor);
+  return elevatorSolid;
+}
+function currentElevatorCenter(){
+  return elevatorSolid.x+ELEVATOR_WIDTH/2;
 }
 function fullTowerCamera(){
   const vw=viewW(FIT_ZOOM),vh=viewH(FIT_ZOOM);
@@ -75,7 +84,7 @@ function makeEnemy(kind,x,floor,index){
   return {
     x,y:g-32,w:34,h:32,
     min:Math.max(FLOOR_LEFT+35,x-span),
-    max:Math.min(ELEVATOR_X-28,x+span),
+    max:Math.min(FLOOR_RIGHT-35,x+span),
     vx:index%2?48:-48,hp:3,hit:0,fire:.9+index*.25,
     windup:0,aimX:0,aimY:0,kind,shotFlash:0
   };
@@ -146,15 +155,15 @@ function updateAction(){
   if(state!=='playing'||progress.mode!=='floor'||puzzleOpen)return;
   const floor=progress.currentFloor,def=FLOOR_DEFS[floor],done=progress.floors[floor].complete;
   if(!done&&def.type==='puzzle'&&near(currentPuzzleX(),105)){btn.textContent='فتح لوحة النظام';btn.hidden=false;return;}
-  if(done&&floor<FLOOR_COUNT&&near(ELEVATOR_X+ELEVATOR_WIDTH/2,90)){btn.textContent='تشغيل المصعد ↑';btn.classList.add('ready-elevator');btn.hidden=false;}
+  if(done&&floor<FLOOR_COUNT&&near(currentElevatorCenter(),90)){btn.textContent='تشغيل المصعد ↑';btn.classList.add('ready-elevator');btn.hidden=false;}
 }
 
 function reset(){
-  progress=createProgress();player=createPlayer(FLOOR_LEFT+90,groundY(1)-44);player.facing=1;state='menu';time=0;elapsed=0;
+  progress=createProgress();player=createPlayer(arrivalXForFloor(1,30),groundY(1)-44);player.facing=1;state='menu';time=0;elapsed=0;
   destroyActivePuzzle();bullets=[];enemyShots=[];particles=[];kills=0;deaths=0;elevatorTime=0;puzzleOpen=false;
   introTime=0;introActive=false;cameraZoom=FIT_ZOOM;
   const full=fullTowerCamera();cameraX=full.x;cameraY=full.y;
-  setElevatorGround(groundY(1));
+  setElevatorForFloor(1);
   $('puzzle').hidden=true;
   resetEnemies();clearInput();updateHUD();updateAction();
 }
@@ -188,15 +197,16 @@ function win(){
 
 function respawn(){
   deaths++;const floor=progress.currentFloor;
-  player=createPlayer(FLOOR_LEFT+70,groundY(floor)-44);player.facing=1;player.invulnerable=1.8;
+  player=createPlayer(arrivalXForFloor(floor,30),groundY(floor)-44);
+  player.facing=floor%2===1?1:-1;player.invulnerable=1.8;
   bullets=[];enemyShots=[];if(FLOOR_DEFS[floor].type==='combat'&&!progress.floors[floor].complete)spawnFloorEnemies(floor);
-  setElevatorGround(groundY(floor));
+  setElevatorForFloor(floor);
   toast('عدت إلى بداية الطابق');sound(170,.2,'triangle');updateHUD();
 }
 function hurt(){if(player.invulnerable>0||player.dashTime>0)return;player.hp--;player.invulnerable=1.25;burst(player.x+15,player.y+22,'#ff646d',10);sound(150,.16,'sawtooth',.04);if(player.hp<=0)respawn();else updateHUD();}
 function finishChallenge(){
   const floor=progress.currentFloor;if(!completeFloor(progress,floor))return;
-  enemyShots=[];bullets=[];burst(ELEVATOR_X+ELEVATOR_WIDTH/2,groundY(floor)-36,'#61ffa7',24);sound(920,.26,'triangle',.055);
+  enemyShots=[];bullets=[];burst(currentElevatorCenter(),groundY(floor)-36,'#61ffa7',24);sound(920,.26,'triangle',.055);
   if(floor===FLOOR_COUNT){toast('غرفة التحكم تعمل — اكتمل الفصل');setTimeout(()=>{if(state==='playing'&&progress.currentFloor===FLOOR_COUNT)win();},1150);}
   else toast(`اكتمل الطابق ${floor} — أضيء المصعد بالأخضر`);
   updateHUD();updateAction();
@@ -204,14 +214,19 @@ function finishChallenge(){
 function useElevator(){
   if(!beginElevator(progress))return;
   elevatorTime=0;enemyShots=[];bullets=[];clearInput();$('action').hidden=true;
+  elevatorSolid.x=elevatorXForFloor(progress.elevator.from);
   const gy=setElevatorGround(groundY(progress.elevator.from));
-  player.x=ELEVATOR_X+ELEVATOR_WIDTH/2-player.w/2;player.y=gy-player.h;player.vx=0;player.vy=0;
+  player.x=currentElevatorCenter()-player.w/2;player.y=gy-player.h;player.vx=0;player.vy=0;
   toast(`المصعد إلى الطابق ${progress.elevator.to}`);sound(210,.4,'sawtooth',.035);
 }
 function arriveNextFloor(){
-  const floor=progress.currentFloor,gy=setElevatorGround(groundY(floor));
-  player.x=ELEVATOR_X+ELEVATOR_WIDTH/2-player.w/2;player.y=gy-player.h;
-  player.vx=0;player.vy=0;player.facing=-1;player.invulnerable=.9;enemyShots=[];bullets=[];
+  const floor=progress.currentFloor;
+  const arrivedFrom=elevatorXForFloor(floor-1);
+  const gy=setElevatorGround(groundY(floor));
+  player.x=arrivedFrom+ELEVATOR_WIDTH/2-player.w/2;player.y=gy-player.h;
+  player.vx=0;player.vy=0;player.facing=floor%2===0?-1:1;player.invulnerable=.9;enemyShots=[];bullets=[];
+  // Move the next elevator to the opposite side only after the player has stepped off the arriving shaft.
+  elevatorSolid.x=elevatorXForFloor(floor);
   const target=followTarget(cameraZoom);cameraX=target.x;cameraY=target.y;
   toast(`الطابق ${floor} — ${FLOOR_DEFS[floor].title}`);sound(740,.18,'triangle');updateHUD();updateAction();
 }
@@ -244,7 +259,7 @@ function tickElevator(dt){
   if(!e){arriveNextFloor();return;}
   const raw=clamp((elevatorTime-.28)/(ELEVATOR_DURATION-.50),0,1),move=ease(raw);
   const gy=setElevatorGround(elevatorGround(e.from,e.to,move));
-  player.x=ELEVATOR_X+ELEVATOR_WIDTH/2-player.w/2;player.y=gy-player.h;player.vx=0;player.vy=0;
+  player.x=currentElevatorCenter()-player.w/2;player.y=gy-player.h;player.vx=0;player.vy=0;
   const target=followTarget(cameraZoom);
   cameraX+=(target.x-cameraX)*(1-Math.exp(-6*dt));
   cameraY+=(target.y-cameraY)*(1-Math.exp(-6*dt));
@@ -274,7 +289,7 @@ function tick(dt){
 
   elapsed+=dt;
   if(progress.mode==='elevator'){tickElevator(dt);updateHUD();return;}
-  setElevatorGround(groundY(progress.currentFloor));
+  setElevatorForFloor(progress.currentFloor);
   const controls=input(),{jumped,landed}=stepPlayer(player,controls,solids,dt);
   player.x=clamp(player.x,FLOOR_LEFT,FLOOR_RIGHT-player.w);
   if(jumped){burst(player.x+15,player.y+44,'#d9d2b2',5);sound(500,.1,'triangle');}if(landed)burst(player.x+15,player.y+44,'#d9d2b2',4);
@@ -305,7 +320,7 @@ function drawFloorNumber(floor){
   const unlocked=progress.floors[floor]?.unlocked;
   ctx.save();
   ctx.globalAlpha=unlocked?1:.42;
-  ctx.translate(FLOOR_LABEL_X,y);
+  ctx.translate(floorLabelX(floor),y);
   ctx.fillStyle='rgba(3,8,12,.84)';
   ctx.strokeStyle=color;ctx.lineWidth=1.6;
   ctx.shadowColor=color;ctx.shadowBlur=unlocked?13:5;
@@ -339,14 +354,14 @@ function drawElevatorPlatform(){
   ctx.fillStyle='rgba(5,10,14,.78)';
   ctx.strokeStyle=color;ctx.lineWidth=1.5;
   ctx.shadowColor=color;ctx.shadowBlur=active?18:8;
-  ctx.beginPath();ctx.roundRect(ELEVATOR_X,gy-8,ELEVATOR_WIDTH,14,3);ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.roundRect(elevatorSolid.x,gy-8,ELEVATOR_WIDTH,14,3);ctx.fill();ctx.stroke();
   ctx.globalAlpha=pulse;
-  ctx.fillStyle=color;ctx.fillRect(ELEVATOR_X+12,gy-5,ELEVATOR_WIDTH-24,4);
+  ctx.fillStyle=color;ctx.fillRect(elevatorSolid.x+12,gy-5,ELEVATOR_WIDTH-24,4);
   ctx.globalAlpha=1;ctx.shadowBlur=0;
-  ctx.fillStyle='rgba(3,8,12,.88)';ctx.fillRect(ELEVATOR_X+31,gy-35,38,20);
-  ctx.strokeStyle=color;ctx.strokeRect(ELEVATOR_X+31,gy-35,38,20);
+  ctx.fillStyle='rgba(3,8,12,.88)';ctx.fillRect(elevatorSolid.x+27,gy-35,38,20);
+  ctx.strokeStyle=color;ctx.strokeRect(elevatorSolid.x+27,gy-35,38,20);
   ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.font='900 8px system-ui';ctx.fillText(active?'READY':'LOCK',ELEVATOR_X+50,gy-25);
+  ctx.font='900 8px system-ui';ctx.fillText(active?'READY':'LOCK',elevatorSolid.x+ELEVATOR_WIDTH/2,gy-25);
   ctx.restore();
 }
 
@@ -383,7 +398,7 @@ function drawWorld(){
   drawCollisionDebug();
 
   const floor=progress.currentFloor,enemies=enemySets.get(floor)??[];
-  for(const e of enemies)if(e.hp>0)art.enemy(e,time);
+  if(!introActive)for(const e of enemies)if(e.hp>0)art.enemy(e,time);
   for(const s of enemyShots){
     const cx=s.x+s.w/2,cy=s.y+s.h/2;
     art.enemyBullet(cx,cy,Math.atan2(s.vy,s.vx));
