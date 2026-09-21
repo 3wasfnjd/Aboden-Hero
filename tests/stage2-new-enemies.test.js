@@ -3,16 +3,16 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {FLOOR_DEFS} from '../src/stage2-state.js';
 import {bulletTargetBounds,enemyDisplayHeight} from '../src/hero-weapon.js';
-import {fallbackEnemyMuzzle} from '../src/enemy-weapon.js';
+import {fallbackEnemyMuzzle,hitsShieldFromFront} from '../src/enemy-weapon.js';
 
 const stage2=readFileSync(new URL('../src/stage2.js',import.meta.url),'utf8');
 const art=readFileSync(new URL('../src/art.js',import.meta.url),'utf8');
 const combat=readFileSync(new URL('../src/combat.js',import.meta.url),'utf8');
 
-test('Chapter 2 adds two drones to floors 1 and 5 and the new guard to floor 3',()=>{
-  assert.deepEqual(FLOOR_DEFS[1].enemies,['city','city','drone','drone']);
-  assert.deepEqual(FLOOR_DEFS[3].enemies,['city','sniper','newguard']);
-  assert.deepEqual(FLOOR_DEFS[5].enemies,['heavy','city','sniper','drone','drone']);
+test('Chapter 2 uses only drones on floors 1 and 5 and two shield guards on floor 3',()=>{
+  assert.deepEqual(FLOOR_DEFS[1].enemies,['drone','drone']);
+  assert.deepEqual(FLOOR_DEFS[3].enemies,['newguard','newguard']);
+  assert.deepEqual(FLOOR_DEFS[5].enemies,['drone','drone']);
 });
 
 test('new Stage 2 guard and both drone poses use the uploaded assets',()=>{
@@ -34,7 +34,14 @@ test('drones hover, move and have their own shooting rhythm',()=>{
   assert.ok(fallbackEnemyMuzzle(drone,0,false).y>drone.y);
 });
 
-test('expanded combat floors use explicit four- and five-enemy layouts',()=>{
-  assert.match(stage2,/if\(count===4\)return \[235,390,560,720\]/);
-  assert.match(stage2,/if\(count===5\)return \[215,345,480,615,750\]/);
+test('new guard shield blocks frontal bullets and accepts rear hits',()=>{
+  const rightFacing={kind:'newguard',vx:48,windup:0,shotFlash:0};
+  assert.equal(hitsShieldFromFront(rightFacing,-620),true);
+  assert.equal(hitsShieldFromFront(rightFacing,620),false);
+  const leftFacing={kind:'newguard',vx:-48,windup:0,shotFlash:0};
+  assert.equal(hitsShieldFromFront(leftFacing,620),true);
+  assert.equal(hitsShieldFromFront(leftFacing,-620),false);
+  assert.match(stage2,/hitsShieldFromFront\(e,b\.vx\)/);
+  assert.match(stage2,/e\.shieldFlash=\.18/);
+  assert.match(art,/type==='newguard'&&e\.shieldFlash>0/);
 });
