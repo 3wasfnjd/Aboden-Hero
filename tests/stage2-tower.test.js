@@ -2,7 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   TOWER_WIDTH,TOWER_HEIGHT,FLOOR_GROUNDS,FLOOR_LEFT,FLOOR_RIGHT,
-  ELEVATOR_X,ELEVATOR_WIDTH,groundY,makeFloorPlatforms,elevatorGround,isFloorGeometryValid
+  ELEVATOR_LEFT_X,ELEVATOR_RIGHT_X,ELEVATOR_WIDTH,
+  FLOOR_LABEL_LEFT_X,FLOOR_LABEL_RIGHT_X,FLOOR_LABEL_Y,
+  groundY,makeFloorPlatforms,elevatorGround,isFloorGeometryValid,
+  elevatorXForFloor,floorLabelX,floorLabelY,arrivalXForFloor
 } from '../src/stage2-tower.js';
 
 test('tower geometry matches the supplied six-floor background',()=>{
@@ -12,7 +15,7 @@ test('tower geometry matches the supplied six-floor background',()=>{
   assert.equal(isFloorGeometryValid(),true);
 });
 
-test('floor platforms align with the tower play area',()=>{
+test('floor platforms cover the full walkable width',()=>{
   const platforms=makeFloorPlatforms();
   assert.equal(platforms.length,6);
   for(let i=0;i<platforms.length;i++){
@@ -20,10 +23,34 @@ test('floor platforms align with the tower play area',()=>{
     assert.equal(p.floor,i+1);
     assert.equal(p.y,groundY(i+1));
     assert.equal(p.x,FLOOR_LEFT);
+    assert.equal(p.w,FLOOR_RIGHT-FLOOR_LEFT);
     assert.equal(p.oneWay,true);
-    assert.ok(p.x+p.w<=ELEVATOR_X+2);
   }
-  assert.ok(FLOOR_RIGHT>=ELEVATOR_X+ELEVATOR_WIDTH);
+});
+
+test('onward elevators alternate sides floor by floor',()=>{
+  assert.equal(elevatorXForFloor(1),ELEVATOR_RIGHT_X);
+  assert.equal(elevatorXForFloor(2),ELEVATOR_LEFT_X);
+  assert.equal(elevatorXForFloor(3),ELEVATOR_RIGHT_X);
+  assert.equal(elevatorXForFloor(4),ELEVATOR_LEFT_X);
+  assert.equal(elevatorXForFloor(5),ELEVATOR_RIGHT_X);
+  assert.ok(ELEVATOR_LEFT_X>=FLOOR_LEFT);
+  assert.ok(ELEVATOR_RIGHT_X+ELEVATOR_WIDTH<=FLOOR_RIGHT);
+});
+
+test('floor numbers alternate opposite the onward elevator and match reference heights',()=>{
+  assert.equal(floorLabelX(1),FLOOR_LABEL_LEFT_X);
+  assert.equal(floorLabelX(2),FLOOR_LABEL_RIGHT_X);
+  assert.equal(floorLabelX(3),FLOOR_LABEL_LEFT_X);
+  assert.equal(floorLabelX(4),FLOOR_LABEL_RIGHT_X);
+  assert.deepEqual(FLOOR_LABEL_Y.slice(1),[1220,1015,802,590,383,190]);
+  assert.equal(floorLabelY(6),190);
+});
+
+test('arrival side is opposite the next elevator on upper floors',()=>{
+  assert.equal(arrivalXForFloor(1,30),FLOOR_LEFT+70);
+  assert.equal(arrivalXForFloor(2,30),ELEVATOR_RIGHT_X+ELEVATOR_WIDTH/2-15);
+  assert.equal(arrivalXForFloor(3,30),ELEVATOR_LEFT_X+ELEVATOR_WIDTH/2-15);
 });
 
 test('elevator ground interpolates between adjacent floors',()=>{
