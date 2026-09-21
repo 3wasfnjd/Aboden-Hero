@@ -2,7 +2,7 @@ export const TOWER_WIDTH=1024;
 export const TOWER_HEIGHT=1536;
 
 /**
- * Ground lines calibrated directly against the single supplied Chapter 2 tower image.
+ * Ground lines calibrated against the supplied Chapter 2 tower artwork.
  * Index 1 is the lowest floor and index 6 is the rooftop control room.
  */
 export const FLOOR_GROUNDS=Object.freeze([
@@ -16,10 +16,12 @@ export const FLOOR_GROUNDS=Object.freeze([
 ]);
 
 export const FLOOR_LEFT=142;
-export const ELEVATOR_X=750;
-export const ELEVATOR_WIDTH=100;
+export const FLOOR_RIGHT=882;
+
+export const ELEVATOR_LEFT_X=171;
+export const ELEVATOR_RIGHT_X=760;
+export const ELEVATOR_WIDTH=92;
 export const ELEVATOR_PLATFORM_HEIGHT=18;
-export const FLOOR_RIGHT=ELEVATOR_X+ELEVATOR_WIDTH;
 
 export const PUZZLE_X=Object.freeze({
   2:560,
@@ -27,7 +29,8 @@ export const PUZZLE_X=Object.freeze({
   6:520
 });
 
-export const FLOOR_LABEL_X=800;
+export const FLOOR_LABEL_LEFT_X=226;
+export const FLOOR_LABEL_RIGHT_X=798;
 
 export function groundY(floor){
   const value=FLOOR_GROUNDS[floor];
@@ -35,12 +38,35 @@ export function groundY(floor){
   return value;
 }
 
+/**
+ * Exit elevators alternate sides so the player always traverses the new floor:
+ * 1→2 right, 2→3 left, 3→4 right, 4→5 left, 5→6 right.
+ */
+export function elevatorXForFloor(floor){
+  return floor%2===1?ELEVATOR_RIGHT_X:ELEVATOR_LEFT_X;
+}
+
+/** Floor numbers sit opposite the onward elevator, matching the supplied reference. */
+export function floorLabelX(floor){
+  return floor%2===1?FLOOR_LABEL_LEFT_X:FLOOR_LABEL_RIGHT_X;
+}
+
+/**
+ * Floor 1 starts on the left. Higher floors begin where the previous elevator arrived,
+ * which is opposite the elevator that continues upward from that floor.
+ */
+export function arrivalXForFloor(floor,playerWidth=30){
+  if(floor<=1)return FLOOR_LEFT+70;
+  const shaft=elevatorXForFloor(floor-1);
+  return shaft+ELEVATOR_WIDTH/2-playerWidth/2;
+}
+
 export function makeFloorPlatforms(){
   return FLOOR_GROUNDS.slice(1).map((y,index)=>({
     floor:index+1,
     x:FLOOR_LEFT,
     y,
-    w:ELEVATOR_X-FLOOR_LEFT+2,
+    w:FLOOR_RIGHT-FLOOR_LEFT,
     h:92,
     ground:true,
     oneWay:true
@@ -57,5 +83,6 @@ export function isFloorGeometryValid(){
     if(!Number.isFinite(FLOOR_GROUNDS[floor]))return false;
     if(floor>1&&FLOOR_GROUNDS[floor]>=FLOOR_GROUNDS[floor-1])return false;
   }
-  return true;
+  return ELEVATOR_LEFT_X>=FLOOR_LEFT
+    && ELEVATOR_RIGHT_X+ELEVATOR_WIDTH<=FLOOR_RIGHT;
 }
