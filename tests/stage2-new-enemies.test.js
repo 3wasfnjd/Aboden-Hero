@@ -45,3 +45,10 @@ test('new guard shield blocks frontal bullets and accepts rear hits',()=>{
   assert.match(stage2,/e\.shieldFlash=\.18/);
   assert.match(art,/type==='newguard'&&e\.shieldFlash>0/);
 });
+
+
+test('new shield guard uses its own full-cell sprite frames instead of legacy city crops',()=>{
+  assert.match(art,/const NEW_GUARD_FRAMES=\{/);
+  assert.match(art,/idle:\[\[0,0,280,280\]/);
+  assert.match(art,/type==='newguard'\?NEW_GUARD_FRAMES/);
+});
