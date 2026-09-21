@@ -37,12 +37,14 @@ let progress=createProgress(),player=createPlayer(arrivalXForFloor(1,30),groundY
 let cameraX=0,cameraY=0,cameraZoom=FIT_ZOOM,introTime=0,introActive=false;
 let bullets=[],enemyShots=[],particles=[],enemySets=new Map();
 let kills=0,deaths=0,toastTime=0,accumulator=0,last=0,elevatorTime=0,puzzleOpen=false;
+let elevatorAuto=null;
 let activePuzzleModule=null,puzzleSession=0;
 let muted=false,audio=null,musicCtl=null;
 
 
 function loadImage(url){const img=new Image();img.decoding='async';if(url)img.src=url;return img;}
 const towerBackground=loadImage('./assets/stage2/tower-background-hq.png?v=20260921-tower-hq-1');
+const elevatorPlatformImage=loadImage('./assets/ui/level/platform.png?v=20260921-stage2-elevator-1');
 
 const floorPlatforms=makeFloorPlatforms();
 const elevatorSolid={
@@ -66,6 +68,20 @@ function setElevatorForFloor(floor){
 }
 function currentElevatorCenter(){
   return elevatorSolid.x+ELEVATOR_WIDTH/2;
+}
+function activateAutoElevator(floor=progress.currentFloor){
+  if(floor>=FLOOR_COUNT)return false;
+  elevatorSolid.x=elevatorXForFloor(floor);
+  elevatorSolid.y=groundY(floor);
+  elevatorAuto={from:floor,to:floor+1,phase:0};
+  return true;
+}
+function playerOnElevator(y=elevatorSolid.y){
+  const feet=player.y+player.h;
+  return player.x+player.w>elevatorSolid.x+6
+    && player.x<elevatorSolid.x+elevatorSolid.w-6
+    && Math.abs(feet-y)<=12
+    && player.vy>=-40;
 }
 function fullTowerCamera(){
   const vw=viewW(FIT_ZOOM),vh=viewH(FIT_ZOOM);
@@ -155,12 +171,12 @@ function updateAction(){
   if(state!=='playing'||progress.mode!=='floor'||puzzleOpen)return;
   const floor=progress.currentFloor,def=FLOOR_DEFS[floor],done=progress.floors[floor].complete;
   if(!done&&def.type==='puzzle'&&near(currentPuzzleX(),105)){btn.textContent='فتح لوحة النظام';btn.hidden=false;return;}
-  if(done&&floor<FLOOR_COUNT&&near(currentElevatorCenter(),90)){btn.textContent='تشغيل المصعد ↑';btn.classList.add('ready-elevator');btn.hidden=false;}
+  // The elevator moves automatically after the floor challenge is complete.
 }
 
 function reset(){
   progress=createProgress();player=createPlayer(arrivalXForFloor(1,30),groundY(1)-44);player.facing=1;state='menu';time=0;elapsed=0;
-  destroyActivePuzzle();bullets=[];enemyShots=[];particles=[];kills=0;deaths=0;elevatorTime=0;puzzleOpen=false;
+  destroyActivePuzzle();bullets=[];enemyShots=[];particles=[];kills=0;deaths=0;elevatorTime=0;puzzleOpen=false;elevatorAuto=null;
   introTime=0;introActive=false;cameraZoom=FIT_ZOOM;
   const full=fullTowerCamera();cameraX=full.x;cameraY=full.y;
   setElevatorForFloor(1);
@@ -208,16 +224,11 @@ function finishChallenge(){
   const floor=progress.currentFloor;if(!completeFloor(progress,floor))return;
   enemyShots=[];bullets=[];burst(currentElevatorCenter(),groundY(floor)-36,'#61ffa7',24);sound(920,.26,'triangle',.055);
   if(floor===FLOOR_COUNT){toast('غرفة التحكم تعمل — اكتمل الفصل');setTimeout(()=>{if(state==='playing'&&progress.currentFloor===FLOOR_COUNT)win();},1150);}
-  else toast(`اكتمل الطابق ${floor} — أضيء المصعد بالأخضر`);
+  else{
+    activateAutoElevator(floor);
+    toast('المصعد نشط');
+  }
   updateHUD();updateAction();
-}
-function useElevator(){
-  if(!beginElevator(progress))return;
-  elevatorTime=0;enemyShots=[];bullets=[];clearInput();$('action').hidden=true;
-  elevatorSolid.x=elevatorXForFloor(progress.elevator.from);
-  const gy=setElevatorGround(groundY(progress.elevator.from));
-  player.x=currentElevatorCenter()-player.w/2;player.y=gy-player.h;player.vx=0;player.vy=0;
-  toast(`المصعد إلى الطابق ${progress.elevator.to}`);sound(210,.4,'sawtooth',.035);
 }
 function arriveNextFloor(){
   const floor=progress.currentFloor;
@@ -253,17 +264,34 @@ function tickCombat(dt){
   if(!progress.floors[floor].complete&&enemies.length&&enemies.every(e=>e.hp<=0))finishChallenge();
 }
 
-function tickElevator(dt){
-  elevatorTime+=dt;
-  const e=progress.elevator;
-  if(!e){arriveNextFloor();return;}
-  const raw=clamp((elevatorTime-.28)/(ELEVATOR_DURATION-.50),0,1),move=ease(raw);
-  const gy=setElevatorGround(elevatorGround(e.from,e.to,move));
-  player.x=currentElevatorCenter()-player.w/2;player.y=gy-player.h;player.vx=0;player.vy=0;
-  const target=followTarget(cameraZoom);
-  cameraX+=(target.x-cameraX)*(1-Math.exp(-6*dt));
-  cameraY+=(target.y-cameraY)*(1-Math.exp(-6*dt));
-  if(updateElevator(progress,move))arriveNextFloor();
+function tickAutoElevator(dt){
+  if(!elevatorAuto)return false;
+  const auto=elevatorAuto;
+  const previousY=elevatorSolid.y;
+  const rider=playerOnElevator(previousY);
+  auto.phase=(auto.phase+dt/ELEVATOR_DURATION)%2;
+  const ascending=auto.phase<=1;
+  const move=ascending?ease(auto.phase):ease(2-auto.phase);
+  elevatorSolid.x=elevatorXForFloor(auto.from);
+  const gy=setElevatorGround(elevatorGround(auto.from,auto.to,move));
+  const dy=gy-previousY;
+
+  if(rider){
+    player.y+=dy;
+    player.grounded=true;
+    if(player.vy>0)player.vy=0;
+  }
+
+  if(rider&&ascending&&auto.phase>=.985){
+    // Reuse the state-machine transition only when the rider reaches the next floor.
+    if(beginElevator(progress)){
+      updateElevator(progress,1);
+      elevatorAuto=null;
+      arriveNextFloor();
+      return true;
+    }
+  }
+  return false;
 }
 
 function tick(dt){
@@ -288,8 +316,8 @@ function tick(dt){
   }
 
   elapsed+=dt;
-  if(progress.mode==='elevator'){tickElevator(dt);updateHUD();return;}
-  setElevatorForFloor(progress.currentFloor);
+  if(!elevatorAuto)setElevatorForFloor(progress.currentFloor);
+  else if(tickAutoElevator(dt))return;
   const controls=input(),{jumped,landed}=stepPlayer(player,controls,solids,dt);
   player.x=clamp(player.x,FLOOR_LEFT,FLOOR_RIGHT-player.w);
   if(jumped){burst(player.x+15,player.y+44,'#d9d2b2',5);sound(500,.1,'triangle');}if(landed)burst(player.x+15,player.y+44,'#d9d2b2',4);
@@ -347,21 +375,21 @@ function drawPuzzleMarker(floor){
 
 function drawElevatorPlatform(){
   const gy=elevatorSolid.y;
-  const active=progress.mode==='elevator'||progress.floors[progress.currentFloor]?.complete;
+  const active=!!elevatorAuto||progress.floors[progress.currentFloor]?.complete;
   const color=active?'#61ffa7':'#ff3d49';
-  const pulse=active ? .78+.16*Math.sin(time*5) : .70;
   ctx.save();
-  ctx.fillStyle='rgba(5,10,14,.78)';
-  ctx.strokeStyle=color;ctx.lineWidth=1.5;
-  ctx.shadowColor=color;ctx.shadowBlur=active?18:8;
-  ctx.beginPath();ctx.roundRect(elevatorSolid.x,gy-8,ELEVATOR_WIDTH,14,3);ctx.fill();ctx.stroke();
-  ctx.globalAlpha=pulse;
-  ctx.fillStyle=color;ctx.fillRect(elevatorSolid.x+12,gy-5,ELEVATOR_WIDTH-24,4);
-  ctx.globalAlpha=1;ctx.shadowBlur=0;
-  ctx.fillStyle='rgba(3,8,12,.88)';ctx.fillRect(elevatorSolid.x+27,gy-35,38,20);
-  ctx.strokeStyle=color;ctx.strokeRect(elevatorSolid.x+27,gy-35,38,20);
-  ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.font='900 8px system-ui';ctx.fillText(active?'READY':'LOCK',elevatorSolid.x+ELEVATOR_WIDTH/2,gy-25);
+  ctx.shadowColor=color;ctx.shadowBlur=active?20:8;
+  if(elevatorPlatformImage.complete&&elevatorPlatformImage.naturalWidth){
+    const dw=ELEVATOR_WIDTH;
+    const dh=elevatorPlatformImage.naturalHeight*(dw/elevatorPlatformImage.naturalWidth);
+    ctx.drawImage(elevatorPlatformImage,elevatorSolid.x,gy-14,dw,dh);
+  }else{
+    ctx.fillStyle='rgba(14,22,31,.92)';
+    ctx.fillRect(elevatorSolid.x,gy-10,ELEVATOR_WIDTH,14);
+  }
+  ctx.globalAlpha=active?.88:.62;
+  ctx.fillStyle=color;
+  ctx.fillRect(elevatorSolid.x+12,gy-4,ELEVATOR_WIDTH-24,3);
   ctx.restore();
 }
 
@@ -390,10 +418,7 @@ function drawWorld(){
   ctx.translate(-cameraX,-cameraY);
   drawTowerBackground();
 
-  for(let floor=1;floor<=FLOOR_COUNT;floor++){
-    drawFloorNumber(floor);
-    drawPuzzleMarker(floor);
-  }
+  for(let floor=1;floor<=FLOOR_COUNT;floor++)drawFloorNumber(floor);
   drawElevatorPlatform();
   drawCollisionDebug();
 
@@ -557,7 +582,7 @@ function doAction(){
   if(state!=='playing'||progress.mode!=='floor'||puzzleOpen)return;
   const floor=progress.currentFloor,def=FLOOR_DEFS[floor],done=progress.floors[floor].complete;
   if(!done&&def.type==='puzzle'&&near(currentPuzzleX(),105))openPuzzle();
-  else if(done&&floor<FLOOR_COUNT&&near(currentElevatorCenter(),90))useElevator();
+
 }
 
 if(moveStick&&moveStickBase&&moveStickKnob){
@@ -595,4 +620,4 @@ $('sound').addEventListener('click',()=>{muted=!muted;unlockAudio();musicCtl?.se
 window.addEventListener('blur',()=>{clearInput();if(state==='playing'&&!puzzleOpen)pause();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){clearInput();if(state==='playing'&&!puzzleOpen)pause();}});
 reset();setIntroCopy();requestAnimationFrame(frame);
-if(new URLSearchParams(location.search).has('test'))window.__stage2={get progress(){return progress;},get player(){return player;},get enemies(){return enemySets.get(progress.currentFloor)??[];},get state(){return state;},tick,play,reset,finishChallenge,useElevator,openPuzzle};
+if(new URLSearchParams(location.search).has('test'))window.__stage2={get progress(){return progress;},get player(){return player;},get enemies(){return enemySets.get(progress.currentFloor)??[];},get state(){return state;},get elevatorAuto(){return elevatorAuto;},tick,play,reset,finishChallenge,openPuzzle};
