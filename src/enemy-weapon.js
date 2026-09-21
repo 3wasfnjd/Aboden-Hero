@@ -1,4 +1,4 @@
-import {enemyDisplayHeight} from './hero-weapon.js?v=20260917-muzzle-1';
+import {enemyDisplayHeight} from './hero-weapon.js?v=20260921-guard-size-1';
 
 export const BOSS_FRAMES={
  idle:[[146,13,191,187],[347,10,189,190],[546,10,189,190],[747,14,189,186]],
