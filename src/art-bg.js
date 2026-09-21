@@ -1,4 +1,4 @@
-import {createArt as createCharacterArt} from './art.js?v=20260917-cleanup-2';
+import {createArt as createCharacterArt} from './art.js?v=20260921-cleanup-1';
 
 const CITY_URL='./assets/backgrounds/stage1-portrait.png';
 const WALKWAY_URL='./assets/backgrounds/stage1-walkway.png';
@@ -9,9 +9,8 @@ const GOAL_URL='./assets/ui/level/goal.png';
 function loadImage(url){
  const img=new Image();
  img.decoding='async';
- const state={img,ready:false,failed:false};
+ const state={img,ready:false};
  img.addEventListener('load',()=>{state.ready=true;});
- img.addEventListener('error',()=>{state.failed=true;});
  img.src=url;
  return state;
 }
@@ -138,8 +137,6 @@ export function createArt(ctx){
   ctx.fillRect(0,shift+280,W,260);
  }
 
- function scenery(){}
-
  function platform(s){
   if(s.ground){drawGroundWalkway(ctx,s);return;}
   drawFloatingPlatform(ctx,s);
@@ -148,6 +145,6 @@ export function createArt(ctx){
  function checkpoint(cp,time){drawCheckpoint(ctx,cp,time);}
  function goal(g,time,locked=false){drawGoal(ctx,g,time,locked);}
 
- return {...base,background,scenery,platform,checkpoint,goal};
+ return {...base,background,platform,checkpoint,goal};
 }
 

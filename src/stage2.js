@@ -1,15 +1,15 @@
 import {lockSafariZoom} from './gesture-lock.js?v=20260921-safari-lock-1';
 import {clamp,overlaps,createPlayer,stepPlayer} from './world.js?v=20260916-action-1';
-import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260917-muzzle-1';
-import {stepCombat} from './combat.js?v=20260921-guards-elevator-1';
-import {createArt} from './art.js?v=20260921-full-guard-attack-2';
+import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260921-cleanup-1';
+import {stepCombat} from './combat.js?v=20260921-cleanup-1';
+import {createArt} from './art.js?v=20260921-cleanup-1';
 import {createMusic} from './music.js?v=20260917-music-1';
 import {createMatchingPuzzle} from '../puzzle-kit/matching/matching.js?v=20260920-stage2-embed-1';
 import {createWiringPuzzle} from '../puzzle-kit/wiring/wiring.js?v=20260919-stage2-embed-2';
 import {createCubesPuzzle} from '../puzzle-kit/cubes/cubes.js?v=20260920-stage2-embed-1';
 import {
   FLOOR_DEFS,FLOOR_COUNT,createProgress,completeFloor,beginElevator,updateElevator
-} from './stage2-state.js?v=20260921-puzzle-swap-1';
+} from './stage2-state.js?v=20260921-cleanup-1';
 import {
   TOWER_WIDTH,TOWER_HEIGHT,FLOOR_LEFT,FLOOR_RIGHT,
   ELEVATOR_WIDTH,ELEVATOR_PLATFORM_HEIGHT,
@@ -36,7 +36,7 @@ const keys=new Set(),touch=new Map(),buttons=[...document.querySelectorAll('[dat
 let progress=createProgress(),player=createPlayer(arrivalXForFloor(1,30),groundY(1)-44),state='menu',time=0,elapsed=0;
 let cameraX=0,cameraY=0,cameraZoom=FIT_ZOOM,introTime=0,introActive=false;
 let bullets=[],enemyShots=[],particles=[],enemySets=new Map();
-let kills=0,deaths=0,toastTime=0,accumulator=0,last=0,elevatorTime=0,puzzleOpen=false;
+let kills=0,toastTime=0,accumulator=0,last=0,puzzleOpen=false;
 let elevatorAuto=null,elevatorDockFloor=null,elevatorPendingFloor=null;
 let activePuzzleModule=null,puzzleSession=0;
 let muted=false,audio=null,musicCtl=null;
@@ -184,7 +184,7 @@ function currentPuzzleInteraction(){
   return puzzleInteraction(progress.currentFloor);
 }
 function updateAction(){
-  const btn=$('action');btn.hidden=true;btn.classList.remove('ready-elevator');
+  const btn=$('action');btn.hidden=true;
   if(state!=='playing'||progress.mode!=='floor'||puzzleOpen)return;
   const floor=progress.currentFloor,def=FLOOR_DEFS[floor],done=progress.floors[floor].complete;
   const puzzleSpot=currentPuzzleInteraction();
@@ -196,7 +196,7 @@ function updateAction(){
 
 function reset(){
   progress=createProgress();player=createPlayer(arrivalXForFloor(1,30),groundY(1)-44);player.facing=1;state='menu';time=0;elapsed=0;
-  destroyActivePuzzle();bullets=[];enemyShots=[];particles=[];kills=0;deaths=0;elevatorTime=0;puzzleOpen=false;
+  destroyActivePuzzle();bullets=[];enemyShots=[];particles=[];kills=0;puzzleOpen=false;
   elevatorAuto=null;elevatorDockFloor=null;elevatorPendingFloor=null;
   introTime=0;introActive=false;cameraZoom=FIT_ZOOM;
   const full=fullTowerCamera();cameraX=full.x;cameraY=full.y;
@@ -233,7 +233,7 @@ function win(){
 }
 
 function respawn(){
-  deaths++;const floor=progress.currentFloor;
+  const floor=progress.currentFloor;
   player=createPlayer(arrivalXForFloor(floor,30),groundY(floor)-44);
   player.facing=floor%2===1?1:-1;player.invulnerable=1.8;
   bullets=[];enemyShots=[];if(FLOOR_DEFS[floor].type==='combat'&&!progress.floors[floor].complete)spawnFloorEnemies(floor);
@@ -589,7 +589,7 @@ async function mountCubesPuzzle(){
 function openPuzzle(){
   const def=FLOOR_DEFS[progress.currentFloor];if(def.type!=='puzzle'||progress.floors[progress.currentFloor].complete)return;
   destroyActivePuzzle();
-  puzzleOpen=true;clearInput();$('puzzle').hidden=false;$('action').hidden=true;$('puzzle-status').textContent='SYSTEM OFFLINE';$('puzzle-status').classList.remove('online');
+  puzzleOpen=true;clearInput();$('puzzle').hidden=false;$('action').hidden=true;$('puzzle-status').textContent='SYSTEM OFFLINE';
   $('puzzle').dataset.type=def.puzzle;
   if(def.puzzle==='match')mountMatchingPuzzle();else if(def.puzzle==='wiring')mountWiringPuzzle();else if(def.puzzle==='cubes')mountCubesPuzzle();
 }

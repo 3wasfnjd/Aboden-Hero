@@ -1,7 +1,5 @@
-import {enemyWeaponMuzzle,ENEMY_FLASH_TIME,enemyKind} from './enemy-weapon.js?v=20260921-full-fire-1';
+import {enemyWeaponMuzzle,ENEMY_FLASH_TIME,enemyKind} from './enemy-weapon.js?v=20260921-cleanup-1';
 import {overlaps} from './world.js?v=20260917-guards-3';
-
-export const getShotOrigin=enemyWeaponMuzzle;
 
 // Each guard type gets its own rhythm and range instead of an identical single shot:
 // city is the baseline; sniper telegraphs longer but hits fast from far away; heavy

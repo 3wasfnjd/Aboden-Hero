@@ -19,12 +19,6 @@ export function heroFirePose(p){
   y:p.y+p.h+(my-fy-fh)*scale
  }};
 }
-export function fallbackMuzzle(p,time){
- const moving=p.grounded&&Math.abs(p.vx)>20;
- const bob=moving?Math.abs(Math.sin(time*21))*1.5:Math.sin(time*3)*.5;
- const lean=p.dashTime>0?-.2:0;
- return {x:p.x+p.w/2+p.facing*(45+lean*-36.5),y:p.y+p.h-bob-36.5};
-}
 export function makeHeroBullet(muzzle,facing){
  // x/y are the collision box top-left; muzzle is its CENTER for both directions.
  return {x:muzzle.x-6.5,y:muzzle.y-4,w:13,h:8,vx:facing*620,life:1};

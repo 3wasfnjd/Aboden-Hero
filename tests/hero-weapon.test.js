@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {heroFirePose,makeHeroBullet,fallbackMuzzle,bulletTargetBounds,enemyDisplayHeight} from '../src/hero-weapon.js';
+import {heroFirePose,makeHeroBullet,bulletTargetBounds,enemyDisplayHeight} from '../src/hero-weapon.js';
 import {createPlayer,overlaps} from '../src/world.js';
 const near=(a,b)=>assert(Math.abs(a-b)<1e-8,`${a} != ${b}`);
 test('first firing frame is anchored to the measured barrel at atlas 338,624',()=>{
@@ -21,11 +21,6 @@ test('jump, dash and hit states keep the firing pose at the current feet positio
  const p=createPlayer(90,396);p.shot=.14;const ground=heroFirePose(p).muzzle;
  p.y-=100;p.grounded=false;p.dashTime=.1;p.invulnerable=1.3;
  const airborne=heroFirePose(p).muzzle;near(airborne.x,ground.x);near(airborne.y,ground.y-100);
-});
-test('fallback muzzle includes procedural bob and dash lean in both directions',()=>{
- const p=createPlayer();p.grounded=true;p.vx=120;p.dashTime=.1;
- const a=fallbackMuzzle(p,.2);p.facing=-1;const b=fallbackMuzzle(p,.2);
- near(a.x+b.x,2*(p.x+p.w/2));near(a.y,b.y);
 });
 test('bullets at corrected muzzle height hit visible guard heads and torsos',()=>{
  const p=createPlayer(100,396);p.shot=.14;const bullet=makeHeroBullet(heroFirePose(p).muzzle,1);

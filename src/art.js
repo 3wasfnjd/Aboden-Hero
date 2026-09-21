@@ -1,6 +1,6 @@
-import {BOSS_FRAMES,CITY_FRAMES,HEAVY_FRAMES,SNIPER_FRAMES,enemyKind,enemyAttackPose,fallbackEnemyMuzzle} from './enemy-weapon.js?v=20260921-full-fire-1';
-import {enemyDisplayHeight} from './hero-weapon.js?v=20260921-guard-size-1';
-import {createArt as createBaseArt} from './art-base.js?v=20260917-cleanup-2';
+import {BOSS_FRAMES,CITY_FRAMES,HEAVY_FRAMES,SNIPER_FRAMES,enemyKind,enemyAttackPose,fallbackEnemyMuzzle} from './enemy-weapon.js?v=20260921-cleanup-1';
+import {enemyDisplayHeight} from './hero-weapon.js?v=20260921-cleanup-1';
+import {createArt as createBaseArt} from './art-base.js?v=20260921-cleanup-1';
 
 const MOVEMENT_URL='./assets/aboden-hero-movement.png';
 const BOSS_URL='./assets/Gatekeeper.png';
@@ -17,9 +17,8 @@ const HEALTH_CROSS_URL='./assets/ui/items/health-cross.png';
 function loadImage(url){
  const img=new Image();
  img.decoding='async';
- const state={img,ready:false,failed:false};
+ const state={img,ready:false};
  img.addEventListener('load',()=>{state.ready=true;});
- img.addEventListener('error',()=>{state.failed=true;});
  img.src=url;
  return state;
 }

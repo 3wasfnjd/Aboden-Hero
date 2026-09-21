@@ -1,8 +1,8 @@
 import {lockSafariZoom} from './gesture-lock.js?v=20260921-safari-lock-1';
-import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260917-muzzle-1';
-import {stepCombat} from './combat.js?v=20260917-straight-1';
+import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260921-cleanup-1';
+import {stepCombat} from './combat.js?v=20260921-cleanup-1';
 import {WORLD_WIDTH,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260916-action-1';
-import {createArt} from './art-bg.js?v=20260917-cleanup-2';
+import {createArt} from './art-bg.js?v=20260921-cleanup-1';
 import {createMusic} from './music.js?v=20260917-music-1';
 lockSafariZoom();
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx);
@@ -65,7 +65,7 @@ function tick(dt){if(state!=='playing')return;time+=dt;elapsed+=dt;const control
  if(toastTime>0){toastTime-=dt;if(toastTime<=0)$('toast').classList.remove('show');}
  updateHUD();updateCombatHUD();
 }
-function draw(){ctx.clearRect(0,0,W,H);art.background(camera,reducedMotion?0:time);art.scenery(camera);ctx.save();ctx.translate(-camera,GROUND_SHIFT);
+function draw(){ctx.clearRect(0,0,W,H);art.background(camera,reducedMotion?0:time);ctx.save();ctx.translate(-camera,GROUND_SHIFT);
  const visible=(x,w=100)=>x+w>camera-100&&x<camera+W+100;
  for(const cp of level.checkpoints)if(visible(cp.x))art.checkpoint(cp,time);
  art.sign(260,'J إطلاق • L اندفاع');art.sign(1350,'اقفز عبر الفجوة');art.sign(2830,'احذر نيران الحراس');art.sign(5530,'حارس البوابة أمامك');
