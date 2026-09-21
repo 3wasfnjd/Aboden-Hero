@@ -295,9 +295,6 @@ html,body,#app,#stage,#game,#controls,#puzzle{
   background:linear-gradient(90deg,#c21f16,#ff8a00);
   border-radius:6px;transition:width .16s linear;
 }
-body.rooftop-after #controls .action-controls{display:none!important}
-body.rooftop-after #controls .movement-controls{bottom:calc(env(safe-area-inset-bottom) + var(--stage2-control-lift))!important}
-body.rooftop-after #controls .movement-controls{bottom:calc(env(safe-area-inset-bottom) + var(--stage2-control-lift))!important}
 
 
 /* Stage 1 visual parity: supplied HUD plates, text frames and PNG controls. */
