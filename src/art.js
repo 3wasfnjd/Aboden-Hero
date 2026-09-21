@@ -1,4 +1,4 @@
-import {BOSS_FRAMES,CITY_FRAMES,HEAVY_FRAMES,SNIPER_FRAMES,enemyKind,enemyAttackPose,fallbackEnemyMuzzle} from './enemy-weapon.js?v=20260921-stage2-new-enemies-1';
+import {BOSS_FRAMES,CITY_FRAMES,HEAVY_FRAMES,SNIPER_FRAMES,enemyKind,enemyFacing,enemyAttackPose,fallbackEnemyMuzzle} from './enemy-weapon.js?v=20260921-shield-guard-2';
 import {enemyDisplayHeight} from './hero-weapon.js?v=20260921-stage2-new-enemies-1';
 import {createArt as createBaseArt} from './art-base.js?v=20260921-cleanup-1';
 
@@ -168,7 +168,7 @@ export function createArt(ctx){
   const scaled=scaledFrames(set,img,ENEMY_BASE_W,ENEMY_BASE_H);
   const i=Math.floor(time*rate+e.x*.006)%scaled.length;
   const center=e.x+e.w/2;
-  const facing=e.windup>0&&e.aimX?e.aimX<center?-1:1:e.vx<0?-1:1;
+  const facing=enemyFacing(e);
 
   ctx.save();
   ctx.globalAlpha=.24;
@@ -176,6 +176,18 @@ export function createArt(ctx){
   ctx.beginPath();ctx.ellipse(center,e.y+e.h+2,type==='heavy'?27:21,4,0,0,Math.PI*2);ctx.fill();
   ctx.restore();
   drawSprite(ctx,img,scaled[i],center,e.y+e.h,facing,displayH);
+  if(type==='newguard'&&e.shieldFlash>0){
+   const pulse=Math.min(1,e.shieldFlash/.18);
+   ctx.save();
+   ctx.globalAlpha=.55*pulse;
+   ctx.strokeStyle='#a9dcff';ctx.lineWidth=3;
+   ctx.shadowColor='#7fc8ff';ctx.shadowBlur=12;
+   const shieldX=center+facing*24;
+   ctx.beginPath();
+   ctx.arc(shieldX,e.y+e.h-displayH*.53,18,Math.PI*.58,Math.PI*1.42);
+   ctx.stroke();
+   ctx.restore();
+  }
  }
 
  function boss(b,time){
