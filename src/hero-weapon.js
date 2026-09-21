@@ -32,7 +32,8 @@ export function makeHeroBullet(muzzle,facing){
 export function enemyDisplayHeight(e){
  const slot=Math.floor(((e.min??e.x)+250)/900)%3;
  const kind=e.kind??(slot===0?'city':slot===1?'sniper':'heavy');
- return kind==='heavy'?88:kind==='sniper'?80:76;
+ // Chapter 2 guards must read clearly larger than the hero at gameplay zoom.
+ return kind==='heavy'?112:kind==='sniper'?100:96;
 }
 export function bulletTargetBounds(e){
  // Extend only projectile reception to the visible torso/head. Walking and
