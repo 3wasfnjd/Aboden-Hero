@@ -289,7 +289,7 @@ function arriveNextFloor(){
   const floor=progress.currentFloor;
   const previousY=elevatorSolid.y;
   const gy=setElevatorGround(groundY(floor));
-  // Preserve the player's horizontal position and carry the final few pixels
+  // Preserve the player's horizontal position and carry the final few pixels continuously
   // with the platform instead of spawning/dropping the player onto each floor.
   player.y+=gy-previousY;
   player.vy=0;player.grounded=true;player.invulnerable=.45;enemyShots=[];bullets=[];
