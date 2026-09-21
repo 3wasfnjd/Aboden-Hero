@@ -67,7 +67,15 @@ export function enemyAttackPose(e,isBoss=false){
    state='aim';index=1+Math.floor(Math.max(0,duration-e.windup)*8)%2;
    height=isBoss?147:enemyDisplayHeight(e);
   }
- }else if(e.shotFlash>0){state='fire';index=Math.min(3,Math.floor(Math.max(0,ENEMY_FLASH_TIME-e.shotFlash)*20+1e-8));height=isBoss?146:enemyDisplayHeight(e);}
+ }else if(e.shotFlash>0){
+  if(isBoss){state='fire';index=Math.min(3,Math.floor(Math.max(0,ENEMY_FLASH_TIME-e.shotFlash)*20+1e-8));height=146;}
+  else{
+   // Guard fire rows are tightly cropped in the source sheets and can look
+   // truncated at gameplay scale. Keep the full raised-gun pose during the
+   // flash while the projectile itself supplies the visible shot.
+   state='aim';index=2;height=enemyDisplayHeight(e);
+  }
+ }
  else return null;
  const kind=isBoss?'boss':enemyKind(e);
  const frames=isBoss?BOSS_FRAMES:kind==='city'?CITY_FRAMES:kind==='sniper'?SNIPER_FRAMES:HEAVY_FRAMES;
