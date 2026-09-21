@@ -48,6 +48,47 @@ function loadImage(url){const img=new Image();img.decoding='async';if(url)img.sr
 const towerBackground=loadImage('./assets/stage2/tower-background-hq.png?v=20260921-tower-hq-1');
 const elevatorPlatformImage=loadImage('./assets/ui/level/platform.png?v=20260921-stage2-elevator-1');
 
+const PUZZLE_DEVICE_SOURCES=Object.freeze({
+  2:'./assets/stage2/puzzle-device-matching.png?v=20260921-puzzle-devices-1',
+  4:'./assets/stage2/puzzle-device-wiring.png?v=20260921-puzzle-devices-1',
+  6:'./assets/stage2/puzzle-device-cubes.png?v=20260921-puzzle-devices-1'
+});
+const PUZZLE_DEVICE_H=184;
+const puzzleDeviceArt=new Map();
+
+function preparePuzzleDevice(floor,src){
+  const img=new Image();img.decoding='async';
+  const state={img,canvas:null,ready:false,failed:false};
+  puzzleDeviceArt.set(floor,state);
+  img.addEventListener('load',()=>{
+    const scale=Math.min(1,360/img.naturalHeight);
+    const w=Math.max(1,Math.round(img.naturalWidth*scale));
+    const h=Math.max(1,Math.round(img.naturalHeight*scale));
+    const c=document.createElement('canvas');c.width=w;c.height=h;
+    const cctx=c.getContext('2d',{willReadFrequently:true});
+    cctx.drawImage(img,0,0,w,h);
+    const image=cctx.getImageData(0,0,w,h),data=image.data;
+    const seen=new Uint8Array(w*h),stack=[];
+    const isWhite=i=>{
+      const o=i*4,r=data[o],g=data[o+1],b=data[o+2],a=data[o+3];
+      const max=Math.max(r,g,b),min=Math.min(r,g,b);
+      return a>0&&min>=238&&(max-min)<=24;
+    };
+    const push=i=>{if(i<0||i>=w*h||seen[i]||!isWhite(i))return;seen[i]=1;stack.push(i);};
+    for(let x=0;x<w;x++){push(x);push((h-1)*w+x);}
+    for(let y=0;y<h;y++){push(y*w);push(y*w+w-1);}
+    while(stack.length){
+      const i=stack.pop(),x=i%w,y=(i/w)|0,o=i*4;data[o+3]=0;
+      if(x>0)push(i-1);if(x<w-1)push(i+1);if(y>0)push(i-w);if(y<h-1)push(i+w);
+    }
+    cctx.putImageData(image,0,0);
+    state.canvas=c;state.ready=true;
+  });
+  img.addEventListener('error',()=>{state.failed=true;});
+  img.src=src;
+}
+for(const [floor,src] of Object.entries(PUZZLE_DEVICE_SOURCES))preparePuzzleDevice(Number(floor),src);
+
 const floorPlatforms=makeFloorPlatforms();
 const elevatorSolid={
   x:elevatorXForFloor(1),
@@ -172,7 +213,7 @@ function updateAction(){
   const btn=$('action');btn.hidden=true;btn.classList.remove('ready-elevator');
   if(state!=='playing'||progress.mode!=='floor'||puzzleOpen)return;
   const floor=progress.currentFloor,def=FLOOR_DEFS[floor],done=progress.floors[floor].complete;
-  if(!done&&def.type==='puzzle'&&near(currentPuzzleX(),105)){btn.textContent='فتح لوحة النظام';btn.hidden=false;return;}
+  if(!done&&def.type==='puzzle'&&near(currentPuzzleX(),105)){btn.textContent='فتح اللغز';btn.hidden=false;return;}
   // The elevator moves automatically after the floor challenge is complete.
 }
 
@@ -360,18 +401,22 @@ function drawFloorNumber(floor){
   ctx.restore();
 }
 
-function drawPuzzleMarker(floor){
-  if(FLOOR_DEFS[floor].type!=='puzzle'||!progress.floors[floor].unlocked||progress.floors[floor].complete)return;
-  const x=PUZZLE_X[floor],y=groundY(floor)-66,pulse=.70+Math.sin(time*4.2)*.22;
+function drawPuzzleDevice(floor){
+  const def=FLOOR_DEFS[floor];
+  if(def.type!=='puzzle'||!progress.floors[floor].unlocked)return;
+  const artState=puzzleDeviceArt.get(floor);
+  if(!artState?.ready||!artState.canvas)return;
+  const src=artState.canvas;
+  const dh=PUZZLE_DEVICE_H,dw=dh*(src.width/src.height);
+  const x=PUZZLE_X[floor]-dw/2,y=groundY(floor)-dh+4;
+  const complete=progress.floors[floor].complete;
+  const active=floor===progress.currentFloor&&!complete;
   ctx.save();
-  ctx.globalAlpha=floor===progress.currentFloor?1:.38;
-  ctx.fillStyle='rgba(3,12,19,.84)';
-  ctx.strokeStyle=`rgba(79,211,255,${pulse})`;ctx.lineWidth=1.7;
-  ctx.shadowColor='#4dd7ff';ctx.shadowBlur=12;
-  ctx.beginPath();ctx.roundRect(x-38,y-19,76,38,6);ctx.fill();ctx.stroke();
-  ctx.shadowBlur=0;ctx.textAlign='center';ctx.fillStyle='#8ee6ff';
-  ctx.font='900 9px system-ui';ctx.fillText('SYSTEM',x,y-2);
-  ctx.fillStyle='#d8f6ff';ctx.font='800 7px system-ui';ctx.fillText('INTERACT',x,y+11);
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  ctx.globalAlpha=complete ? .78 : 1;
+  if(complete){ctx.shadowColor='#61ffa7';ctx.shadowBlur=18;}
+  else if(active&&near(PUZZLE_X[floor],118)){ctx.shadowColor='#54d7ff';ctx.shadowBlur=14;}
+  ctx.drawImage(src,x,y,dw,dh);
   ctx.restore();
 }
 
@@ -420,7 +465,10 @@ function drawWorld(){
   ctx.translate(-cameraX,-cameraY);
   drawTowerBackground();
 
-  for(let floor=1;floor<=FLOOR_COUNT;floor++)drawFloorNumber(floor);
+  for(let floor=1;floor<=FLOOR_COUNT;floor++){
+    drawFloorNumber(floor);
+    drawPuzzleDevice(floor);
+  }
   drawElevatorPlatform();
   drawCollisionDebug();
 
