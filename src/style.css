@@ -38,3 +38,17 @@
 #boss-hud>span{position:absolute;opacity:0}
 #boss-hud>.track{position:absolute;top:54.3%;left:22%;width:62.9%;height:11.2%;background:#12141c;border-radius:6px;overflow:hidden;margin:0}
 #boss-health{display:block;height:100%;width:100%;background:linear-gradient(90deg,#c21f16,#ff8a00);border-radius:6px}
+
+/* Game-surface Safari zoom/callout lock. */
+html,body,#app,#stage,canvas,#controls{
+  touch-action:none;
+  overscroll-behavior:none;
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+}
+html,body{
+  width:100%;
+  min-height:100%;
+  overflow:hidden;
+}
