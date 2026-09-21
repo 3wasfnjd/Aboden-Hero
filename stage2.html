@@ -8,7 +8,7 @@
 <title>Aboden Hero • الفصل الثاني</title>
 <link rel="stylesheet" href="./puzzle-kit/core/puzzle-host.css?v=20260919-stage2-embed-1">
 <link rel="stylesheet" href="./src/controls.css?v=20260921-stage1-parity-1">
-<link rel="stylesheet" href="./src/stage2.css?v=20260921-control-direction-1">
+<link rel="stylesheet" href="./src/stage2.css?v=20260921-continuous-floor-1">
 <link rel="stylesheet" href="./puzzle-kit/wiring/wiring.css?v=20260919-stage2-embed-1">
 <link rel="stylesheet" href="./puzzle-kit/matching/matching.css?v=20260920-stage2-embed-1">
 <link rel="stylesheet" href="./puzzle-kit/cubes/cubes.css?v=20260920-stage2-embed-1">
@@ -18,7 +18,10 @@
   <section id="stage" aria-label="الفصل الثاني — المصعد الرأسي">
     <canvas id="game" width="720" height="1280" aria-label="لعبة أكشن وألغاز. تحرك واقترب من لوحة اللغز أو المصعد للتفاعل."></canvas>
     <div id="hud" hidden>
-      <div class="hud-card"><b id="floor-label">الطابق 1 / 6</b><span id="floor-title">الاستقبال الأمني</span></div>
+      <div id="area-strip" class="stage2-area">
+        <span id="area-name">الطابق 1 — قطاع المعالجة</span>
+        <div><i id="area-progress"></i></div>
+      </div>
       <div class="hud-card compact"><span id="health">♥♥♥♥♥</span><span id="challenge">اقضِ على الحراس</span></div>
     </div>
     <div id="tools"><button id="sound" aria-label="كتم الصوت" aria-pressed="true">♫</button><button id="pause" aria-label="إيقاف مؤقت">Ⅱ</button></div>
@@ -55,6 +58,6 @@
   </nav>
 </main>
 <noscript>فعّل JavaScript لتشغيل اللعبة.</noscript>
-<script type="module" src="./src/stage2.js?v=20260921-smooth-camera-all-visible-1"></script>
+<script type="module" src="./src/stage2.js?v=20260921-continuous-floor-1"></script>
 </body>
 </html>
