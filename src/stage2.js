@@ -18,7 +18,7 @@ import {
 } from './stage2-tower.js?v=20260921-alternating-1';
 import {
   ROOFTOP_LADDER_X,createRooftopBattle,drawRooftopLadder,drawRooftopClimber
-} from './stage2-rooftop.js?v=20260921-rooftop-tuning-2';
+} from './stage2-rooftop.js?v=20260921-rooftop-assets-rain-3';
 
 lockSafariZoom();
 const $=id=>document.getElementById(id);
