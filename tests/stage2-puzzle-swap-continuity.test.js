@@ -18,5 +18,5 @@ test('floor arrival keeps the same player continuously instead of respawning or 
   assert.doesNotMatch(block,/createPlayer\(/);
   assert.doesNotMatch(block,/player\.x\s*=/);
   assert.doesNotMatch(block,/player\.y\s*=\s*groundY/);
-  assert.match(block,/player\.y\+=carryDelta/);
+  assert.match(block,/player\.y\+=gy-previousY/);
 });
