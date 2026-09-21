@@ -59,6 +59,12 @@ const MOVE_FRAMES={
 // Rectangles deliberately keep a little transparent padding so animation frames
 // stay a consistent size and no neighboring sprite leaks into the crop.
 const ENEMY_BASE_W=1122,ENEMY_BASE_H=1402;
+const NEW_GUARD_FRAMES={
+ idle:[[0,0,280,280],[280,0,281,280],[561,0,281,280]],
+ run:[[0,280,280,281],[280,280,281,281],[561,280,281,281]],
+ aim:[[0,561,280,280],[280,561,281,280],[561,561,281,280]],
+ hit:[[0,841,280,281],[280,841,281,281]]
+};
 
 
 
@@ -148,7 +154,7 @@ export function createArt(ctx){
   const type=enemyKind(e);
   if(type==='drone'){drawDrone(e,time);return;}
   const asset=type==='city'?cityAsset:type==='newguard'?newGuardAsset:type==='sniper'?sniperAsset:heavyAsset;
-  const frames=(type==='city'||type==='newguard')?CITY_FRAMES:type==='sniper'?SNIPER_FRAMES:HEAVY_FRAMES;
+  const frames=type==='newguard'?NEW_GUARD_FRAMES:type==='city'?CITY_FRAMES:type==='sniper'?SNIPER_FRAMES:HEAVY_FRAMES;
   const img=asset.img;
   const attack=enemyAttackPose(e);
   if(attack){
