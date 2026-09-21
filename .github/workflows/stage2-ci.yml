@@ -45,6 +45,8 @@ jobs:
           test -s assets/stage2/rooftop/68F8B92C-855E-4303-B55B-4E69B4BDDDE7.png
           test -s assets/stage2/rooftop/C73795B9-E427-4AA3-A3DC-B3C990A6B7F4.png
           test -s assets/stage2/rooftop/4660C9C3-D5D8-4F99-AAD3-8EC865E593D2.png
+          test -s assets/stage2/rooftop/0525AB5D-6007-49F8-8DA2-F7BB8E22D605.png
+          test -s assets/stage2/rooftop/A3B1ACCB-271B-42D1-9AC7-94E9E4CF491B.png
           test -s assets/stage2/rooftop/152AB8BD-FD1C-44F8-BCBD-D043437BC255.png
           test -s assets/stage2/rooftop/CE321790-436E-4BF6-BF00-23D8E11F8635.png
           test -s assets/stage2/rooftop/712D453B-A752-4A91-BB87-AE9554BBF4FA.png
