@@ -51,6 +51,15 @@ const BOSS_FRAMES=Object.freeze({
   defeat:[[561,1052,555,334]]
 });
 const BOSS_VISUAL_H=232;
+const FLOSS_DURATION=5.8;
+const FLOSS_SEQUENCE=Object.freeze([
+  Object.freeze({frame:'punch1',shift:-10,lean:-.055,bob:0,flip:1}),
+  Object.freeze({frame:'block', shift:  8,lean: .045,bob:2,flip:1}),
+  Object.freeze({frame:'punch2',shift: 12,lean: .060,bob:0,flip:1}),
+  Object.freeze({frame:'heavy', shift: -7,lean:-.045,bob:2,flip:-1}),
+  Object.freeze({frame:'dodge', shift:-12,lean:-.060,bob:0,flip:-1}),
+  Object.freeze({frame:'win',   shift:  6,lean: .035,bob:1,flip:1})
+]);
 
 function loadAsset(url,chroma=false){
   const img=new Image();
@@ -121,6 +130,19 @@ function drawRawSprite(ctx,asset,frame,x,feetY,facing,displayH,alpha=1){
   return true;
 }
 
+function drawDancePose(ctx,asset,base,frame,x,feetY,{facing=1,displayH=188,rotation=0,bob=0}={}){
+  if(!asset.ready)return false;
+  const [sx,sy,sw,sh]=scaledFrame(frame,asset,base);
+  const dw=displayH*(sw/sh);
+  ctx.save();
+  ctx.translate(x,feetY+bob);
+  ctx.rotate(rotation);
+  ctx.scale(facing,1);
+  ctx.drawImage(asset.source,sx,sy,sw,sh,-dw/2,-displayH,dw,displayH);
+  ctx.restore();
+  return true;
+}
+
 export function drawRooftopLadder(ctx,{x=ROOFTOP_LADDER_X,bottomY,unlocked=false,time=0}){
   const displayH=184;
   ctx.save();
@@ -152,7 +174,6 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
   const FLOOR_Y=984;
   const ARENA_LEFT=115;
   const ARENA_RIGHT=1330;
-  const CONTROL_ROOM_X=626;
   const HERO_MAX_HP=5;
   const BOSS_MAX_HP=12;
 
@@ -313,7 +334,7 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
   }
 
   function updateCamera(dt){
-    const focus=mode==='after'?hero.x:(hero.x+boss.x)/2;
+    const focus=mode==='dance'||mode==='complete'?hero.x:(hero.x+boss.x)/2;
     const target=clamp(focus-width*.5,0,1448-width);
     cameraX+=(target-cameraX)*(1-Math.exp(-5*dt));
   }
@@ -346,22 +367,21 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
     }
 
     if(mode==='boss-defeat'){
-      if(timer>=1.65){
-        mode='after';timer=0;
-        hero.attack=null;hero.hit=0;hero.dodge=0;
-        events.push('after-ready');
+      if(timer>=1.05){
+        mode='dance';timer=0;
+        hero.attack=null;hero.hit=0;hero.dodge=0;hero.walk=false;hero.facing=1;
+        hero.x=clamp(hero.x,ARENA_LEFT+110,ARENA_RIGHT-110);
+        events.push('dance-start');
       }
       updateCamera(dt);
       return events;
     }
 
-    if(mode==='after'){
-      hero.walk=false;
-      const axis=Number(input.right)-Number(input.left);
-      if(axis){
-        hero.x=clamp(hero.x+axis*225*dt,ARENA_LEFT,ARENA_RIGHT);
-        hero.facing=axis;
-        hero.walk=true;
+    if(mode==='dance'){
+      hero.walk=false;hero.attack=null;hero.hit=0;hero.dodge=0;
+      if(timer>=FLOSS_DURATION){
+        mode='complete';timer=0;
+        events.push('dance-finished');
       }
       updateCamera(dt);
       return events;
@@ -376,14 +396,26 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
   function heroFrame(){
     if(mode==='intro'&&timer>2.18&&timer<2.72)return HERO_FRAMES.hurt[0];
     if(mode==='hero-ko'||hero.hit>0)return HERO_FRAMES.hurt[0];
-    if(mode==='after'&&!hero.walk)return HERO_FRAMES.win[0];
+    if(mode==='dance'||mode==='complete')return HERO_FRAMES.win[0];
     if(hero.dodge>0)return HERO_FRAMES.dodge[0];
     if(hero.attack)return HERO_FRAMES[hero.attack][0];
     if(hero.walk)return HERO_FRAMES.walk[0];
     return HERO_FRAMES.idle[0];
   }
 
+  function drawVictoryDance(){
+    const beat=Math.floor(timer*7.2);
+    const phase=FLOSS_SEQUENCE[beat%FLOSS_SEQUENCE.length];
+    const frame=HERO_FRAMES[phase.frame][0];
+    const bounce=Math.sin(timer*Math.PI*7.2)*2.2;
+    const sway=Math.sin(timer*Math.PI*3.6)*3.5;
+    return drawDancePose(ctx,heroAsset,HERO_BASE,frame,hero.x+phase.shift+sway,FLOOR_Y,{
+      facing:phase.flip,displayH:188,rotation:phase.lean,bob:phase.bob+bounce
+    });
+  }
+
   function drawHeroSprite(time,facing){
+    if(mode==='dance'||mode==='complete')return drawVictoryDance();
     if(hero.walk&&!hero.attack&&hero.hit<=0&&hero.dodge<=0&&mode!=='hero-ko'){
       const frame=HERO_WALK_FRAMES[Math.floor(time*7.5)%HERO_WALK_FRAMES.length];
       if(drawRawSprite(ctx,heroWalkAsset,frame,hero.x,FLOOR_Y,facing,188))return true;
@@ -392,7 +424,7 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
   }
 
   function drawBossSprite(time,facing){
-    if(boss.walk&&!boss.attack&&boss.hit<=0&&boss.block<=0&&mode!=='boss-defeat'&&mode!=='after'){
+    if(boss.walk&&!boss.attack&&boss.hit<=0&&boss.block<=0&&mode!=='boss-defeat'&&mode!=='dance'&&mode!=='complete'){
       const frame=BOSS_WALK_FRAMES[Math.floor(time*6.4)%BOSS_WALK_FRAMES.length];
       if(drawSprite(ctx,bossWalkAsset,BOSS_WALK_BASE,frame,boss.x,FLOOR_Y,facing,BOSS_VISUAL_H))return true;
     }
@@ -400,7 +432,7 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
   }
 
   function bossFrame(){
-    if(mode==='boss-defeat'||mode==='after'||boss.hp<=0)return BOSS_FRAMES.defeat[0];
+    if(mode==='boss-defeat'||boss.hp<=0)return BOSS_FRAMES.defeat[0];
     if(boss.hit>0)return BOSS_FRAMES.hurt[0];
     if(boss.block>0)return BOSS_FRAMES.block[0];
     if(boss.attack)return BOSS_FRAMES[boss.attack][0];
@@ -424,12 +456,12 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
     }
     ctx.fillStyle='#05070c';
     ctx.fillRect(0,BG_Y+515,1448,height-(BG_Y+515));
-    if(mode==='after'||mode==='complete'){
+    if(mode==='dance'){
       ctx.save();
-      ctx.globalAlpha=.8+.2*Math.sin(timer*5);
-      ctx.fillStyle='#61ffa7';
-      ctx.shadowColor='#61ffa7';ctx.shadowBlur=18;
-      ctx.fillRect(CONTROL_ROOM_X-7,918,14,8);
+      const glow=.12+.05*Math.sin(timer*8);
+      ctx.globalAlpha=glow;
+      ctx.fillStyle='#ffd66b';
+      ctx.fillRect(cameraX,0,width,536);
       ctx.restore();
     }
     ctx.restore();
@@ -504,18 +536,19 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
 
     ctx.save();
     ctx.translate(-cameraX,0);
-    const heroFacing=mode==='after'&&hero.walk?hero.facing:(boss.x>=hero.x?1:-1);
+    const heroFacing=boss.x>=hero.x?1:-1;
     const bossFacing=hero.x>=boss.x?1:-1;
+    const bossVisible=mode!=='dance'&&mode!=='complete';
 
     ctx.globalAlpha=.24;ctx.fillStyle='#020407';
     ctx.beginPath();ctx.ellipse(hero.x,FLOOR_Y+3,54,8,0,0,Math.PI*2);ctx.fill();
-    ctx.beginPath();ctx.ellipse(boss.x,FLOOR_Y+4,72,10,0,0,Math.PI*2);ctx.fill();
+    if(bossVisible){ctx.beginPath();ctx.ellipse(boss.x,FLOOR_Y+4,72,10,0,0,Math.PI*2);ctx.fill();}
     ctx.globalAlpha=1;
 
     if(!drawHeroSprite(time,heroFacing)){
       ctx.fillStyle='#b73339';ctx.fillRect(hero.x-20,FLOOR_Y-100,40,100);
     }
-    if(!drawBossSprite(time,bossFacing)){
+    if(bossVisible&&!drawBossSprite(time,bossFacing)){
       ctx.fillStyle='#37151b';ctx.fillRect(boss.x-28,FLOOR_Y-145,56,145);
     }
     ctx.restore();
@@ -535,10 +568,16 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
       if(timer>2.15){ctx.fillStyle='#ff5d68';ctx.font='900 12px system-ui';ctx.fillText('السلاح خارج المعركة',width/2,142);}
       ctx.restore();
     }
-  }
-
-  function canEnterControlRoom(){
-    return mode==='after'&&Math.abs(hero.x-CONTROL_ROOM_X)<=95;
+    if(mode==='dance'){
+      ctx.save();
+      ctx.textAlign='center';
+      ctx.shadowColor='#000';ctx.shadowBlur=12;
+      ctx.fillStyle='#ffd66b';ctx.font='900 18px system-ui';
+      ctx.fillText('VICTORY DANCE',width/2,126);
+      ctx.fillStyle='#f5f7fa';ctx.font='800 11px system-ui';
+      ctx.fillText('FLOSS!',width/2,149);
+      ctx.restore();
+    }
   }
 
   function finish(){
@@ -546,8 +585,9 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
   }
 
   function stats(){
+  function stats(){
     return {mode,heroHp:hero.hp,heroMax:hero.maxHp,bossHp:boss.hp,bossMax:boss.maxHp,cameraX,heroX:hero.x,bossX:boss.x};
   }
 
-  return {reset,start,tick,draw,canEnterControlRoom,finish,stats,get mode(){return mode;}};
+  return {reset,start,tick,draw,finish,stats,get mode(){return mode;}};
 }
