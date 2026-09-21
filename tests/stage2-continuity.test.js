@@ -14,7 +14,7 @@ test('floor arrival keeps the player continuous on the elevator instead of respa
   assert.doesNotMatch(arrive,/toast\(/);
 });
 
-test('Chapter 2 uses a persistent Stage 1-style area strip and no puzzle devices are drawn',()=>{
+test('Chapter 2 uses a persistent Stage 1-style area strip and no puzzle-device overlays are drawn',()=>{
   const html=readFileSync(new URL('../stage2.html',import.meta.url),'utf8');
   const css=readFileSync(new URL('../src/stage2.css',import.meta.url),'utf8');
   const js=readFileSync(new URL('../src/stage2.js',import.meta.url),'utf8');
