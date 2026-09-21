@@ -5,7 +5,7 @@ import {
   ELEVATOR_LEFT_X,ELEVATOR_RIGHT_X,ELEVATOR_WIDTH,
   FLOOR_LABEL_LEFT_X,FLOOR_LABEL_RIGHT_X,FLOOR_LABEL_Y,
   groundY,makeFloorPlatforms,elevatorGround,isFloorGeometryValid,
-  elevatorXForFloor,floorLabelX,floorLabelY,arrivalXForFloor
+  elevatorXForFloor,floorLabelX,floorLabelY,arrivalXForFloor,puzzleInteraction
 } from '../src/stage2-tower.js';
 
 test('tower geometry matches the supplied six-floor background',()=>{
@@ -57,4 +57,11 @@ test('elevator ground interpolates between adjacent floors',()=>{
   assert.equal(elevatorGround(1,2,0),groundY(1));
   assert.equal(elevatorGround(1,2,1),groundY(2));
   assert.equal(elevatorGround(1,2,.5),(groundY(1)+groundY(2))/2);
+});
+
+test('embedded puzzle devices use fixed interaction hotspots on puzzle floors',()=>{
+  assert.deepEqual(puzzleInteraction(2),{x:560,range:92});
+  assert.deepEqual(puzzleInteraction(4),{x:360,range:92});
+  assert.deepEqual(puzzleInteraction(6),{x:520,range:92});
+  assert.equal(puzzleInteraction(1),null);
 });
