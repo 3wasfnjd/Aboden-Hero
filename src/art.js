@@ -119,7 +119,20 @@ export function createArt(ctx){
   const frames=type==='city'?CITY_FRAMES:type==='sniper'?SNIPER_FRAMES:HEAVY_FRAMES;
   const img=asset.img;
   const attack=enemyAttackPose(e);
-  if(attack){const frame=scaledFrames([attack.frame],img,ENEMY_BASE_W,ENEMY_BASE_H)[0];drawSprite(ctx,img,frame,e.x+e.w/2,e.y+e.h,attack.facing,attack.height);return;}
+  if(attack){
+   if(e.shotFlash>0){
+    // During the actual shot keep a full-body guard frame on screen.
+    // The attack rows in the supplied atlases are upper-body crops, which made
+    // the soldier look cut off when anchored to his feet.
+    const full=scaledFrames(frames.idle,img,ENEMY_BASE_W,ENEMY_BASE_H);
+    const fullFrame=full[Math.floor(time*4+e.x*.006)%full.length];
+    drawSprite(ctx,img,fullFrame,e.x+e.w/2,e.y+e.h,attack.facing,enemyDisplayHeight(e));
+   }else{
+    const frame=scaledFrames([attack.frame],img,ENEMY_BASE_W,ENEMY_BASE_H)[0];
+    drawSprite(ctx,img,frame,e.x+e.w/2,e.y+e.h,attack.facing,attack.height);
+   }
+   return;
+  }
   let state='idle',rate=4,displayH=enemyDisplayHeight(e);
   if(e.hit>0){state='hit';rate=12;}
   else if(Math.abs(e.vx)>5){state='run';rate=4.5;}
