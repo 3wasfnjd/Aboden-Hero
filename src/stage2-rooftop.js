@@ -10,6 +10,8 @@ const HERO_WALK_URL='./assets/aboden-hero-movement.png';
 const BOSS_URL='./assets/stage2/rooftop/0D1BD2D4-2C58-41AD-87C6-AF3454DDCD3D.png';
 const BOSS_WALK_URL='./assets/stage2/rooftop/68F8B92C-855E-4303-B55B-4E69B4BDDDE7.png';
 const LADDER_URL='./assets/stage2/rooftop/C73795B9-E427-4AA3-A3DC-B3C990A6B7F4.png';
+const FLOSS_A_URL='./assets/stage2/rooftop/0525AB5D-6007-49F8-8DA2-F7BB8E22D605.png';
+const FLOSS_B_URL='./assets/stage2/rooftop/A3B1ACCB-271B-42D1-9AC7-94E9E4CF491B.png';
 
 const HERO_BASE={w:1536,h:1024};
 const BOSS_BASE={w:1122,h:1402};
@@ -52,13 +54,17 @@ const BOSS_FRAMES=Object.freeze({
 });
 const BOSS_VISUAL_H=232;
 const FLOSS_DURATION=5.8;
-const FLOSS_SEQUENCE=Object.freeze([
-  Object.freeze({frame:'punch1',shift:-10,lean:-.055,bob:0,flip:1}),
-  Object.freeze({frame:'block', shift:  8,lean: .045,bob:2,flip:1}),
-  Object.freeze({frame:'punch2',shift: 12,lean: .060,bob:0,flip:1}),
-  Object.freeze({frame:'heavy', shift: -7,lean:-.045,bob:2,flip:-1}),
-  Object.freeze({frame:'dodge', shift:-12,lean:-.060,bob:0,flip:-1}),
-  Object.freeze({frame:'win',   shift:  6,lean: .035,bob:1,flip:1})
+const FLOSS_FRAME_W=543;
+const FLOSS_FRAME_H=724;
+const FLOSS_FRAMES=Object.freeze([
+  Object.freeze({sheet:0,frame:[0,0,FLOSS_FRAME_W,FLOSS_FRAME_H]}),
+  Object.freeze({sheet:0,frame:[FLOSS_FRAME_W,0,FLOSS_FRAME_W,FLOSS_FRAME_H]}),
+  Object.freeze({sheet:0,frame:[0,FLOSS_FRAME_H,FLOSS_FRAME_W,FLOSS_FRAME_H]}),
+  Object.freeze({sheet:0,frame:[FLOSS_FRAME_W,FLOSS_FRAME_H,FLOSS_FRAME_W,FLOSS_FRAME_H]}),
+  Object.freeze({sheet:1,frame:[0,0,FLOSS_FRAME_W,FLOSS_FRAME_H]}),
+  Object.freeze({sheet:1,frame:[FLOSS_FRAME_W,0,FLOSS_FRAME_W,FLOSS_FRAME_H]}),
+  Object.freeze({sheet:1,frame:[0,FLOSS_FRAME_H,FLOSS_FRAME_W,FLOSS_FRAME_H]}),
+  Object.freeze({sheet:1,frame:[FLOSS_FRAME_W,FLOSS_FRAME_H,FLOSS_FRAME_W,FLOSS_FRAME_H]})
 ]);
 
 function loadAsset(url,chroma=false){
@@ -96,6 +102,10 @@ const heroWalkAsset=loadAsset(HERO_WALK_URL,false);
 const bossAsset=loadAsset(BOSS_URL,true);
 const bossWalkAsset=loadAsset(BOSS_WALK_URL,false);
 const ladderAsset=loadAsset(LADDER_URL,false);
+const flossAssets=[
+  loadAsset(FLOSS_A_URL,false),
+  loadAsset(FLOSS_B_URL,false)
+];
 
 function scaledFrame(frame,asset,base){
   const source=asset.source;
@@ -404,14 +414,11 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
   }
 
   function drawVictoryDance(){
-    const beat=Math.floor(timer*7.2);
-    const phase=FLOSS_SEQUENCE[beat%FLOSS_SEQUENCE.length];
-    const frame=HERO_FRAMES[phase.frame][0];
-    const bounce=Math.sin(timer*Math.PI*7.2)*2.2;
-    const sway=Math.sin(timer*Math.PI*3.6)*3.5;
-    return drawDancePose(ctx,heroAsset,HERO_BASE,frame,hero.x+phase.shift+sway,FLOOR_Y,{
-      facing:phase.flip,displayH:188,rotation:phase.lean,bob:phase.bob+bounce
-    });
+    const index=Math.floor(timer*7)%FLOSS_FRAMES.length;
+    const pose=FLOSS_FRAMES[index];
+    const asset=flossAssets[pose.sheet];
+    const bounce=Math.sin(timer*Math.PI*7)*1.5;
+    return drawRawSprite(ctx,asset,pose.frame,hero.x,FLOOR_Y+bounce,1,205);
   }
 
   function drawHeroSprite(time,facing){
