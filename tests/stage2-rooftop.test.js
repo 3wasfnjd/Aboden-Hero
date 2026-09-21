@@ -57,3 +57,21 @@ test('rooftop boss difficulty is reduced and hero melee damage is stronger',()=>
   assert.match(rooftop,/hitBoss\(3,135,events\)/);
   assert.match(rooftop,/hitBoss\(2,115,events\)/);
 });
+
+
+test('uploaded ladder and six-frame boss walk sheet are integrated into the rooftop finale',()=>{
+  assert.match(rooftop,/C73795B9-E427-4AA3-A3DC-B3C990A6B7F4\.png/);
+  assert.match(rooftop,/68F8B92C-855E-4303-B55B-4E69B4BDDDE7\.png/);
+  assert.match(rooftop,/BOSS_WALK_FRAMES=Object\.freeze\(\[/);
+  assert.match(rooftop,/drawSprite\(ctx,bossWalkAsset/);
+  assert.match(rooftop,/drawSprite\(ctx,ladderAsset/);
+});
+
+test('rooftop fighters stand higher and rain uses layered natural streaks with subtle ripples',()=>{
+  assert.match(rooftop,/const FLOOR_Y=984/);
+  assert.match(rooftop,/function drawRainLayer\(time/);
+  assert.match(rooftop,/count:72,speed:360/);
+  assert.match(rooftop,/count:46,speed:575/);
+  assert.match(rooftop,/count:20,speed:820/);
+  assert.match(rooftop,/ctx\.ellipse\(x,FLOOR_Y\+2/);
+});
