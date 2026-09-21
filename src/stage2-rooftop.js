@@ -37,19 +37,20 @@ const HERO_FRAMES=Object.freeze({
   hurt:[[27,749,258,261]],
   block:[[342,736,313,274]],
   dodge:[[691,751,384,258]],
-  win:[[1216,720,233,290]]
+  win:[[1152,683,362,329]]
 });
 
 const BOSS_FRAMES=Object.freeze({
-  idle:[[110,0,390,410]],
-  walk:[[572,2,421,397]],
-  attack1:[[61,422,467,343]],
-  attack2:[[587,414,484,351]],
-  heavy:[[82,753,496,334]],
-  hurt:[[661,759,393,338]],
-  block:[[99,1091,403,294]],
-  defeat:[[561,1127,496,253]]
+  idle:[[0,0,533,350]],
+  walk:[[568,0,508,350]],
+  attack1:[[37,350,494,351]],
+  attack2:[[572,350,502,351]],
+  heavy:[[0,701,561,351]],
+  hurt:[[561,701,547,351]],
+  block:[[75,1052,486,350]],
+  defeat:[[561,1052,555,334]]
 });
+const BOSS_VISUAL_H=232;
 
 function loadAsset(url,chroma=false){
   const img=new Image();
@@ -121,7 +122,7 @@ function drawRawSprite(ctx,asset,frame,x,feetY,facing,displayH,alpha=1){
 }
 
 export function drawRooftopLadder(ctx,{x=ROOFTOP_LADDER_X,bottomY,unlocked=false,time=0}){
-  const displayH=270;
+  const displayH=184;
   ctx.save();
   ctx.globalAlpha=unlocked?1:.50;
   ctx.shadowColor=unlocked?'#61ffa7':'#ff3d49';
@@ -393,9 +394,9 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
   function drawBossSprite(time,facing){
     if(boss.walk&&!boss.attack&&boss.hit<=0&&boss.block<=0&&mode!=='boss-defeat'&&mode!=='after'){
       const frame=BOSS_WALK_FRAMES[Math.floor(time*6.4)%BOSS_WALK_FRAMES.length];
-      if(drawSprite(ctx,bossWalkAsset,BOSS_WALK_BASE,frame,boss.x,FLOOR_Y,facing,248))return true;
+      if(drawSprite(ctx,bossWalkAsset,BOSS_WALK_BASE,frame,boss.x,FLOOR_Y,facing,BOSS_VISUAL_H))return true;
     }
-    return drawSprite(ctx,bossAsset,BOSS_BASE,bossFrame(),boss.x,FLOOR_Y,facing,248);
+    return drawSprite(ctx,bossAsset,BOSS_BASE,bossFrame(),boss.x,FLOOR_Y,facing,BOSS_VISUAL_H);
   }
 
   function bossFrame(){
