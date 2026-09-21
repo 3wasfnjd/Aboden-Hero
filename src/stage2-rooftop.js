@@ -8,13 +8,23 @@ const BG_URL='./assets/stage2/rooftop/E254AA9A-004F-4581-B58B-1FF6F0427114.jpeg'
 const HERO_URL='./assets/stage2/rooftop/B78F8298-AC6E-4984-8171-6060AD95C1AD.png';
 const HERO_WALK_URL='./assets/aboden-hero-movement.png';
 const BOSS_URL='./assets/stage2/rooftop/0D1BD2D4-2C58-41AD-87C6-AF3454DDCD3D.png';
+const BOSS_WALK_URL='./assets/stage2/rooftop/68F8B92C-855E-4303-B55B-4E69B4BDDDE7.png';
+const LADDER_URL='./assets/stage2/rooftop/C73795B9-E427-4AA3-A3DC-B3C990A6B7F4.png';
 
 const HERO_BASE={w:1536,h:1024};
 const BOSS_BASE={w:1122,h:1402};
+const BOSS_WALK_BASE={w:1112,h:1415};
+const LADDER_BASE={w:1024,h:1536};
+const LADDER_FRAME=[276,0,472,1524];
 
 const HERO_WALK_FRAMES=Object.freeze([
   [6,42,206,306],[194,42,209,307],[402,43,196,304],[583,38,239,309],
   [808,42,208,306],[1008,39,208,310],[1220,43,211,306],[1436,42,217,307]
+]);
+
+const BOSS_WALK_FRAMES=Object.freeze([
+  [0,37,371,671],[371,19,370,656],[741,69,371,610],
+  [0,722,371,693],[371,724,370,691],[741,726,371,689]
 ]);
 
 const HERO_FRAMES=Object.freeze({
@@ -74,6 +84,8 @@ const backgroundAsset=loadAsset(BG_URL,false);
 const heroAsset=loadAsset(HERO_URL,true);
 const heroWalkAsset=loadAsset(HERO_WALK_URL,false);
 const bossAsset=loadAsset(BOSS_URL,true);
+const bossWalkAsset=loadAsset(BOSS_WALK_URL,false);
+const ladderAsset=loadAsset(LADDER_URL,false);
 
 function scaledFrame(frame,asset,base){
   const source=asset.source;
@@ -109,29 +121,24 @@ function drawRawSprite(ctx,asset,frame,x,feetY,facing,displayH,alpha=1){
 }
 
 export function drawRooftopLadder(ctx,{x=ROOFTOP_LADDER_X,bottomY,unlocked=false,time=0}){
-  const top=74,bottom=bottomY-5,w=42;
+  const displayH=270;
   ctx.save();
-  ctx.lineCap='round';
-  ctx.lineWidth=5;
-  ctx.strokeStyle=unlocked?'#b7c8d5':'#59636c';
+  ctx.globalAlpha=unlocked?1:.50;
   ctx.shadowColor=unlocked?'#61ffa7':'#ff3d49';
-  ctx.shadowBlur=unlocked?11:5;
-  ctx.beginPath();
-  ctx.moveTo(x-w/2,top);ctx.lineTo(x-w/2,bottom);
-  ctx.moveTo(x+w/2,top);ctx.lineTo(x+w/2,bottom);
-  ctx.stroke();
-  ctx.lineWidth=3;
-  for(let y=top+18;y<bottom-7;y+=23){
-    ctx.beginPath();ctx.moveTo(x-w/2+3,y);ctx.lineTo(x+w/2-3,y);ctx.stroke();
+  ctx.shadowBlur=unlocked?13:7;
+  if(!drawSprite(ctx,ladderAsset,LADDER_BASE,LADDER_FRAME,x,bottomY,1,displayH)){
+    const top=bottomY-displayH,w=48;
+    ctx.strokeStyle=unlocked?'#b7c8d5':'#59636c';ctx.lineWidth=5;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(x-w/2,top);ctx.lineTo(x-w/2,bottomY);
+    ctx.moveTo(x+w/2,top);ctx.lineTo(x+w/2,bottomY);ctx.stroke();
+    ctx.lineWidth=3;
+    for(let y=top+18;y<bottomY-7;y+=23){ctx.beginPath();ctx.moveTo(x-w/2+3,y);ctx.lineTo(x+w/2-3,y);ctx.stroke();}
   }
+  ctx.globalAlpha=.62+Math.sin(time*4)*.20;
   ctx.fillStyle=unlocked?'#61ffa7':'#ff3d49';
-  ctx.shadowBlur=12;
-  const pulse=.62+Math.sin(time*4)*.22;
-  ctx.globalAlpha=pulse;
-  ctx.fillRect(x-5,top-16,10,7);
+  ctx.shadowBlur=12;ctx.fillRect(x-5,bottomY-displayH-13,10,7);
   ctx.restore();
 }
-
 export function drawRooftopClimber(ctx,{x,feetY,time=0,facing=1}){
   const frames=HERO_FRAMES.climb;
   const frame=frames[Math.floor(time*5.5)%frames.length];
@@ -141,7 +148,7 @@ export function drawRooftopClimber(ctx,{x,feetY,time=0,facing=1}){
 
 export function createRooftopBattle(ctx,{width=720,height=1280}={}){
   const BG_Y=560;
-  const FLOOR_Y=1048;
+  const FLOOR_Y=984;
   const ARENA_LEFT=115;
   const ARENA_RIGHT=1330;
   const CONTROL_ROOM_X=626;
@@ -383,6 +390,14 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
     return drawSprite(ctx,heroAsset,HERO_BASE,heroFrame(),hero.x,FLOOR_Y,facing,188);
   }
 
+  function drawBossSprite(time,facing){
+    if(boss.walk&&!boss.attack&&boss.hit<=0&&boss.block<=0&&mode!=='boss-defeat'&&mode!=='after'){
+      const frame=BOSS_WALK_FRAMES[Math.floor(time*6.4)%BOSS_WALK_FRAMES.length];
+      if(drawSprite(ctx,bossWalkAsset,BOSS_WALK_BASE,frame,boss.x,FLOOR_Y,facing,248))return true;
+    }
+    return drawSprite(ctx,bossAsset,BOSS_BASE,bossFrame(),boss.x,FLOOR_Y,facing,248);
+  }
+
   function bossFrame(){
     if(mode==='boss-defeat'||mode==='after'||boss.hp<=0)return BOSS_FRAMES.defeat[0];
     if(boss.hit>0)return BOSS_FRAMES.hurt[0];
@@ -419,18 +434,58 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
     ctx.restore();
   }
 
-  function drawRain(time){
+  function rainHash(n){
+    const v=Math.sin(n*12.9898+78.233)*43758.5453;
+    return v-Math.floor(v);
+  }
+
+  function drawRainLayer(time,{count,speed,length,alpha,lineWidth,wind,seed}){
     ctx.save();
-    ctx.strokeStyle='rgba(191,220,255,.34)';
-    ctx.lineWidth=1.2;
-    for(let i=0;i<62;i++){
-      const x=(i*113+(time*360)%900)%900-90;
-      const y=(i*173+(time*690)%1380)%1380-70;
-      ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-9,y+34);ctx.stroke();
+    ctx.strokeStyle='#d6e8ff';
+    ctx.lineCap='round';
+    ctx.lineWidth=lineWidth;
+    const travel=height+90;
+    for(let i=0;i<count;i++){
+      const h1=rainHash(seed+i*3.17),h2=rainHash(seed+i*7.91),h3=rainHash(seed+i*11.43);
+      const y=(h2*travel+time*speed)%travel-45;
+      const x=h1*(width+170)-85+Math.sin(time*.25+h3*6.28)*7;
+      const drop=length*(.72+h3*.42);
+      ctx.globalAlpha=alpha*(.62+h2*.38);
+      ctx.beginPath();
+      ctx.moveTo(x,y);
+      ctx.lineTo(x+wind,y+drop);
+      ctx.stroke();
     }
     ctx.restore();
   }
 
+  function drawRain(time){
+    // Three restrained depth layers: fine distant rain, readable middle rain,
+    // and only a few foreground streaks. This avoids the old uniform "scratch" look.
+    drawRainLayer(time,{count:72,speed:360,length:10,alpha:.085,lineWidth:.55,wind:-2.2,seed:13});
+    drawRainLayer(time,{count:46,speed:575,length:15,alpha:.14,lineWidth:.72,wind:-3.6,seed:71});
+    drawRainLayer(time,{count:20,speed:820,length:22,alpha:.19,lineWidth:.95,wind:-5.2,seed:151});
+
+    // Fine wet haze immediately above the roof surface.
+    const haze=ctx.createLinearGradient(0,FLOOR_Y-125,0,FLOOR_Y+18);
+    haze.addColorStop(0,'rgba(180,210,236,0)');
+    haze.addColorStop(1,'rgba(180,210,236,.035)');
+    ctx.fillStyle=haze;ctx.fillRect(0,FLOOR_Y-125,width,143);
+
+    // Sparse shallow ripples where drops meet the wet roof.
+    ctx.save();
+    ctx.strokeStyle='#c8e0f6';ctx.lineWidth=.7;
+    for(let i=0;i<10;i++){
+      const phase=(time*(1.05+rainHash(i+230)*.35)+rainHash(i+310))%1;
+      if(phase>.24)continue;
+      const p=phase/.24,x=rainHash(i+410)*width;
+      ctx.globalAlpha=(1-p)*.12;
+      ctx.beginPath();
+      ctx.ellipse(x,FLOOR_Y+2,2+p*10,.6+p*1.8,0,0,Math.PI*2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
   function drawIntroWeapon(){
     if(mode!=='intro'||timer<2.08||timer>3.05)return;
     const t=clamp((timer-2.08)/.97,0,1);
@@ -459,7 +514,7 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
     if(!drawHeroSprite(time,heroFacing)){
       ctx.fillStyle='#b73339';ctx.fillRect(hero.x-20,FLOOR_Y-100,40,100);
     }
-    if(!drawSprite(ctx,bossAsset,BOSS_BASE,bossFrame(),boss.x,FLOOR_Y,bossFacing,248)){
+    if(!drawBossSprite(time,bossFacing)){
       ctx.fillStyle='#37151b';ctx.fillRect(boss.x-28,FLOOR_Y-145,56,145);
     }
     ctx.restore();
