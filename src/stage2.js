@@ -1,7 +1,7 @@
 import {clamp,overlaps,createPlayer,stepPlayer} from './world.js?v=20260916-action-1';
 import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260917-muzzle-1';
-import {stepCombat} from './combat.js?v=20260917-straight-1';
-import {createArt} from './art.js?v=20260917-cleanup-2';
+import {stepCombat} from './combat.js?v=20260921-guards-elevator-1';
+import {createArt} from './art.js?v=20260921-guards-elevator-1';
 import {createMusic} from './music.js?v=20260917-music-1';
 import {createMatchingPuzzle} from '../puzzle-kit/matching/matching.js?v=20260920-stage2-embed-1';
 import {createWiringPuzzle} from '../puzzle-kit/wiring/wiring.js?v=20260919-stage2-embed-2';
@@ -387,7 +387,7 @@ function drawElevatorPlatform(){
     ctx.fillStyle='rgba(14,22,31,.92)';
     ctx.fillRect(elevatorSolid.x,gy-10,ELEVATOR_WIDTH,14);
   }
-  ctx.globalAlpha=active?.88:.62;
+  ctx.globalAlpha=active ? .88 : .62;
   ctx.fillStyle=color;
   ctx.fillRect(elevatorSolid.x+12,gy-4,ELEVATOR_WIDTH-24,3);
   ctx.restore();
