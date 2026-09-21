@@ -2,7 +2,7 @@ import {lockSafariZoom} from './gesture-lock.js?v=20260921-safari-lock-1';
 import {clamp,overlaps,createPlayer,stepPlayer} from './world.js?v=20260916-action-1';
 import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260917-muzzle-1';
 import {stepCombat} from './combat.js?v=20260921-guards-elevator-1';
-import {createArt} from './art.js?v=20260921-full-shot-body-1';
+import {createArt} from './art.js?v=20260921-full-guard-attack-2';
 import {createMusic} from './music.js?v=20260917-music-1';
 import {createMatchingPuzzle} from '../puzzle-kit/matching/matching.js?v=20260920-stage2-embed-1';
 import {createWiringPuzzle} from '../puzzle-kit/wiring/wiring.js?v=20260919-stage2-embed-2';
@@ -37,7 +37,7 @@ let progress=createProgress(),player=createPlayer(arrivalXForFloor(1,30),groundY
 let cameraX=0,cameraY=0,cameraZoom=FIT_ZOOM,introTime=0,introActive=false;
 let bullets=[],enemyShots=[],particles=[],enemySets=new Map();
 let kills=0,deaths=0,toastTime=0,accumulator=0,last=0,elevatorTime=0,puzzleOpen=false;
-let elevatorAuto=null;
+let elevatorAuto=null,elevatorDockFloor=null,elevatorPendingFloor=null;
 let activePuzzleModule=null,puzzleSession=0;
 let muted=false,audio=null,musicCtl=null;
 
@@ -113,6 +113,11 @@ function currentElevatorCenter(){
 }
 function activateAutoElevator(floor=progress.currentFloor){
   if(floor>=FLOOR_COUNT)return false;
+  if(elevatorDockFloor===floor&&playerOnElevator(elevatorSolid.y)){
+    elevatorPendingFloor=floor;
+    return true;
+  }
+  elevatorDockFloor=null;elevatorPendingFloor=null;
   elevatorSolid.x=elevatorXForFloor(floor);
   elevatorSolid.y=groundY(floor);
   elevatorAuto={from:floor,to:floor+1,phase:0};
@@ -211,7 +216,8 @@ function challengeLabel(){
 }
 function updateHUD(){
   const floor=progress.currentFloor,def=FLOOR_DEFS[floor];
-  $('floor-label').textContent=`الطابق ${floor} / ${FLOOR_COUNT}`;$('floor-title').textContent=def.title;
+  $('area-name').textContent=`الطابق ${floor} — ${def.title}`;
+  $('area-progress').style.width=`${clamp(floor/FLOOR_COUNT*100,0,100)}%`;
   $('health').textContent='♥'.repeat(player.hp)+'♡'.repeat(5-player.hp);$('challenge').textContent=challengeLabel();
   $('hud').hidden=state!=='playing'||introActive;
 }
@@ -227,7 +233,8 @@ function updateAction(){
 
 function reset(){
   progress=createProgress();player=createPlayer(arrivalXForFloor(1,30),groundY(1)-44);player.facing=1;state='menu';time=0;elapsed=0;
-  destroyActivePuzzle();bullets=[];enemyShots=[];particles=[];kills=0;deaths=0;elevatorTime=0;puzzleOpen=false;elevatorAuto=null;
+  destroyActivePuzzle();bullets=[];enemyShots=[];particles=[];kills=0;deaths=0;elevatorTime=0;puzzleOpen=false;
+  elevatorAuto=null;elevatorDockFloor=null;elevatorPendingFloor=null;
   introTime=0;introActive=false;cameraZoom=FIT_ZOOM;
   const full=fullTowerCamera();cameraX=full.x;cameraY=full.y;
   setElevatorForFloor(1);
@@ -267,7 +274,7 @@ function respawn(){
   player=createPlayer(arrivalXForFloor(floor,30),groundY(floor)-44);
   player.facing=floor%2===1?1:-1;player.invulnerable=1.8;
   bullets=[];enemyShots=[];if(FLOOR_DEFS[floor].type==='combat'&&!progress.floors[floor].complete)spawnFloorEnemies(floor);
-  setElevatorForFloor(floor);
+  elevatorAuto=null;elevatorDockFloor=null;elevatorPendingFloor=null;setElevatorForFloor(floor);
   toast('عدت إلى بداية الطابق');sound(170,.2,'triangle');updateHUD();
 }
 function hurt(){if(player.invulnerable>0||player.dashTime>0)return;player.hp--;player.invulnerable=1.25;burst(player.x+15,player.y+22,'#ff646d',10);sound(150,.16,'sawtooth',.04);if(player.hp<=0)respawn();else updateHUD();}
@@ -275,22 +282,19 @@ function finishChallenge(){
   const floor=progress.currentFloor;if(!completeFloor(progress,floor))return;
   enemyShots=[];bullets=[];burst(currentElevatorCenter(),groundY(floor)-36,'#61ffa7',24);sound(920,.26,'triangle',.055);
   if(floor===FLOOR_COUNT){toast('غرفة التحكم تعمل — اكتمل الفصل');setTimeout(()=>{if(state==='playing'&&progress.currentFloor===FLOOR_COUNT)win();},1150);}
-  else{
-    activateAutoElevator(floor);
-    toast('المصعد نشط');
-  }
+  else activateAutoElevator(floor);
   updateHUD();updateAction();
 }
 function arriveNextFloor(){
   const floor=progress.currentFloor;
-  const arrivedFrom=elevatorXForFloor(floor-1);
+  const previousY=elevatorSolid.y;
   const gy=setElevatorGround(groundY(floor));
-  player.x=arrivedFrom+ELEVATOR_WIDTH/2-player.w/2;player.y=gy-player.h;
-  player.vx=0;player.vy=0;player.facing=floor%2===0?-1:1;player.invulnerable=.9;enemyShots=[];bullets=[];
-  // Move the next elevator to the opposite side only after the player has stepped off the arriving shaft.
-  elevatorSolid.x=elevatorXForFloor(floor);
-  const target=followTarget(cameraZoom);cameraX=target.x;cameraY=target.y;
-  toast(`الطابق ${floor} — ${FLOOR_DEFS[floor].title}`);sound(740,.18,'triangle');updateHUD();updateAction();
+  // Preserve the player's horizontal position and carry the final few pixels continuously
+  // with the platform instead of spawning/dropping the player onto each floor.
+  player.y+=gy-previousY;
+  player.vy=0;player.grounded=true;player.invulnerable=.45;enemyShots=[];bullets=[];
+  elevatorDockFloor=floor;
+  sound(740,.18,'triangle');updateHUD();updateAction();
 }
 
 function tickCombat(dt){
@@ -359,15 +363,23 @@ function tick(dt){
       const target=followTarget(GAME_ZOOM);
       cameraX=target.x;cameraY=target.y;
       $('controls').hidden=false;updateHUD();updateAction();
-      toast('الطابق 1 — ابدأ الصعود');
     }
     return;
   }
 
   elapsed+=dt;
-  if(!elevatorAuto)setElevatorForFloor(progress.currentFloor);
-  else if(tickAutoElevator(dt))return;
+  if(elevatorAuto){
+    if(tickAutoElevator(dt))return;
+  }else if(elevatorDockFloor===null){
+    setElevatorForFloor(progress.currentFloor);
+  }
   const controls=input(),{jumped,landed}=stepPlayer(player,controls,solids,dt);
+  if(elevatorDockFloor!==null&&!playerOnElevator(elevatorSolid.y)&&player.grounded){
+    const pending=elevatorPendingFloor;
+    elevatorDockFloor=null;elevatorPendingFloor=null;
+    if(pending===progress.currentFloor)activateAutoElevator(progress.currentFloor);
+    else setElevatorForFloor(progress.currentFloor);
+  }
   player.x=clamp(player.x,FLOOR_LEFT,FLOOR_RIGHT-player.w);
   if(jumped){burst(player.x+15,player.y+44,'#d9d2b2',5);sound(500,.1,'triangle');}if(landed)burst(player.x+15,player.y+44,'#d9d2b2',4);
   if(player.y>groundY(progress.currentFloor)+150){respawn();return;}
@@ -474,10 +486,7 @@ function drawWorld(){
   ctx.translate(-cameraX,-cameraY);
   drawTowerBackground();
 
-  for(let floor=1;floor<=FLOOR_COUNT;floor++){
-    drawFloorNumber(floor);
-    drawPuzzleDevice(floor);
-  }
+  for(let floor=1;floor<=FLOOR_COUNT;floor++)drawFloorNumber(floor);
   drawElevatorPlatform();
   drawCollisionDebug();
 

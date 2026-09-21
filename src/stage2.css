@@ -221,3 +221,54 @@ html,body,#app,#stage,#game,#controls,#puzzle{
   user-select:none;
   -webkit-touch-callout:none;
 }
+
+
+/* Stage 1-style persistent area/progress strip for Chapter 2. */
+.stage2-area{
+  position:relative;
+  width:clamp(118px,36vw,158px);
+  aspect-ratio:2172/724;
+  background:url('../assets/ui/hud/area.png') no-repeat center/contain;
+  pointer-events:none;
+  flex:none;
+  container-type:inline-size;
+}
+#area-name{
+  position:absolute;
+  top:33%;
+  left:21%;
+  width:73%;
+  height:23%;
+  background:#050f1b;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:clamp(6px,7.1cqi,10px);
+  font-weight:800;
+  color:#eaf6ff;
+  padding:0 5px;
+  text-align:center;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  overflow:hidden;
+  direction:rtl;
+}
+.stage2-area>div{
+  position:absolute;
+  top:59%;
+  left:34.5%;
+  width:49.5%;
+  height:9%;
+  background:#050f1b;
+  border-radius:999px;
+  overflow:hidden;
+}
+#area-progress{
+  display:block;
+  height:100%;
+  width:16.666%;
+  background:#0ecbfd;
+  border-radius:999px;
+  transition:width .35s ease;
+}

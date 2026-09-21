@@ -120,17 +120,12 @@ export function createArt(ctx){
   const img=asset.img;
   const attack=enemyAttackPose(e);
   if(attack){
-   if(e.shotFlash>0){
-    // During the actual shot keep a full-body guard frame on screen.
-    // The attack rows in the supplied atlases are upper-body crops, which made
-    // the soldier look cut off when anchored to his feet.
-    const full=scaledFrames(frames.idle,img,ENEMY_BASE_W,ENEMY_BASE_H);
-    const fullFrame=full[Math.floor(time*4+e.x*.006)%full.length];
-    drawSprite(ctx,img,fullFrame,e.x+e.w/2,e.y+e.h,attack.facing,enemyDisplayHeight(e));
-   }else{
-    const frame=scaledFrames([attack.frame],img,ENEMY_BASE_W,ENEMY_BASE_H)[0];
-    drawSprite(ctx,img,frame,e.x+e.w/2,e.y+e.h,attack.facing,attack.height);
-   }
+   // Guard aim/fire atlas rows are cropped around the upper body. Keep a
+   // complete full-body guard sprite for the entire attack sequence and let
+   // the projectile/muzzle effect communicate the shot.
+   const full=scaledFrames(frames.idle,img,ENEMY_BASE_W,ENEMY_BASE_H);
+   const fullFrame=full[Math.floor(time*4+e.x*.006)%full.length];
+   drawSprite(ctx,img,fullFrame,e.x+e.w/2,e.y+e.h,attack.facing,enemyDisplayHeight(e));
    return;
   }
   let state='idle',rate=4,displayH=enemyDisplayHeight(e);
@@ -175,7 +170,11 @@ export function createArt(ctx){
   drawSprite(ctx,gatekeeper,frames[i],b.x+b.w/2,b.y+b.h,facing,displayH);
  }
 
- function enemyMuzzle(e,time,isBoss=false){const asset=isBoss?bossAsset:enemyKind(e)==='city'?cityAsset:enemyKind(e)==='sniper'?sniperAsset:heavyAsset;const pose=enemyAttackPose(e,isBoss);return asset.ready&&pose?pose.muzzle:fallbackEnemyMuzzle(e,time,isBoss);}
+ function enemyMuzzle(e,time,isBoss=false){
+  if(!isBoss)return fallbackEnemyMuzzle(e,time,false);
+  const asset=bossAsset,pose=enemyAttackPose(e,true);
+  return asset.ready&&pose?pose.muzzle:fallbackEnemyMuzzle(e,time,true);
+ }
  function rocket(x,y,angle){
   if(!rocketAsset.ready)return false;
   const img=rocketAsset.img,dh=ROCKET_DISPLAY_H,dw=dh*(img.naturalWidth/img.naturalHeight);
