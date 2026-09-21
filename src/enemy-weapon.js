@@ -46,6 +46,18 @@ export function enemyKind(e){
  const slot=Math.floor(((e.min??e.x)+250)/900)%3;
  return slot===0?'city':slot===1?'sniper':'heavy';
 }
+export function enemyFacing(e){
+ if(enemyKind(e)==='newguard'&&e.windup<=0&&e.shotFlash<=0)return e.vx<0?-1:1;
+ if(e.attackFacing===-1||e.attackFacing===1)return e.attackFacing;
+ if(Number.isFinite(e.aimX)&&e.windup>0)return e.aimX<e.x+e.w/2?-1:1;
+ return e.vx<0?-1:1;
+}
+export function hitsShieldFromFront(e,bulletVx){
+ if(enemyKind(e)!=='newguard')return false;
+ const facing=enemyFacing(e);
+ // A bullet travelling opposite the guard's facing approaches the shield/front.
+ return Math.sign(bulletVx||0)!==facing;
+}
 export function enemyAttackPose(e,isBoss=false){
  let state,index,height;
  if(e.windup>0){
@@ -73,7 +85,7 @@ export function enemyAttackPose(e,isBoss=false){
  const frames=isBoss?BOSS_FRAMES:(kind==='city'||kind==='newguard')?CITY_FRAMES:kind==='sniper'?SNIPER_FRAMES:HEAVY_FRAMES;
  const frame=frames[state][index],[fx,fy,fw,fh]=frame;
  const [mx,my]=MUZZLES[kind][state][index];
- const facing=e.attackFacing??(e.aimX<e.x+e.w/2?-1:1);
+ const facing=enemyFacing(e);
  const scale=height/fh;
  return {state,index,frame,height,facing,muzzle:{
   x:e.x+e.w/2+facing*(mx-fx-fw/2)*scale,
@@ -85,7 +97,7 @@ export function enemyWeaponMuzzle(e,isBoss=false){
  return pose?pose.muzzle:fallbackEnemyMuzzle(e,0,isBoss);
 }
 export function fallbackEnemyMuzzle(e,time,isBoss=false){
- const facing=e.attackFacing??(e.aimX<e.x+e.w/2?-1:1);
+ const facing=enemyFacing(e);
  if(!isBoss&&enemyKind(e)==='drone')return {x:e.x+e.w/2+facing*28,y:e.y+e.h/2+5};
  return isBoss?{x:e.x+e.w/2+facing*67,y:e.y+e.h-37}
   :{x:e.x+e.w/2+facing*35,y:e.y+e.h-22.5};
