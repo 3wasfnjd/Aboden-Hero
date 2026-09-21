@@ -585,7 +585,6 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
   }
 
   function stats(){
-  function stats(){
     return {mode,heroHp:hero.hp,heroMax:hero.maxHp,bossHp:boss.hp,bossMax:boss.maxHp,cameraX,heroX:hero.x,bossX:boss.x};
   }
 
