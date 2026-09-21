@@ -14,7 +14,7 @@ import {
   ELEVATOR_WIDTH,ELEVATOR_PLATFORM_HEIGHT,
   PUZZLE_X,groundY,makeFloorPlatforms,elevatorGround,
   elevatorXForFloor,floorLabelX,arrivalXForFloor
-} from './stage2-tower.js?v=20260920-tower-1';
+} from './stage2-tower.js?v=20260921-alternating-1';
 
 const $=id=>document.getElementById(id);
 const canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx);
@@ -557,7 +557,7 @@ function doAction(){
   if(state!=='playing'||progress.mode!=='floor'||puzzleOpen)return;
   const floor=progress.currentFloor,def=FLOOR_DEFS[floor],done=progress.floors[floor].complete;
   if(!done&&def.type==='puzzle'&&near(currentPuzzleX(),105))openPuzzle();
-  else if(done&&floor<FLOOR_COUNT&&near(ELEVATOR_X+ELEVATOR_WIDTH/2,90))useElevator();
+  else if(done&&floor<FLOOR_COUNT&&near(currentElevatorCenter(),90))useElevator();
 }
 
 if(moveStick&&moveStickBase&&moveStickKnob){
