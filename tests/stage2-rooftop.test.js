@@ -31,10 +31,10 @@ test('the final fight is melee-only and exposes a boss HUD',()=>{
   assert.match(stage2,/rooftop\.tick\(dt,input\(\)\)/);
   assert.match(html,/id="boss-hud"/);
   assert.match(html,/id="boss-health-fill"/);
-  assert.match(css,/body\.rooftop-melee[\s\S]*data-action="shoot"/);
-  assert.match(css,/content:"لكمة"/);
-  assert.match(css,/content:"قوية"/);
-  assert.match(css,/content:"مراوغة"/);
+  assert.match(css,/assets\/ui\/hud\/boss\.png/);
+  assert.match(css,/assets\/ui\/buttons\/shoot\.png/);
+  assert.match(css,/assets\/ui\/buttons\/jump\.png/);
+  assert.match(css,/assets\/ui\/buttons\/dash\.png/);
 });
 
 test('boss defeat leaves a playable walk to the control room before chapter completion',()=>{
@@ -64,6 +64,8 @@ test('uploaded ladder and six-frame boss walk sheet are integrated into the roof
   assert.match(rooftop,/68F8B92C-855E-4303-B55B-4E69B4BDDDE7\.png/);
   assert.match(rooftop,/BOSS_WALK_FRAMES=Object\.freeze\(\[/);
   assert.match(rooftop,/drawSprite\(ctx,bossWalkAsset/);
+  assert.match(rooftop,/BOSS_VISUAL_H=232/);
+  assert.match(rooftop,/const displayH=184/);
   assert.match(rooftop,/drawSprite\(ctx,ladderAsset/);
 });
 
@@ -74,4 +76,13 @@ test('rooftop fighters stand higher and rain uses layered natural streaks with s
   assert.match(rooftop,/count:46,speed:575/);
   assert.match(rooftop,/count:20,speed:820/);
   assert.match(rooftop,/ctx\.ellipse\(x,FLOOR_Y\+2/);
+});
+
+
+test('hero victory frame keeps the full head and Chapter 2 uses Stage 1 framed UI assets',()=>{
+  assert.match(rooftop,/win:\[\[1152,683,362,329\]\]/);
+  assert.match(html,/class="health" id="health-panel"/);
+  assert.match(css,/assets\/ui\/hud\/health\.png/);
+  assert.match(css,/assets\/ui\/hud\/area\.png/);
+  assert.match(css,/assets\/ui\/toast-frame\.png/);
 });
