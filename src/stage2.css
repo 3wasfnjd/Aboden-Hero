@@ -277,3 +277,13 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;-webkit-tap-highlight-
   #puzzle[data-type="cubes"] .puzzle-head h2{font-size:18px}
   #puzzle[data-type="cubes"] #puzzle-help{font-size:11px;line-height:1.45}
 }
+
+
+/* Keep Safari gestures from hijacking gameplay. */
+html,body,#app,#stage,#game,#controls,#puzzle{
+  touch-action:none!important;
+  overscroll-behavior:none;
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+}
