@@ -43,3 +43,17 @@ test('boss defeat leaves a playable walk to the control room before chapter comp
   assert.match(stage2,/scene==='rooftop-after'[\s\S]{0,120}rooftop\.canEnterControlRoom\(\)/);
   assert.match(stage2,/function beginChapterEnd\(\)/);
 });
+
+
+test('rooftop ladder is on the left and hero uses the retained multi-frame movement sheet',()=>{
+  assert.match(rooftop,/ROOFTOP_LADDER_X=204/);
+  assert.match(rooftop,/HERO_WALK_URL='\.\/assets\/aboden-hero-movement\.png'/);
+  assert.match(rooftop,/HERO_WALK_FRAMES=Object\.freeze\(\[/);
+  assert.match(rooftop,/drawRawSprite\(ctx,heroWalkAsset/);
+});
+
+test('rooftop boss difficulty is reduced and hero melee damage is stronger',()=>{
+  assert.match(rooftop,/BOSS_MAX_HP=12/);
+  assert.match(rooftop,/hitBoss\(3,135,events\)/);
+  assert.match(rooftop,/hitBoss\(2,115,events\)/);
+});
