@@ -38,7 +38,7 @@ let cameraX=0,cameraY=0,cameraZoom=FIT_ZOOM,introTime=0,introActive=false;
 let bullets=[],enemyShots=[],particles=[],enemySets=new Map();
 let kills=0,toastTime=0,accumulator=0,last=0,puzzleOpen=false;
 let elevatorAuto=null,elevatorDockFloor=null,elevatorPendingFloor=null;
-let activePuzzleModule=null,puzzleSession=0;
+let activePuzzleModule=null,puzzleSession=0,activePuzzleFloor=null;
 let muted=false,audio=null,musicCtl=null;
 
 
@@ -132,6 +132,26 @@ function spawnFloorEnemies(floor){
   enemySets.set(floor,def.enemies.map((kind,i)=>makeEnemy(kind,positions[i],floor,i)));
 }
 function resetEnemies(){for(let f=1;f<=FLOOR_COUNT;f++)spawnFloorEnemies(f);}
+function playerFloor(){
+  const feet=player.y+player.h;
+  let closest=1,distance=Infinity;
+  for(let floor=1;floor<=FLOOR_COUNT;floor++){
+    const next=Math.abs(feet-groundY(floor));
+    if(next<distance){closest=floor;distance=next;}
+  }
+  return closest;
+}
+function tickEnemyPatrol(dt){
+  for(let floor=1;floor<=FLOOR_COUNT;floor++){
+    for(const e of enemySets.get(floor)??[]){
+      if(e.hp<=0)continue;
+      if(e.windup<=0)e.x+=e.vx*dt;
+      e.hit=Math.max(0,e.hit-dt);
+      if(e.x<e.min){e.x=e.min;e.vx=Math.abs(e.vx);}
+      if(e.x+e.w>e.max){e.x=e.max-e.w;e.vx=-Math.abs(e.vx);}
+    }
+  }
+}
 
 function clearInput(){
   keys.clear();touch.clear();buttons.forEach(b=>b.classList.remove('held'));
@@ -181,14 +201,17 @@ function updateHUD(){
 }
 function near(x,range=90){return Math.abs((player.x+player.w/2)-x)<=range;}
 function currentPuzzleInteraction(){
-  return puzzleInteraction(progress.currentFloor);
+  const floor=playerFloor();
+  const spot=puzzleInteraction(floor);
+  return spot?{floor,spot}:null;
 }
 function updateAction(){
   const btn=$('action');btn.hidden=true;
   if(state!=='playing'||progress.mode!=='floor'||puzzleOpen)return;
-  const floor=progress.currentFloor,def=FLOOR_DEFS[floor],done=progress.floors[floor].complete;
-  const puzzleSpot=currentPuzzleInteraction();
-  if(!done&&def.type==='puzzle'&&puzzleSpot&&near(puzzleSpot.x,puzzleSpot.range)){
+  const interaction=currentPuzzleInteraction();
+  if(!interaction)return;
+  const {floor,spot}=interaction,def=FLOOR_DEFS[floor],done=progress.floors[floor].complete;
+  if(!done&&def.type==='puzzle'&&near(spot.x,spot.range)){
     btn.textContent='فتح اللغز';btn.hidden=false;return;
   }
   // The elevator moves automatically after the floor challenge is complete.
@@ -196,7 +219,7 @@ function updateAction(){
 
 function reset(){
   progress=createProgress();player=createPlayer(arrivalXForFloor(1,30),groundY(1)-44);player.facing=1;state='menu';time=0;elapsed=0;
-  destroyActivePuzzle();bullets=[];enemyShots=[];particles=[];kills=0;puzzleOpen=false;
+  destroyActivePuzzle();bullets=[];enemyShots=[];particles=[];kills=0;puzzleOpen=false;activePuzzleFloor=null;
   elevatorAuto=null;elevatorDockFloor=null;elevatorPendingFloor=null;
   introTime=0;introActive=false;cameraZoom=FIT_ZOOM;
   const full=fullTowerCamera();cameraX=full.x;cameraY=full.y;
@@ -241,11 +264,13 @@ function respawn(){
   toast('عدت إلى بداية الطابق');sound(170,.2,'triangle');updateHUD();
 }
 function hurt(){if(player.invulnerable>0||player.dashTime>0)return;player.hp--;player.invulnerable=1.25;burst(player.x+15,player.y+22,'#ff646d',10);sound(150,.16,'sawtooth',.04);if(player.hp<=0)respawn();else updateHUD();}
-function finishChallenge(){
-  const floor=progress.currentFloor;if(!completeFloor(progress,floor))return;
+function finishChallenge(floor=progress.currentFloor){
+  if(!completeFloor(progress,floor))return;
   enemyShots=[];bullets=[];burst(currentElevatorCenter(),groundY(floor)-36,'#61ffa7',24);sound(920,.26,'triangle',.055);
-  if(floor===FLOOR_COUNT){toast('غرفة التحكم تعمل — اكتمل الفصل');setTimeout(()=>{if(state==='playing'&&progress.currentFloor===FLOOR_COUNT)win();},1150);}
-  else activateAutoElevator(floor);
+  if(floor===progress.currentFloor){
+    if(floor===FLOOR_COUNT){toast('غرفة التحكم تعمل — اكتمل الفصل');setTimeout(()=>{if(state==='playing'&&progress.currentFloor===FLOOR_COUNT)win();},1150);}
+    else activateAutoElevator(floor);
+  }
   updateHUD();updateAction();
 }
 function arriveNextFloor(){
@@ -261,27 +286,30 @@ function arriveNextFloor(){
 }
 
 function tickCombat(dt){
-  const floor=progress.currentFloor,enemies=enemySets.get(floor)??[];
-  for(const e of enemies){
-    if(e.hp<=0)continue;if(e.windup<=0)e.x+=e.vx*dt;e.hit=Math.max(0,e.hit-dt);
-    if(e.x<e.min){e.x=e.min;e.vx=Math.abs(e.vx);}if(e.x+e.w>e.max){e.x=e.max-e.w;e.vx=-Math.abs(e.vx);}
-    if(overlaps(player,e))hurt();
-  }
+  const floor=playerFloor();
+  const enemies=FLOOR_DEFS[floor].type==='combat'?(enemySets.get(floor)??[]):[];
+  for(const e of enemies)if(e.hp>0&&overlaps(player,e))hurt();
+
   const dummyBoss={x:0,y:0,w:0,h:0,hp:0,maxHP:0,active:false,hit:0,fire:99,windup:0,aimX:0,aimY:0};
   for(const ev of stepCombat({enemies,boss:dummyBoss},player,enemyShots,dt,(e,isBoss)=>art.enemyMuzzle(e,time,isBoss)))if(ev==='hit')hurt();
   enemyShots=enemyShots.filter(s=>s.life>0);
+
+  const allEnemies=[...enemySets.values()].flat();
   for(const b of bullets){
     b.x+=b.vx*dt;b.life-=dt;if(b.life<=0)continue;
-    for(const e of enemies)if(e.hp>0&&overlaps(b,bulletTargetBounds(e))){
+    for(const e of allEnemies)if(e.hp>0&&overlaps(b,bulletTargetBounds(e))){
       b.life=0;e.hp--;e.hit=.12;burst(b.x,b.y,'#e6c878',5);
       if(e.hp<=0){kills++;burst(e.x+17,e.y+16,'#ef874f',14);sound(260,.12,'triangle');}
       break;
     }
   }
   bullets=bullets.filter(b=>b.life>0);
-  if(!progress.floors[floor].complete&&enemies.length&&enemies.every(e=>e.hp<=0))finishChallenge();
-}
 
+  for(let f=1;f<=FLOOR_COUNT;f++){
+    const def=FLOOR_DEFS[f],set=enemySets.get(f)??[];
+    if(def.type==='combat'&&!progress.floors[f].complete&&set.length&&set.every(e=>e.hp<=0))finishChallenge(f);
+  }
+}
 function tickAutoElevator(dt){
   if(!elevatorAuto)return false;
   const auto=elevatorAuto;
@@ -316,6 +344,8 @@ function tick(dt){
   if(state!=='playing'||puzzleOpen)return;
   time+=dt;
 
+  tickEnemyPatrol(dt);
+
   if(introActive){
     introTime+=dt;
     const normalized=clamp(introTime/INTRO_DURATION,0,1);
@@ -347,8 +377,7 @@ function tick(dt){
   if(jumped){burst(player.x+15,player.y+44,'#d9d2b2',5);sound(500,.1,'triangle');}if(landed)burst(player.x+15,player.y+44,'#d9d2b2',4);
   if(player.y>groundY(progress.currentFloor)+150){respawn();return;}
   if(controls.shoot&&player.shot<=0){player.shot=SHOT_INTERVAL;bullets.push(makeHeroBullet(art.heroMuzzle(player,time),player.facing));sound(660,.055,'triangle',.035);}
-  if(FLOOR_DEFS[progress.currentFloor].type==='combat'&&!progress.floors[progress.currentFloor].complete)tickCombat(dt);
-  else{for(const b of bullets){b.x+=b.vx*dt;b.life-=dt;}bullets=bullets.filter(b=>b.life>0);enemyShots=[];}
+  tickCombat(dt);
   for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=180*dt;p.life-=dt;}particles=particles.filter(p=>p.life>0);
   cameraZoom+=(GAME_ZOOM-cameraZoom)*(1-Math.exp(-5*dt));
   const target=followTarget(cameraZoom);
@@ -431,17 +460,11 @@ function drawWorld(){
   drawElevatorPlatform();
   drawCollisionDebug();
 
-  const floor=progress.currentFloor;
-  // Keep every combat floor populated from the first full-tower shot.
-  // Future-floor guards are visual previews only: they stay idle and cannot
-  // move, aim, fire or damage the player until that floor becomes current.
+  // Every combat floor is live from the start. Guards render their real
+  // runtime state instead of waiting for a floor-arrival activation.
   for(let f=1;f<=FLOOR_COUNT;f++){
     const enemies=enemySets.get(f)??[];
-    for(const e of enemies){
-      if(e.hp<=0)continue;
-      if(f===floor)art.enemy(e,time);
-      else art.enemy({...e,vx:0,windup:0,shotFlash:0,hit:0},time);
-    }
+    for(const e of enemies)if(e.hp>0)art.enemy(e,time);
   }
   for(const s of enemyShots){
     const cx=s.x+s.w/2,cy=s.y+s.h/2;
@@ -471,6 +494,7 @@ function frame(now){if(!last)last=now;const dt=Math.min((now-last)/1000,.1);last
 
 async function mountMatchingPuzzle(){
   const session=++puzzleSession;
+  const floor=activePuzzleFloor;
   const body=$('puzzle-body');
   $('puzzle-title').textContent='مطابقة التوصيلات';
   $('puzzle-help').textContent='اختر موصلًا من اليسار ثم وصّله بالموصل المطابق له في الجهة الأخرى.';
@@ -487,7 +511,7 @@ async function mountMatchingPuzzle(){
       // Stage 2 keeps its own background score. Only Matching Puzzle SFX play here.
       audioOptions:{musicVolume:0,sfxVolume:.20}
     });
-    if(session!==puzzleSession||!puzzleOpen||FLOOR_DEFS[progress.currentFloor].puzzle!=='match'){
+    if(session!==puzzleSession||!puzzleOpen||FLOOR_DEFS[floor]?.puzzle!=='match'){
       puzzle.destroy();
       return;
     }
@@ -498,7 +522,7 @@ async function mountMatchingPuzzle(){
       setTimeout(()=>{
         if(session!==puzzleSession||!puzzleOpen)return;
         closePuzzle();
-        finishChallenge();
+        finishChallenge(floor);
       },1000);
     });
     puzzle.start();
@@ -510,6 +534,7 @@ async function mountMatchingPuzzle(){
 }
 async function mountWiringPuzzle(){
   const session=++puzzleSession;
+  const floor=activePuzzleFloor;
   const body=$('puzzle-body');
   $('puzzle-title').textContent='دائرة الطاقة';
   $('puzzle-help').textContent='دوّر قطع المواسير حتى يكتمل المسار من START إلى END.';
@@ -527,7 +552,7 @@ async function mountWiringPuzzle(){
       // rotation and success SFX remain active.
       audioOptions:{musicVolume:0,sfxVolume:.20}
     });
-    if(session!==puzzleSession||!puzzleOpen||FLOOR_DEFS[progress.currentFloor].puzzle!=='wiring'){
+    if(session!==puzzleSession||!puzzleOpen||FLOOR_DEFS[floor]?.puzzle!=='wiring'){
       puzzle.destroy();
       return;
     }
@@ -537,7 +562,7 @@ async function mountWiringPuzzle(){
       setTimeout(()=>{
         if(session!==puzzleSession||!puzzleOpen)return;
         closePuzzle();
-        finishChallenge();
+        finishChallenge(floor);
       },1000);
     });
     puzzle.start();
@@ -549,6 +574,7 @@ async function mountWiringPuzzle(){
 }
 async function mountCubesPuzzle(){
   const session=++puzzleSession;
+  const floor=activePuzzleFloor;
   const body=$('puzzle-body');
   $('puzzle-title').textContent='مسار التحكم';
   $('puzzle-help').textContent='اختر قطعتين لتبديل موقعيهما، ثم رتّب المسار الصحيح من START إلى GOAL.';
@@ -565,7 +591,7 @@ async function mountCubesPuzzle(){
       // Keep Chapter 2 music playing; use only Cubes Puzzle interaction/success SFX.
       audioOptions:{musicVolume:0,sfxVolume:.20}
     });
-    if(session!==puzzleSession||!puzzleOpen||FLOOR_DEFS[progress.currentFloor].puzzle!=='cubes'){
+    if(session!==puzzleSession||!puzzleOpen||FLOOR_DEFS[floor]?.puzzle!=='cubes'){
       puzzle.destroy();
       return;
     }
@@ -576,7 +602,7 @@ async function mountCubesPuzzle(){
       setTimeout(()=>{
         if(session!==puzzleSession||!puzzleOpen)return;
         closePuzzle();
-        finishChallenge();
+        finishChallenge(floor);
       },1000);
     });
     puzzle.start();
@@ -586,22 +612,24 @@ async function mountCubesPuzzle(){
     body.innerHTML='<div class="embedded-puzzle-error">تعذر تحميل لوحة مسار التحكم.</div>';
   }
 }
-function openPuzzle(){
-  const def=FLOOR_DEFS[progress.currentFloor];if(def.type!=='puzzle'||progress.floors[progress.currentFloor].complete)return;
+function openPuzzle(floor=playerFloor()){
+  const def=FLOOR_DEFS[floor];if(def.type!=='puzzle'||progress.floors[floor].complete)return;
   destroyActivePuzzle();
+  activePuzzleFloor=floor;
   puzzleOpen=true;clearInput();$('puzzle').hidden=false;$('action').hidden=true;$('puzzle-status').textContent='SYSTEM OFFLINE';
   $('puzzle').dataset.type=def.puzzle;
   if(def.puzzle==='match')mountMatchingPuzzle();else if(def.puzzle==='wiring')mountWiringPuzzle();else if(def.puzzle==='cubes')mountCubesPuzzle();
 }
 function closePuzzle(){
-  puzzleOpen=false;destroyActivePuzzle();$('puzzle').hidden=true;clearInput();
+  puzzleOpen=false;activePuzzleFloor=null;destroyActivePuzzle();$('puzzle').hidden=true;clearInput();
   updateAction();
 }
 function doAction(){
   if(state!=='playing'||progress.mode!=='floor'||puzzleOpen)return;
-  const floor=progress.currentFloor,def=FLOOR_DEFS[floor],done=progress.floors[floor].complete;
-  const puzzleSpot=currentPuzzleInteraction();
-  if(!done&&def.type==='puzzle'&&puzzleSpot&&near(puzzleSpot.x,puzzleSpot.range))openPuzzle();
+  const interaction=currentPuzzleInteraction();
+  if(!interaction)return;
+  const {floor,spot}=interaction,def=FLOOR_DEFS[floor],done=progress.floors[floor].complete;
+  if(!done&&def.type==='puzzle'&&near(spot.x,spot.range))openPuzzle(floor);
 
 }
 

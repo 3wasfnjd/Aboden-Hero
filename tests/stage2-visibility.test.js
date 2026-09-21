@@ -8,9 +8,22 @@ test('Chapter 2 uses the uploaded tower background with embedded puzzle controls
   assert.doesNotMatch(js,/PUZZLE_DEVICE_SOURCES|preparePuzzleDevice|puzzleDeviceArt|drawPuzzleDevice/);
 });
 
-test('guards remain visible on all combat floors from the opening tower shot',()=>{
+test('guards on every combat floor are live from the start instead of waiting for floor arrival',()=>{
   const js=readFileSync(new URL('../src/stage2.js',import.meta.url),'utf8');
-  assert.match(js,/for\(let f=1;f<=FLOOR_COUNT;f\+\+\)/);
-  assert.match(js,/else art\.enemy\(\{\.\.\.e,vx:0,windup:0,shotFlash:0,hit:0\},time\)/);
-  assert.doesNotMatch(js,/if\(!introActive\)for\(const e of enemies\)/);
+  assert.match(js,/function tickEnemyPatrol\(dt\)/);
+  assert.match(js,/tickEnemyPatrol\(dt\);[\s\S]*if\(introActive\)/);
+  const draw=js.slice(js.indexOf('function drawWorld()'),js.indexOf('function draw(){'));
+  assert.match(draw,/for\(let f=1;f<=FLOOR_COUNT;f\+\+\)/);
+  assert.match(draw,/art\.enemy\(e,time\)/);
+  assert.doesNotMatch(draw,/\.\.\.e,vx:0,windup:0,shotFlash:0,hit:0/);
+});
+
+test('puzzle interaction follows the player physical floor, not currentFloor activation',()=>{
+  const js=readFileSync(new URL('../src/stage2.js',import.meta.url),'utf8');
+  const interaction=js.slice(js.indexOf('function currentPuzzleInteraction()'),js.indexOf('function updateAction()'));
+  assert.match(interaction,/const floor=playerFloor\(\)/);
+  assert.doesNotMatch(interaction,/progress\.currentFloor/);
+  const open=js.slice(js.indexOf('function openPuzzle('),js.indexOf('function closePuzzle()'));
+  assert.match(open,/function openPuzzle\(floor=playerFloor\(\)\)/);
+  assert.doesNotMatch(open,/progress\.currentFloor/);
 });
