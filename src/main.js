@@ -1,8 +1,10 @@
+import {lockSafariZoom} from './gesture-lock.js?v=20260921-safari-lock-1';
 import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260917-muzzle-1';
 import {stepCombat} from './combat.js?v=20260917-straight-1';
 import {WORLD_WIDTH,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260916-action-1';
 import {createArt} from './art-bg.js?v=20260917-cleanup-2';
 import {createMusic} from './music.js?v=20260917-music-1';
+lockSafariZoom();
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx);
 // Portrait canvas for mobile: the original 960x540 landscape frame is preserved
 // unscaled and anchored to the bottom via GROUND_SHIFT, so world.js/combat.js
