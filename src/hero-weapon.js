@@ -26,12 +26,13 @@ export function makeHeroBullet(muzzle,facing){
 export function enemyDisplayHeight(e){
  const slot=Math.floor(((e.min??e.x)+250)/900)%3;
  const kind=e.kind??(slot===0?'city':slot===1?'sniper':'heavy');
- // Chapter 2 guards must read clearly larger than the hero at gameplay zoom.
+ if(kind==='drone')return 82;
+ if(kind==='newguard')return 102;
  return kind==='heavy'?112:kind==='sniper'?100:96;
 }
 export function bulletTargetBounds(e){
- // Extend only projectile reception to the visible torso/head. Walking and
- // platform collision remain unchanged. Boss already has a tall body box.
+ const kind=e.kind;
+ if(kind==='drone')return {x:e.x-10,y:e.y-16,w:e.w+20,h:e.h+32};
  const height=e.maxHP?e.h:enemyDisplayHeight(e)*.9;
  return {x:e.x,y:e.y+e.h-height,w:e.w,h:height};
 }
