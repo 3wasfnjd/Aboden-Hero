@@ -13,9 +13,8 @@ test('Chapter 2 uses Stage 1 left/right button controls instead of a joystick',(
   assert.match(js,/activeTouch\('right'\)/);
 });
 
-test('Chapter 2 puzzle devices are rendered as compact wall controls',()=>{
+test('Chapter 2 leaves puzzle-device artwork out of the tower until the background is redesigned',()=>{
   const js=readFileSync(new URL('../src/stage2.js',import.meta.url),'utf8');
-  assert.match(js,/PUZZLE_DEVICE_H=96/);
-  assert.match(js,/PUZZLE_DEVICE_CROP=\.60/);
-  assert.match(js,/groundY\(floor\)-dh-28/);
+  const world=js.slice(js.indexOf('function drawWorld()'),js.indexOf('function draw(){'));
+  assert.doesNotMatch(world,/drawPuzzleDevice\(floor\)/);
 });
