@@ -39,7 +39,7 @@ test('the final fight is melee-only and exposes a boss HUD',()=>{
 
 test('boss defeat removes the boss, runs a scripted Floss victory dance, then completes Chapter 2',()=>{
   assert.match(rooftop,/FLOSS_DURATION=5\.8/);
-  assert.match(rooftop,/FLOSS_SEQUENCE=Object\.freeze/);
+  assert.match(rooftop,/FLOSS_FRAMES=Object\.freeze/);
   assert.match(rooftop,/mode='dance'/);
   assert.match(rooftop,/events\.push\('dance-start'\)/);
   assert.match(rooftop,/events\.push\('dance-finished'\)/);
@@ -93,13 +93,15 @@ test('hero victory frame keeps the full head and Chapter 2 uses Stage 1 framed U
 });
 
 
-test('Floss animation uses six programmed victory phases and locks controls while dancing',()=>{
-  assert.match(rooftop,/frame:'punch1'/);
-  assert.match(rooftop,/frame:'block'/);
-  assert.match(rooftop,/frame:'punch2'/);
-  assert.match(rooftop,/frame:'heavy'/);
-  assert.match(rooftop,/frame:'dodge'/);
-  assert.match(rooftop,/frame:'win'/);
+test('Floss animation uses the two uploaded four-frame dance sheets and locks controls while dancing',()=>{
+  assert.match(rooftop,/0525AB5D-6007-49F8-8DA2-F7BB8E22D605\.png/);
+  assert.match(rooftop,/A3B1ACCB-271B-42D1-9AC7-94E9E4CF491B\.png/);
+  assert.match(rooftop,/FLOSS_FRAME_W=543/);
+  assert.match(rooftop,/FLOSS_FRAME_H=724/);
+  assert.match(rooftop,/FLOSS_FRAMES=Object\.freeze/);
+  assert.match(rooftop,/const index=Math\.floor\(timer\*7\)%FLOSS_FRAMES\.length/);
+  assert.match(rooftop,/drawRawSprite\(ctx,asset,pose\.frame,hero\.x,FLOOR_Y\+bounce,1,205\)/);
+  assert.doesNotMatch(rooftop,/frame:'punch1'|frame:'block'|frame:'heavy'|frame:'dodge'/);
   assert.match(stage2,/scene==='rooftop-dance'/);
   assert.match(html,/زعيم \+ Floss/);
 });
