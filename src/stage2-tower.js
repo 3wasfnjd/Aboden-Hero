@@ -31,6 +31,15 @@ export const PUZZLE_X=Object.freeze({
 
 export const FLOOR_LABEL_LEFT_X=226;
 export const FLOOR_LABEL_RIGHT_X=798;
+export const FLOOR_LABEL_Y=Object.freeze([
+  null,
+  1220,
+  1015,
+  802,
+  590,
+  383,
+  190
+]);
 
 export function groundY(floor){
   const value=FLOOR_GROUNDS[floor];
@@ -49,6 +58,12 @@ export function elevatorXForFloor(floor){
 /** Floor numbers sit opposite the onward elevator, matching the supplied reference. */
 export function floorLabelX(floor){
   return floor%2===1?FLOOR_LABEL_LEFT_X:FLOOR_LABEL_RIGHT_X;
+}
+
+export function floorLabelY(floor){
+  const value=FLOOR_LABEL_Y[floor];
+  if(!Number.isFinite(value))throw new RangeError(`Unknown Chapter 2 floor label: ${floor}`);
+  return value;
 }
 
 /**
