@@ -37,11 +37,16 @@ test('the final fight is melee-only and exposes a boss HUD',()=>{
   assert.match(css,/assets\/ui\/buttons\/dash\.png/);
 });
 
-test('boss defeat leaves a playable walk to the control room before chapter completion',()=>{
-  assert.match(rooftop,/mode='after'/);
-  assert.match(rooftop,/function canEnterControlRoom\(\)/);
-  assert.match(stage2,/scene==='rooftop-after'[\s\S]{0,120}rooftop\.canEnterControlRoom\(\)/);
-  assert.match(stage2,/function beginChapterEnd\(\)/);
+test('boss defeat removes the boss, runs a scripted Floss victory dance, then completes Chapter 2',()=>{
+  assert.match(rooftop,/FLOSS_DURATION=5\.8/);
+  assert.match(rooftop,/FLOSS_SEQUENCE=Object\.freeze/);
+  assert.match(rooftop,/mode='dance'/);
+  assert.match(rooftop,/events\.push\('dance-start'\)/);
+  assert.match(rooftop,/events\.push\('dance-finished'\)/);
+  assert.match(rooftop,/bossVisible=mode!=='dance'&&mode!=='complete'/);
+  assert.match(stage2,/scene='rooftop-dance'/);
+  assert.match(stage2,/dance-finished'\)\{win\(\);return;/);
+  assert.doesNotMatch(stage2,/ادخل غرفة التحكم|beginChapterEnd|canEnterControlRoom/);
 });
 
 
@@ -85,4 +90,16 @@ test('hero victory frame keeps the full head and Chapter 2 uses Stage 1 framed U
   assert.match(css,/assets\/ui\/hud\/health\.png/);
   assert.match(css,/assets\/ui\/hud\/area\.png/);
   assert.match(css,/assets\/ui\/toast-frame\.png/);
+});
+
+
+test('Floss animation uses six programmed victory phases and locks controls while dancing',()=>{
+  assert.match(rooftop,/frame:'punch1'/);
+  assert.match(rooftop,/frame:'block'/);
+  assert.match(rooftop,/frame:'punch2'/);
+  assert.match(rooftop,/frame:'heavy'/);
+  assert.match(rooftop,/frame:'dodge'/);
+  assert.match(rooftop,/frame:'win'/);
+  assert.match(stage2,/scene==='rooftop-dance'/);
+  assert.match(html,/زعيم \+ Floss/);
 });
