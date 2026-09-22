@@ -217,7 +217,7 @@ export function createArt(ctx){
  }
 
  function drawNewGuard(e,time){
-  const center=e.x+e.w/2,feet=e.y+e.h,facing=enemyFacing(e),displayH=enemyDisplayHeight(e);
+  const center=e.x+e.w/2,feet=e.y+e.h,facing=enemyFacing(e),displayH=enemyDisplayHeight(e)*.92;
   let state='idle',index=0;
   if(e.hp<=0){
    state='defeat';
