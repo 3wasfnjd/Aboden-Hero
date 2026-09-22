@@ -39,7 +39,7 @@ test('the final fight is melee-only and exposes a boss HUD',()=>{
 
 test('boss defeat removes the boss, runs a scripted Floss victory dance, then completes Chapter 2',()=>{
   assert.match(rooftop,/FLOSS_DURATION=5\.8/);
-  assert.match(rooftop,/FLOSS_FRAMES=Object\.freeze/);
+  assert.match(rooftop,/FLOSS_POSES=Object\.freeze/);
   assert.match(rooftop,/mode='dance'/);
   assert.match(rooftop,/events\.push\('dance-start'\)/);
   assert.match(rooftop,/events\.push\('dance-finished'\)/);
@@ -55,7 +55,7 @@ test('rooftop ladder stays on the left and combat walking uses a real multi-fram
   assert.match(rooftop,/77A34199-B559-4A99-8683-92889A35586F\.png/);
   assert.match(rooftop,/HERO_WALK_URL='\.\/assets\/aboden-hero-movement\.png'/);
   assert.match(rooftop,/HERO_WALK_FRAMES=Object\.freeze/);
-  assert.match(rooftop,/drawRawSprite\(ctx,heroWalkAsset,frame,hero\.x,FLOOR_Y,facing,188\)/);
+  assert.match(rooftop,/drawRawSprite\(ctx,heroWalkAsset,frame,hero\.x,FLOOR_Y,facing,frame\[3\]\*walkScale\)/);
 });
 
 test('rooftop boss difficulty is reduced and hero melee damage is stronger',()=>{
