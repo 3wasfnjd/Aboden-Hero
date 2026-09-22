@@ -120,3 +120,8 @@ test('tower hero locomotion and action poses keep one 82px reference scale',()=>
   assert.doesNotMatch(art,/state='hurt';displayH=80/);
   assert.doesNotMatch(art,/state='shoot';displayH=83/);
 });
+
+
+test('shield guard visual scale is reduced without changing combat hitboxes',()=>{
+  assert.match(art,/displayH=enemyDisplayHeight\(e\)\*\.92/);
+});
