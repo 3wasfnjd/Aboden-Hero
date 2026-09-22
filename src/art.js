@@ -27,6 +27,10 @@ const HERO_POSE_SETS=Object.freeze({
   ['./assets/stage2/rooftop/CB6B8417-8564-4F27-BFEB-8DB12889CF23.png',[232,146,1100,1116]]
  ],
  hurt:[['./assets/stage2/rooftop/81AF200A-886A-4CA2-A2DF-8F7E0FD7A6CF.png',[185,50,1121,1201]]],
+ dash:[
+  ['./assets/stage2/rooftop/1CF31F35-DC61-4CA6-B284-9362DDCEE75D.png',[183,150,1174,1109]],
+  ['./assets/stage2/rooftop/62B88E5B-ECCA-4FB3-9DB8-DE4A70143F91.png',[239,239,1053,1085]]
+ ],
  climb:[['./assets/stage2/rooftop/77A34199-B559-4A99-8683-92889A35586F.png',[303,29,1026,1218]]],
  meleeIdle:[['./assets/stage2/rooftop/28C8741E-FF4D-4642-9B2D-F77236FFA97F.png',[226,44,1083,1224]]],
  punch1:[['./assets/stage2/rooftop/3E73BF27-069C-4E22-A80D-737550CFA7B9.png',[28,84,1241,1206]]],
@@ -149,11 +153,15 @@ export function createArt(ctx){
   ctx.beginPath();ctx.ellipse(p.x+p.w/2,p.y+p.h+2,22,4,0,0,Math.PI*2);ctx.fill();
   ctx.restore();
 
-  // The uploaded Run/Jump/Fall/Dash files are single key poses, not animation
-  // sheets. Using them while the physics body moves causes visible skating.
-  // Keep the HQ uploaded art for matching action poses, but use the repository's
-  // real multi-frame movement sheet for locomotion.
-  if(p.dashTime>0){baseHero(p,time);return;}
+  // Run/Jump/Fall use the real multi-frame movement sheet. The two uploaded
+  // dash key poses are used together as a short two-frame dash animation.
+  if(p.dashTime>0){
+    const set=heroPoseAssets.dash;
+    const index=p.dashTime>.085?0:1;
+    const pose=set[index]??set[0];
+    if(drawBoundedImage(ctx,pose.asset,pose.bounds,p.x+p.w/2,p.y+p.h,p.facing,82))return;
+    baseHero(p,time);return;
+  }
   if(p.shot<=.02&&p.invulnerable<=1.05&&!p.grounded&&movementAsset.ready){
     const frames=p.vy<60?MOVE_FRAMES.jump:MOVE_FRAMES.fall;
     const i=p.vy<60?Math.min(frames.length-1,p.vy<-260?1:2):Math.floor(time*7)%frames.length;
@@ -164,13 +172,14 @@ export function createArt(ctx){
   if(p.shot<=.02&&p.invulnerable<=1.05&&p.grounded&&Math.abs(p.vx)>28&&movementAsset.ready){
     const speed=Math.min(15,9+Math.abs(p.vx)/55);
     const i=Math.floor(time*speed)%MOVE_FRAMES.run.length;
-    drawSprite(ctx,movementAsset.img,MOVE_FRAMES.run[i],p.x+p.w/2,p.y+p.h,p.facing,82);
+    const frame=MOVE_FRAMES.run[i],moveScale=82/307;
+    drawSprite(ctx,movementAsset.img,frame,p.x+p.w/2,p.y+p.h,p.facing,frame[3]*moveScale);
     return;
   }
 
   let state='idle',displayH=82;
-  if(p.invulnerable>1.05){state='hurt';displayH=80;}
-  else if(p.shot>.02){state='shoot';displayH=83;}
+  if(p.invulnerable>1.05)state='hurt';
+  else if(p.shot>.02)state='shoot';
 
   const set=heroPoseAssets[state]??heroPoseAssets.idle;
   const index=state==='shoot'
