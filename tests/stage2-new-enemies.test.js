@@ -51,7 +51,7 @@ test('new guard shield blocks frontal bullets and accepts rear hits',()=>{
   assert.equal(hitsShieldFromFront(leftFacing,-620),false);
   assert.match(stage2,/hitsShieldFromFront\(e,b\.vx\)/);
   assert.match(stage2,/e\.shieldFlash=\.18/);
-  assert.match(art,/type==='newguard'&&e\.shieldFlash>0/);
+  assert.match(art,/else if\(e\.shieldFlash>0\)\{\n   state='block'/);
 });
 
 
