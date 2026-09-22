@@ -1,4 +1,4 @@
-import {BOSS_FRAMES,CITY_FRAMES,HEAVY_FRAMES,SNIPER_FRAMES,enemyKind,enemyFacing,enemyAttackPose,fallbackEnemyMuzzle} from './enemy-weapon.js?v=20260921-shield-guard-2';
+import {BOSS_FRAMES,CITY_FRAMES,HEAVY_FRAMES,SNIPER_FRAMES,enemyKind,enemyFacing,enemyAttackPose,fallbackEnemyMuzzle} from './enemy-weapon.js?v=20260922-hq-sprites-1';
 import {enemyDisplayHeight} from './hero-weapon.js?v=20260921-stage2-new-enemies-1';
 import {createArt as createBaseArt} from './art-base.js?v=20260921-cleanup-1';
 
@@ -7,23 +7,33 @@ const CITY_URL='./assets/City_Guard.png';
 const HEAVY_URL='./assets/Heavy_Guard.png';
 const SNIPER_URL='./assets/Sniper_Rooftop_Guard.png';
 
-const HERO_POSE_URLS=Object.freeze({
- idle:'./assets/stage2/rooftop/E1490764-AF8C-4DE7-8182-3895BB2E1BDE.png',
- run:'./assets/stage2/rooftop/FCECFF5E-A6A3-44E3-A913-612E7923F975.png',
- jump:'./assets/stage2/rooftop/3F996481-7410-40C1-9A5C-66C5374F97CC.png',
- fall:'./assets/stage2/rooftop/D6AF22F9-E5AF-4765-813F-DC4A115B2A2F.png',
- shoot:'./assets/stage2/rooftop/07D8F9F6-4DE1-48F5-A2AB-58E5A204DE56.png',
- dash:'./assets/stage2/rooftop/1CF31F35-DC61-4CA6-B284-9362DDCEE75D.png',
- hurt:'./assets/stage2/rooftop/81AF200A-886A-4CA2-A2DF-8F7E0FD7A6CF.png'
-});
-const HERO_POSE_BOUNDS=Object.freeze({
- idle:[97,57,1210,1254],
- run:[97,70,1210,1206],
- jump:[89,0,1210,1254],
- fall:[69,9,1210,1231],
- shoot:[63,21,1214,1234],
- dash:[0,18,1242,1254],
- hurt:[73,48,1214,1254]
+const HERO_POSE_SETS=Object.freeze({
+ idle:[
+  ['./assets/stage2/rooftop/A683D766-579C-4F78-9DF1-425E03CAACED.png',[111,51,1134,1212]],
+  ['./assets/stage2/rooftop/50B3B697-BC29-4C39-8278-49C7AE643BC7.png',[96,47,1210,1182]],
+  ['./assets/stage2/rooftop/E1490764-AF8C-4DE7-8182-3895BB2E1BDE.png',[97,57,1210,1254]],
+  ['./assets/stage2/rooftop/EDFA0F7E-8277-4744-A1D8-83A77E114397.png',[258,84,1057,1238]]
+ ],
+ run:[['./assets/stage2/rooftop/FCECFF5E-A6A3-44E3-A913-612E7923F975.png',[97,70,1210,1206]]],
+ jump:[['./assets/stage2/rooftop/3F996481-7410-40C1-9A5C-66C5374F97CC.png',[89,0,1210,1254]]],
+ fall:[['./assets/stage2/rooftop/D6AF22F9-E5AF-4765-813F-DC4A115B2A2F.png',[69,9,1210,1231]]],
+ shoot:[
+  ['./assets/stage2/rooftop/07D8F9F6-4DE1-48F5-A2AB-58E5A204DE56.png',[63,21,1214,1234]],
+  ['./assets/stage2/rooftop/ABC893E7-6718-4006-8568-4B74BABAFDC1.png',[69,21,1224,1235]],
+  ['./assets/stage2/rooftop/CB6B8417-8564-4F27-BFEB-8DB12889CF23.png',[89,53,1224,1222]]
+ ],
+ dash:[
+  ['./assets/stage2/rooftop/1CF31F35-DC61-4CA6-B284-9362DDCEE75D.png',[0,18,1242,1254]],
+  ['./assets/stage2/rooftop/62B88E5B-ECCA-4FB3-9DB8-DE4A70143F91.png',[89,21,1210,1226]]
+ ],
+ hurt:[['./assets/stage2/rooftop/81AF200A-886A-4CA2-A2DF-8F7E0FD7A6CF.png',[73,48,1214,1254]]],
+ climb:[['./assets/stage2/rooftop/77A34199-B559-4A99-8683-92889A35586F.png',[0,26,1059,1220]]],
+ meleeIdle:[['./assets/stage2/rooftop/28C8741E-FF4D-4642-9B2D-F77236FFA97F.png',[91,41,1218,1254]]],
+ punch1:[['./assets/stage2/rooftop/3E73BF27-069C-4E22-A80D-737550CFA7B9.png',[0,31,1253,1254]]],
+ punch2:[['./assets/stage2/rooftop/A95ABCE5-11A8-4AA5-8FCE-5F18B016F5E6.png',[0,21,1236,1254]]],
+ heavy:[['./assets/stage2/rooftop/159DD9FD-ADB2-448C-98FD-CD14991E4FE2.png',[0,9,1208,1244]]],
+ block:[['./assets/stage2/rooftop/A7CFFEBC-EE18-4086-9F82-9B2840FB5B08.png',[39,21,1234,1238]]],
+ dodge:[['./assets/stage2/rooftop/452DCE10-755B-4E2E-8D53-7B6C3E5790B8.png',[0,21,1247,1229]]]
 });
 
 const NEW_GUARD_URLS=Object.freeze({
@@ -67,7 +77,12 @@ const bossAsset=loadImage(BOSS_URL);
 const cityAsset=loadImage(CITY_URL);
 const heavyAsset=loadImage(HEAVY_URL);
 const sniperAsset=loadImage(SNIPER_URL);
-const heroPoseAssets=Object.fromEntries(Object.entries(HERO_POSE_URLS).map(([k,url])=>[k,loadImage(url)]));
+const heroPoseAssets=Object.fromEntries(
+ Object.entries(HERO_POSE_SETS).map(([k,entries])=>[
+  k,
+  entries.map(([url,bounds])=>({asset:loadImage(url),bounds}))
+ ])
+);
 const newGuardAssets=Object.fromEntries(Object.entries(NEW_GUARD_URLS).map(([k,url])=>[k,loadImage(url)]));
 const droneIdleAsset=loadImage(DRONE_IDLE_URL);
 const droneAttackAsset=loadImage(DRONE_ATTACK_URL);
@@ -140,8 +155,14 @@ export function createArt(ctx){
   else if(!p.grounded){state=p.vy<60?'jump':'fall';displayH=80;}
   else if(Math.abs(p.vx)>28){state='run';displayH=82;}
 
-  const asset=heroPoseAssets[state],box=HERO_POSE_BOUNDS[state];
-  if(drawBoundedImage(ctx,asset,box,p.x+p.w/2,p.y+p.h,p.facing,displayH))return;
+  const set=heroPoseAssets[state]??heroPoseAssets.idle;
+  let index=0;
+  if(state==='idle')index=Math.floor(time*3.2)%set.length;
+  else if(state==='shoot')index=Math.min(set.length-1,Math.floor(Math.max(0,.14-p.shot)/.14*set.length));
+  else if(state==='dash')index=Math.floor(time*10)%set.length;
+  const pose=set[index]??set[0];
+  const bob=state==='run'?Math.sin(time*15)*1.3:0;
+  if(drawBoundedImage(ctx,pose.asset,pose.bounds,p.x+p.w/2,p.y+p.h+bob,p.facing,displayH))return;
   base.hero(p,time);
  }
 
