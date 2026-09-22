@@ -103,3 +103,20 @@ test('tower hero HQ poses use measured alpha crop bounds',()=>{
   assert.match(art,/\[185,50,1121,1201\]/);
   assert.match(art,/const frame=frames\[i\],moveScale=82\/307/);
 });
+
+
+test('tower hero dash uses both uploaded poses at the same 82px visual scale',()=>{
+  assert.match(art,/1CF31F35-DC61-4CA6-B284-9362DDCEE75D\.png/);
+  assert.match(art,/62B88E5B-ECCA-4FB3-9DB8-DE4A70143F91\.png/);
+  assert.match(art,/\[183,150,1174,1109\]/);
+  assert.match(art,/\[239,239,1053,1085\]/);
+  assert.match(art,/const index=p\.dashTime>\.085\?0:1/);
+  assert.match(art,/drawBoundedImage\(ctx,pose\.asset,pose\.bounds,p\.x\+p\.w\/2,p\.y\+p\.h,p\.facing,82\)/);
+});
+
+test('tower hero locomotion and action poses keep one 82px reference scale',()=>{
+  assert.match(art,/const frame=MOVE_FRAMES\.run\[i\],moveScale=82\/307/);
+  assert.match(art,/let state='idle',displayH=82/);
+  assert.doesNotMatch(art,/state='hurt';displayH=80/);
+  assert.doesNotMatch(art,/state='shoot';displayH=83/);
+});
