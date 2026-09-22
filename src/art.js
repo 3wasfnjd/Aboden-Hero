@@ -16,24 +16,24 @@ const MOVE_FRAMES=Object.freeze({
 
 const HERO_POSE_SETS=Object.freeze({
  idle:[
-  ['./assets/stage2/rooftop/A683D766-579C-4F78-9DF1-425E03CAACED.png',[111,51,1134,1212]],
-  ['./assets/stage2/rooftop/50B3B697-BC29-4C39-8278-49C7AE643BC7.png',[96,47,1210,1182]],
-  ['./assets/stage2/rooftop/E1490764-AF8C-4DE7-8182-3895BB2E1BDE.png',[97,57,1210,1254]],
-  ['./assets/stage2/rooftop/EDFA0F7E-8277-4744-A1D8-83A77E114397.png',[258,84,1057,1238]]
+  ['./assets/stage2/rooftop/A683D766-579C-4F78-9DF1-425E03CAACED.png',[365,179,911,1119]],
+  ['./assets/stage2/rooftop/50B3B697-BC29-4C39-8278-49C7AE643BC7.png',[336,148,958,1173]],
+  ['./assets/stage2/rooftop/E1490764-AF8C-4DE7-8182-3895BB2E1BDE.png',[333,81,965,1177]],
+  ['./assets/stage2/rooftop/EDFA0F7E-8277-4744-A1D8-83A77E114397.png',[341,115,960,1134]]
  ],
  shoot:[
-  ['./assets/stage2/rooftop/07D8F9F6-4DE1-48F5-A2AB-58E5A204DE56.png',[63,21,1214,1234]],
-  ['./assets/stage2/rooftop/ABC893E7-6718-4006-8568-4B74BABAFDC1.png',[69,21,1224,1235]],
-  ['./assets/stage2/rooftop/CB6B8417-8564-4F27-BFEB-8DB12889CF23.png',[89,53,1224,1222]]
+  ['./assets/stage2/rooftop/07D8F9F6-4DE1-48F5-A2AB-58E5A204DE56.png',[234,195,1135,1111]],
+  ['./assets/stage2/rooftop/ABC893E7-6718-4006-8568-4B74BABAFDC1.png',[220,151,1098,1142]],
+  ['./assets/stage2/rooftop/CB6B8417-8564-4F27-BFEB-8DB12889CF23.png',[232,146,1100,1116]]
  ],
- hurt:[['./assets/stage2/rooftop/81AF200A-886A-4CA2-A2DF-8F7E0FD7A6CF.png',[73,48,1214,1254]]],
- climb:[['./assets/stage2/rooftop/77A34199-B559-4A99-8683-92889A35586F.png',[0,26,1059,1220]]],
- meleeIdle:[['./assets/stage2/rooftop/28C8741E-FF4D-4642-9B2D-F77236FFA97F.png',[91,41,1218,1254]]],
- punch1:[['./assets/stage2/rooftop/3E73BF27-069C-4E22-A80D-737550CFA7B9.png',[0,31,1253,1254]]],
- punch2:[['./assets/stage2/rooftop/A95ABCE5-11A8-4AA5-8FCE-5F18B016F5E6.png',[0,21,1236,1254]]],
- heavy:[['./assets/stage2/rooftop/159DD9FD-ADB2-448C-98FD-CD14991E4FE2.png',[0,9,1208,1244]]],
- block:[['./assets/stage2/rooftop/A7CFFEBC-EE18-4086-9F82-9B2840FB5B08.png',[39,21,1234,1238]]],
- dodge:[['./assets/stage2/rooftop/452DCE10-755B-4E2E-8D53-7B6C3E5790B8.png',[0,21,1247,1229]]]
+ hurt:[['./assets/stage2/rooftop/81AF200A-886A-4CA2-A2DF-8F7E0FD7A6CF.png',[185,50,1121,1201]]],
+ climb:[['./assets/stage2/rooftop/77A34199-B559-4A99-8683-92889A35586F.png',[303,29,1026,1218]]],
+ meleeIdle:[['./assets/stage2/rooftop/28C8741E-FF4D-4642-9B2D-F77236FFA97F.png',[226,44,1083,1224]]],
+ punch1:[['./assets/stage2/rooftop/3E73BF27-069C-4E22-A80D-737550CFA7B9.png',[28,84,1241,1206]]],
+ punch2:[['./assets/stage2/rooftop/A95ABCE5-11A8-4AA5-8FCE-5F18B016F5E6.png',[54,98,1232,1185]]],
+ heavy:[['./assets/stage2/rooftop/159DD9FD-ADB2-448C-98FD-CD14991E4FE2.png',[123,12,1191,1241]]],
+ block:[['./assets/stage2/rooftop/A7CFFEBC-EE18-4086-9F82-9B2840FB5B08.png',[165,27,1133,1233]]],
+ dodge:[['./assets/stage2/rooftop/452DCE10-755B-4E2E-8D53-7B6C3E5790B8.png',[15,291,1244,1026]]]
 });
 
 const NEW_GUARD_URLS=Object.freeze({
@@ -46,13 +46,13 @@ const NEW_GUARD_URLS=Object.freeze({
  defeat:'./assets/stage2/rooftop/799F6394-1C8A-431B-9BCD-12EE63BAFE65.png'
 });
 const NEW_GUARD_ANIMS=Object.freeze({
- idle:{refH:680,boxes:[[0,3,537,690],[546,7,1072,692],[1095,23,1629,706],[1629,15,2120,708]]},
- walk:{refH:680,boxes:[[0,55,724,685],[724,140,1448,724],[1448,41,2132,702]]},
- aim:{refH:680,boxes:[[57,101,676,685],[725,101,1408,706],[1497,47,2120,708]]},
- fire:{refH:680,boxes:[[25,2,543,690],[543,31,1086,692],[1086,23,1628,697],[1629,27,2172,678]]},
- block:{refH:820,boxes:[[19,147,887,869],[887,35,1659,855]]},
- hurt:{refH:680,boxes:[[23,21,706,708],[725,55,1400,708],[1463,98,2126,724]]},
- defeat:{refH:596,boxes:[[10,38,272,634],[272,116,543,634],[543,55,814,636],[814,118,1086,668],[1086,223,1358,672],[1358,246,1629,674],[1629,264,1900,680],[1900,287,2171,691]]}
+ idle:{refH:514,boxes:[[93,162,495,676],[634,162,1035,675],[1172,162,1573,675],[1705,162,2108,676]]},
+ walk:{refH:520,boxes:[[74,136,724,647],[724,143,1448,655],[1448,115,2117,655]]},
+ aim:{refH:543,boxes:[[142,104,652,647],[846,103,1364,645],[1567,103,2088,647]]},
+ fire:{refH:453,boxes:[[57,155,543,608],[543,158,1086,609],[1086,157,1627,609],[1645,157,2169,610]]},
+ block:{refH:638,boxes:[[281,148,810,784],[987,143,1494,783]]},
+ hurt:{refH:523,boxes:[[84,110,610,633],[803,115,1360,633],[1524,100,2123,633]]},
+ defeat:{refH:330,boxes:[[12,220,272,542],[272,208,543,544],[543,225,814,548],[814,332,1086,551],[1086,365,1358,555],[1358,401,1629,565],[1629,417,1900,567],[1900,446,2159,575]]}
 });
 
 const DRONE_IDLE_URL='./assets/stage2/rooftop/CE321790-436E-4BF6-BF00-23D8E11F8635.png';
@@ -157,7 +157,8 @@ export function createArt(ctx){
   if(p.shot<=.02&&p.invulnerable<=1.05&&!p.grounded&&movementAsset.ready){
     const frames=p.vy<60?MOVE_FRAMES.jump:MOVE_FRAMES.fall;
     const i=p.vy<60?Math.min(frames.length-1,p.vy<-260?1:2):Math.floor(time*7)%frames.length;
-    drawSprite(ctx,movementAsset.img,frames[i],p.x+p.w/2,p.y+p.h,p.facing,p.vy<60?79:76);
+    const frame=frames[i],moveScale=82/307;
+    drawSprite(ctx,movementAsset.img,frame,p.x+p.w/2,p.y+p.h,p.facing,frame[3]*moveScale);
     return;
   }
   if(p.shot<=.02&&p.invulnerable<=1.05&&p.grounded&&Math.abs(p.vx)>28&&movementAsset.ready){
