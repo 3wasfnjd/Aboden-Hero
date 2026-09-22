@@ -63,20 +63,35 @@ test('new shield guard uses measured per-action frame boxes and a visible defeat
 });
 
 
-test('tower hero uses every uploaded high quality pose group',()=>{
+test('tower hero uses real multi-frame locomotion and HQ uploaded action poses',()=>{
+  assert.match(art,/MOVEMENT_URL='\.\/assets\/aboden-hero-movement\.png'/);
+  assert.match(art,/MOVE_FRAMES=Object\.freeze/);
+  assert.match(art,/MOVE_FRAMES\.run\[i\]/);
+  assert.match(art,/MOVE_FRAMES\.jump/);
+  assert.match(art,/MOVE_FRAMES\.fall/);
   for(const id of [
     'A683D766-579C-4F78-9DF1-425E03CAACED',
     '50B3B697-BC29-4C39-8278-49C7AE643BC7',
     'E1490764-AF8C-4DE7-8182-3895BB2E1BDE',
     'EDFA0F7E-8277-4744-A1D8-83A77E114397',
-    'FCECFF5E-A6A3-44E3-A913-612E7923F975',
-    '3F996481-7410-40C1-9A5C-66C5374F97CC',
-    'D6AF22F9-E5AF-4765-813F-DC4A115B2A2F',
     '07D8F9F6-4DE1-48F5-A2AB-58E5A204DE56',
     'ABC893E7-6718-4006-8568-4B74BABAFDC1',
     'CB6B8417-8564-4F27-BFEB-8DB12889CF23',
-    '1CF31F35-DC61-4CA6-B284-9362DDCEE75D',
-    '62B88E5B-ECCA-4FB3-9DB8-DE4A70143F91',
     '81AF200A-886A-4CA2-A2DF-8F7E0FD7A6CF'
   ])assert.match(art,new RegExp(id));
+  assert.doesNotMatch(art,/run:\[\['\.\/assets\/stage2\/rooftop\/FCEC/);
+  assert.doesNotMatch(art,/jump:\[\['\.\/assets\/stage2\/rooftop\/3F996/);
+  assert.doesNotMatch(art,/fall:\[\['\.\/assets\/stage2\/rooftop\/D6AF/);
+});
+
+
+test('shield guard keeps one body scale and freezes during combat poses',()=>{
+  assert.match(art,/idle:\{refH:680/);
+  assert.match(art,/walk:\{refH:680/);
+  assert.match(art,/aim:\{refH:680/);
+  assert.match(art,/fire:\{refH:680/);
+  assert.match(art,/hurt:\{refH:680/);
+  assert.match(art,/defeat:\{refH:680/);
+  assert.match(stage2,/const locked=e\.windup>0\|\|e\.shotFlash>0\|\|e\.hit>0\|\|\(e\.shieldFlash\?\?0\)>0/);
+  assert.match(stage2,/if\(!locked\)e\.x\+=e\.vx\*dt/);
 });
