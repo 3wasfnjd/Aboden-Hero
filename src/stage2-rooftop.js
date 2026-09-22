@@ -16,15 +16,14 @@ const HERO_WALK_FRAMES=Object.freeze([
 ]);
 
 const HERO_MELEE_POSES=Object.freeze({
- climb:['./assets/stage2/rooftop/77A34199-B559-4A99-8683-92889A35586F.png',[0,26,1059,1220]],
- idle:['./assets/stage2/rooftop/28C8741E-FF4D-4642-9B2D-F77236FFA97F.png',[91,41,1218,1254]],
- walk:['./assets/stage2/rooftop/FCECFF5E-A6A3-44E3-A913-612E7923F975.png',[97,70,1210,1206]],
- punch1:['./assets/stage2/rooftop/3E73BF27-069C-4E22-A80D-737550CFA7B9.png',[0,31,1253,1254]],
- punch2:['./assets/stage2/rooftop/A95ABCE5-11A8-4AA5-8FCE-5F18B016F5E6.png',[0,21,1236,1254]],
- heavy:['./assets/stage2/rooftop/159DD9FD-ADB2-448C-98FD-CD14991E4FE2.png',[0,9,1208,1244]],
- block:['./assets/stage2/rooftop/A7CFFEBC-EE18-4086-9F82-9B2840FB5B08.png',[39,21,1234,1238]],
- dodge:['./assets/stage2/rooftop/452DCE10-755B-4E2E-8D53-7B6C3E5790B8.png',[0,21,1247,1229]],
- hurt:['./assets/stage2/rooftop/81AF200A-886A-4CA2-A2DF-8F7E0FD7A6CF.png',[73,48,1214,1254]]
+ climb:['./assets/stage2/rooftop/77A34199-B559-4A99-8683-92889A35586F.png',[303,29,1026,1218]],
+ idle:['./assets/stage2/rooftop/28C8741E-FF4D-4642-9B2D-F77236FFA97F.png',[226,44,1083,1224]],
+ punch1:['./assets/stage2/rooftop/3E73BF27-069C-4E22-A80D-737550CFA7B9.png',[28,84,1241,1206]],
+ punch2:['./assets/stage2/rooftop/A95ABCE5-11A8-4AA5-8FCE-5F18B016F5E6.png',[54,98,1232,1185]],
+ heavy:['./assets/stage2/rooftop/159DD9FD-ADB2-448C-98FD-CD14991E4FE2.png',[123,12,1191,1241]],
+ block:['./assets/stage2/rooftop/A7CFFEBC-EE18-4086-9F82-9B2840FB5B08.png',[165,27,1133,1233]],
+ dodge:['./assets/stage2/rooftop/452DCE10-755B-4E2E-8D53-7B6C3E5790B8.png',[15,291,1244,1026]],
+ hurt:['./assets/stage2/rooftop/81AF200A-886A-4CA2-A2DF-8F7E0FD7A6CF.png',[185,50,1121,1201]]
 });
 
 const BOSS_URLS=Object.freeze({
@@ -37,33 +36,25 @@ const BOSS_URLS=Object.freeze({
  block:'./assets/stage2/rooftop/C935CA0B-5C44-45C4-A29B-1BBA10D4BDA1.png',
  attack2:'./assets/stage2/rooftop/EC12F7F5-4E9E-42B5-B806-48372F81AA5C.png'
 });
-const BOSS_REFERENCE_H=680;
 const BOSS_ANIMS=Object.freeze({
- defeat:{refH:BOSS_REFERENCE_H,boxes:[[0,31,362,724],[362,55,724,724],[724,99,1086,724],[1086,181,1448,708],[1448,244,1810,688],[1810,343,2162,700]]},
- walk:{refH:BOSS_REFERENCE_H,boxes:[[17,17,362,668],[362,25,724,685],[724,19,1086,646],[1086,19,1448,680],[1448,23,1810,646],[1810,39,2172,690]]},
- idle:{refH:BOSS_REFERENCE_H,boxes:[[27,36,519,690],[563,80,1086,690],[1086,77,1591,690],[1674,77,2115,692]]},
- hurt:{refH:BOSS_REFERENCE_H,boxes:[[25,38,724,690],[724,79,1442,692],[1471,47,2148,694]]},
- heavy:{refH:BOSS_REFERENCE_H,boxes:[[13,83,434,633],[434,39,869,704],[869,112,1303,724],[1303,39,1738,647],[1738,101,2158,656]]},
- attack1:{refH:BOSS_REFERENCE_H,boxes:[[45,32,543,666],[543,55,1084,696],[1100,13,1629,705],[1629,146,2154,704]]},
- block:{refH:BOSS_REFERENCE_H,boxes:[[25,23,721,694],[733,83,1401,706],[1481,79,2127,694]]},
- attack2:{refH:BOSS_REFERENCE_H,boxes:[[12,148,543,692],[543,41,1086,706],[1086,45,1629,702],[1629,49,2161,716]]}
+ defeat:{refH:397,boxes:[[8,186,362,583],[362,209,724,583],[724,265,1086,583],[1086,337,1448,580],[1448,381,1810,587],[1810,466,2160,583]]},
+ walk:{refH:485,boxes:[[22,161,362,637],[362,154,724,640],[724,154,1086,638],[1086,154,1448,640],[1448,154,1810,640],[1810,154,2172,640]]},
+ idle:{refH:600,boxes:[[44,83,517,681],[565,83,1086,681],[1086,79,1586,681],[1677,79,2113,681]]},
+ hurt:{refH:639,boxes:[[104,43,724,682],[724,142,1421,682],[1523,114,2112,682]]},
+ heavy:{refH:531,boxes:[[16,320,434,631],[434,100,869,631],[869,220,1303,631],[1303,215,1738,645],[1738,267,2156,634]]},
+ attack1:{refH:488,boxes:[[50,146,543,638],[543,151,1072,635],[1103,152,1629,637],[1629,150,2149,640]]},
+ block:{refH:608,boxes:[[50,80,670,690],[786,86,1399,692],[1496,83,2125,692]]},
+ attack2:{refH:466,boxes:[[15,153,543,620],[543,162,1086,621],[1086,167,1629,621],[1629,159,2159,625]]}
 });
 
 const LADDER_BASE={w:1024,h:1536};
 const LADDER_FRAME=[276,0,472,1524];
 const BOSS_VISUAL_H=232;
 const FLOSS_DURATION=5.8;
-const FLOSS_FRAME_W=543;
-const FLOSS_FRAME_H=724;
-const FLOSS_FRAMES=Object.freeze([
-  Object.freeze({sheet:0,frame:[0,0,FLOSS_FRAME_W,FLOSS_FRAME_H]}),
-  Object.freeze({sheet:0,frame:[FLOSS_FRAME_W,0,FLOSS_FRAME_W,FLOSS_FRAME_H]}),
-  Object.freeze({sheet:0,frame:[0,FLOSS_FRAME_H,FLOSS_FRAME_W,FLOSS_FRAME_H]}),
-  Object.freeze({sheet:0,frame:[FLOSS_FRAME_W,FLOSS_FRAME_H,FLOSS_FRAME_W,FLOSS_FRAME_H]}),
-  Object.freeze({sheet:1,frame:[0,0,FLOSS_FRAME_W,FLOSS_FRAME_H]}),
-  Object.freeze({sheet:1,frame:[FLOSS_FRAME_W,0,FLOSS_FRAME_W,FLOSS_FRAME_H]}),
-  Object.freeze({sheet:1,frame:[0,FLOSS_FRAME_H,FLOSS_FRAME_W,FLOSS_FRAME_H]}),
-  Object.freeze({sheet:1,frame:[FLOSS_FRAME_W,FLOSS_FRAME_H,FLOSS_FRAME_W,FLOSS_FRAME_H]})
+const FLOSS_VISUAL_H=188;
+const FLOSS_POSES=Object.freeze([
+  Object.freeze({sheet:0,bounds:[176,44,976,1404]}),
+  Object.freeze({sheet:1,bounds:[264,20,1048,1420]})
 ]);
 
 function loadAsset(url,chroma=false){
@@ -106,6 +97,7 @@ const flossAssets=[
   loadAsset(FLOSS_A_URL,false),
   loadAsset(FLOSS_B_URL,false)
 ];
+const flossPoses=FLOSS_POSES.map(p=>({asset:flossAssets[p.sheet],bounds:p.bounds}));
 
 function scaledFrame(frame,asset,base){
   const source=asset.source;
@@ -409,11 +401,8 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
   }
 
   function drawVictoryDance(){
-    const index=Math.floor(timer*7)%FLOSS_FRAMES.length;
-    const pose=FLOSS_FRAMES[index];
-    const asset=flossAssets[pose.sheet];
-    const bounce=Math.sin(timer*Math.PI*7)*1.5;
-    return drawRawSprite(ctx,asset,pose.frame,hero.x,FLOOR_Y+bounce,1,205);
+    const index=Math.floor(timer*5.5)%flossPoses.length;
+    return drawBoundedAsset(ctx,flossPoses[index],hero.x,FLOOR_Y,1,FLOSS_VISUAL_H);
   }
 
   function drawHeroSprite(time,facing){
@@ -425,11 +414,13 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
     else if(hero.attack)state=hero.attack;
     else if(hero.walk){
       const frame=HERO_WALK_FRAMES[Math.floor(time*7.5)%HERO_WALK_FRAMES.length];
-      if(drawRawSprite(ctx,heroWalkAsset,frame,hero.x,FLOOR_Y,facing,188))return true;
+      const walkScale=188/307;
+      if(drawRawSprite(ctx,heroWalkAsset,frame,hero.x,FLOOR_Y,facing,frame[3]*walkScale))return true;
       state='walk';
     }
     const entry=heroMeleeAssets[state]??heroMeleeAssets.idle;
-    return drawBoundedAsset(ctx,entry,hero.x,FLOOR_Y,facing,188);
+    const visualH=state==='dodge'?118:188;
+    return drawBoundedAsset(ctx,entry,hero.x,FLOOR_Y,facing,visualH);
   }
 
   function drawBossSprite(time,facing){
