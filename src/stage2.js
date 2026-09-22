@@ -1,9 +1,9 @@
 import {lockSafariZoom} from './gesture-lock.js?v=20260921-safari-lock-1';
 import {clamp,overlaps,createPlayer,stepPlayer} from './world.js?v=20260916-action-1';
 import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260921-stage2-new-enemies-1';
-import {hitsShieldFromFront} from './enemy-weapon.js?v=20260921-shield-guard-2';
+import {hitsShieldFromFront} from './enemy-weapon.js?v=20260922-hq-sprites-1';
 import {stepCombat} from './combat.js?v=20260921-stage2-new-enemies-1';
-import {createArt} from './art.js?v=20260921-ui-crop-fix-1';
+import {createArt} from './art.js?v=20260922-hq-sprites-1';
 import {createMusic} from './music.js?v=20260917-music-1';
 import {createMatchingPuzzle} from '../puzzle-kit/matching/matching.js?v=20260920-stage2-embed-1';
 import {createWiringPuzzle} from '../puzzle-kit/wiring/wiring.js?v=20260919-stage2-embed-2';
@@ -19,7 +19,7 @@ import {
 } from './stage2-tower.js?v=20260921-ui-crop-fix-1';
 import {
   ROOFTOP_LADDER_X,createRooftopBattle,drawRooftopLadder,drawRooftopClimber
-} from './stage2-rooftop.js?v=20260921-uploaded-floss-2';
+} from './stage2-rooftop.js?v=20260922-hq-sprites-1';
 
 lockSafariZoom();
 const $=id=>document.getElementById(id);
@@ -401,7 +401,7 @@ function tickCombat(dt){
         break;
       }
       e.hp--;e.hit=.12;burst(b.x,b.y,'#e6c878',5);
-      if(e.hp<=0){kills++;burst(e.x+17,e.y+16,'#ef874f',14);sound(260,.12,'triangle');}
+      if(e.hp<=0){e.deathAt=time;kills++;burst(e.x+17,e.y+16,'#ef874f',14);sound(260,.12,'triangle');}
       break;
     }
   }
@@ -575,7 +575,7 @@ function drawWorld(){
 
   for(let f=1;f<=FLOOR_COUNT;f++){
     const enemies=enemySets.get(f)??[];
-    for(const e of enemies)if(e.hp>0)art.enemy(e,time);
+    for(const e of enemies)if(e.hp>0||(e.deathAt!=null&&time-e.deathAt<.90))art.enemy(e,time);
   }
   for(const s of enemyShots){
     const cx=s.x+s.w/2,cy=s.y+s.h/2;
