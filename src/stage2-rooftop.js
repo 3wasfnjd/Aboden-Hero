@@ -8,6 +8,12 @@ const BG_URL='./assets/stage2/rooftop/E254AA9A-004F-4581-B58B-1FF6F0427114.jpeg'
 const LADDER_URL='./assets/stage2/rooftop/C73795B9-E427-4AA3-A3DC-B3C990A6B7F4.png';
 const FLOSS_A_URL='./assets/stage2/rooftop/0525AB5D-6007-49F8-8DA2-F7BB8E22D605.png';
 const FLOSS_B_URL='./assets/stage2/rooftop/A3B1ACCB-271B-42D1-9AC7-94E9E4CF491B.png';
+const HERO_WALK_URL='./assets/aboden-hero-movement.png';
+
+const HERO_WALK_FRAMES=Object.freeze([
+  [6,42,206,306],[194,42,209,307],[402,43,196,304],[583,38,239,309],
+  [808,42,208,306],[1008,39,208,310],[1220,43,211,306],[1436,42,217,307]
+]);
 
 const HERO_MELEE_POSES=Object.freeze({
  climb:['./assets/stage2/rooftop/77A34199-B559-4A99-8683-92889A35586F.png',[0,26,1059,1220]],
@@ -31,15 +37,16 @@ const BOSS_URLS=Object.freeze({
  block:'./assets/stage2/rooftop/C935CA0B-5C44-45C4-A29B-1BBA10D4BDA1.png',
  attack2:'./assets/stage2/rooftop/EC12F7F5-4E9E-42B5-B806-48372F81AA5C.png'
 });
+const BOSS_REFERENCE_H=680;
 const BOSS_ANIMS=Object.freeze({
- defeat:{refH:693,boxes:[[0,31,362,724],[362,55,724,724],[724,99,1086,724],[1086,181,1448,708],[1448,244,1810,688],[1810,343,2162,700]]},
- walk:{refH:661,boxes:[[17,17,362,668],[362,25,724,685],[724,19,1086,646],[1086,19,1448,680],[1448,23,1810,646],[1810,39,2172,690]]},
- idle:{refH:654,boxes:[[27,36,519,690],[563,80,1086,690],[1086,77,1591,690],[1674,77,2115,692]]},
- hurt:{refH:652,boxes:[[25,38,724,690],[724,79,1442,692],[1471,47,2148,694]]},
- heavy:{refH:665,boxes:[[13,83,434,633],[434,39,869,704],[869,112,1303,724],[1303,39,1738,647],[1738,101,2158,656]]},
- attack1:{refH:692,boxes:[[45,32,543,666],[543,55,1084,696],[1100,13,1629,705],[1629,146,2154,704]]},
- block:{refH:671,boxes:[[25,23,721,694],[733,83,1401,706],[1481,79,2127,694]]},
- attack2:{refH:667,boxes:[[12,148,543,692],[543,41,1086,706],[1086,45,1629,702],[1629,49,2161,716]]}
+ defeat:{refH:BOSS_REFERENCE_H,boxes:[[0,31,362,724],[362,55,724,724],[724,99,1086,724],[1086,181,1448,708],[1448,244,1810,688],[1810,343,2162,700]]},
+ walk:{refH:BOSS_REFERENCE_H,boxes:[[17,17,362,668],[362,25,724,685],[724,19,1086,646],[1086,19,1448,680],[1448,23,1810,646],[1810,39,2172,690]]},
+ idle:{refH:BOSS_REFERENCE_H,boxes:[[27,36,519,690],[563,80,1086,690],[1086,77,1591,690],[1674,77,2115,692]]},
+ hurt:{refH:BOSS_REFERENCE_H,boxes:[[25,38,724,690],[724,79,1442,692],[1471,47,2148,694]]},
+ heavy:{refH:BOSS_REFERENCE_H,boxes:[[13,83,434,633],[434,39,869,704],[869,112,1303,724],[1303,39,1738,647],[1738,101,2158,656]]},
+ attack1:{refH:BOSS_REFERENCE_H,boxes:[[45,32,543,666],[543,55,1084,696],[1100,13,1629,705],[1629,146,2154,704]]},
+ block:{refH:BOSS_REFERENCE_H,boxes:[[25,23,721,694],[733,83,1401,706],[1481,79,2127,694]]},
+ attack2:{refH:BOSS_REFERENCE_H,boxes:[[12,148,543,692],[543,41,1086,706],[1086,45,1629,702],[1629,49,2161,716]]}
 });
 
 const LADDER_BASE={w:1024,h:1536};
@@ -89,6 +96,7 @@ function removeWhiteMatte(img){
 }
 
 const backgroundAsset=loadAsset(BG_URL,false);
+const heroWalkAsset=loadAsset(HERO_WALK_URL,false);
 const heroMeleeAssets=Object.fromEntries(
   Object.entries(HERO_MELEE_POSES).map(([k,[url,bounds]])=>[k,{asset:loadAsset(url,false),bounds}])
 );
@@ -410,14 +418,18 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
 
   function drawHeroSprite(time,facing){
     if(mode==='dance'||mode==='complete')return drawVictoryDance();
-    let state='idle',bob=0;
+    let state='idle';
     if(mode==='intro'&&timer>2.18&&timer<2.72)state='hurt';
     else if(mode==='hero-ko'||hero.hit>0)state='hurt';
     else if(hero.dodge>0)state='dodge';
     else if(hero.attack)state=hero.attack;
-    else if(hero.walk){state='walk';bob=Math.sin(time*14)*1.4;}
+    else if(hero.walk){
+      const frame=HERO_WALK_FRAMES[Math.floor(time*7.5)%HERO_WALK_FRAMES.length];
+      if(drawRawSprite(ctx,heroWalkAsset,frame,hero.x,FLOOR_Y,facing,188))return true;
+      state='walk';
+    }
     const entry=heroMeleeAssets[state]??heroMeleeAssets.idle;
-    return drawBoundedAsset(ctx,entry,hero.x,FLOOR_Y+bob,facing,188);
+    return drawBoundedAsset(ctx,entry,hero.x,FLOOR_Y,facing,188);
   }
 
   function drawBossSprite(time,facing){
