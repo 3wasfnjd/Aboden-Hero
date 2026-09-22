@@ -2,12 +2,49 @@ import {BOSS_FRAMES,CITY_FRAMES,HEAVY_FRAMES,SNIPER_FRAMES,enemyKind,enemyFacing
 import {enemyDisplayHeight} from './hero-weapon.js?v=20260921-stage2-new-enemies-1';
 import {createArt as createBaseArt} from './art-base.js?v=20260921-cleanup-1';
 
-const MOVEMENT_URL='./assets/aboden-hero-movement.png';
 const BOSS_URL='./assets/Gatekeeper.png';
 const CITY_URL='./assets/City_Guard.png';
 const HEAVY_URL='./assets/Heavy_Guard.png';
 const SNIPER_URL='./assets/Sniper_Rooftop_Guard.png';
-const NEW_GUARD_URL='./assets/stage2/rooftop/712D453B-A752-4A91-BB87-AE9554BBF4FA.png';
+
+const HERO_POSE_URLS=Object.freeze({
+ idle:'./assets/stage2/rooftop/E1490764-AF8C-4DE7-8182-3895BB2E1BDE.png',
+ run:'./assets/stage2/rooftop/FCECFF5E-A6A3-44E3-A913-612E7923F975.png',
+ jump:'./assets/stage2/rooftop/3F996481-7410-40C1-9A5C-66C5374F97CC.png',
+ fall:'./assets/stage2/rooftop/D6AF22F9-E5AF-4765-813F-DC4A115B2A2F.png',
+ shoot:'./assets/stage2/rooftop/07D8F9F6-4DE1-48F5-A2AB-58E5A204DE56.png',
+ dash:'./assets/stage2/rooftop/1CF31F35-DC61-4CA6-B284-9362DDCEE75D.png',
+ hurt:'./assets/stage2/rooftop/81AF200A-886A-4CA2-A2DF-8F7E0FD7A6CF.png'
+});
+const HERO_POSE_BOUNDS=Object.freeze({
+ idle:[97,57,1210,1254],
+ run:[97,70,1210,1206],
+ jump:[89,0,1210,1254],
+ fall:[69,9,1210,1231],
+ shoot:[63,21,1214,1234],
+ dash:[0,18,1242,1254],
+ hurt:[73,48,1214,1254]
+});
+
+const NEW_GUARD_URLS=Object.freeze({
+ idle:'./assets/stage2/rooftop/979836E9-6441-4AD5-9AAB-301DEDDA3F08.png',
+ walk:'./assets/stage2/rooftop/7FDACB48-1789-4A22-9EBC-8BE321E13B4D.png',
+ aim:'./assets/stage2/rooftop/467F9C1F-30BE-4274-953A-E6CF9ADC358B.png',
+ fire:'./assets/stage2/rooftop/06266B22-0894-489A-9711-B79239B1A128.png',
+ block:'./assets/stage2/rooftop/33329A1A-C050-441E-9D23-C85EEDBCFD88.png',
+ hurt:'./assets/stage2/rooftop/9F2B5146-8350-45D9-86C0-A7E3A03FD43F.png',
+ defeat:'./assets/stage2/rooftop/799F6394-1C8A-431B-9BCD-12EE63BAFE65.png'
+});
+const NEW_GUARD_ANIMS=Object.freeze({
+ idle:{refH:693,boxes:[[0,3,537,690],[546,7,1072,692],[1095,23,1629,706],[1629,15,2120,708]]},
+ walk:{refH:661,boxes:[[0,55,724,685],[724,140,1448,724],[1448,41,2132,702]]},
+ aim:{refH:661,boxes:[[57,101,676,685],[725,101,1408,706],[1497,47,2120,708]]},
+ fire:{refH:688,boxes:[[25,2,543,690],[543,31,1086,692],[1086,23,1628,697],[1629,27,2172,678]]},
+ block:{refH:700,boxes:[[19,147,887,869],[887,35,1659,855]]},
+ hurt:{refH:687,boxes:[[23,21,706,708],[725,55,1400,708],[1463,98,2126,724]]},
+ defeat:{refH:596,boxes:[[10,38,272,634],[272,116,543,634],[543,55,814,636],[814,118,1086,668],[1086,223,1358,672],[1358,246,1629,674],[1629,264,1900,680],[1900,287,2171,691]]}
+});
+
 const DRONE_IDLE_URL='./assets/stage2/rooftop/CE321790-436E-4BF6-BF00-23D8E11F8635.png';
 const DRONE_ATTACK_URL='./assets/stage2/rooftop/152AB8BD-FD1C-44F8-BCBD-D043437BC255.png';
 const ROCKET_URL='./assets/ui/rocket.png';
@@ -26,12 +63,12 @@ function loadImage(url){
  return state;
 }
 
-const movementAsset=loadImage(MOVEMENT_URL);
 const bossAsset=loadImage(BOSS_URL);
 const cityAsset=loadImage(CITY_URL);
 const heavyAsset=loadImage(HEAVY_URL);
 const sniperAsset=loadImage(SNIPER_URL);
-const newGuardAsset=loadImage(NEW_GUARD_URL);
+const heroPoseAssets=Object.fromEntries(Object.entries(HERO_POSE_URLS).map(([k,url])=>[k,loadImage(url)]));
+const newGuardAssets=Object.fromEntries(Object.entries(NEW_GUARD_URLS).map(([k,url])=>[k,loadImage(url)]));
 const droneIdleAsset=loadImage(DRONE_IDLE_URL);
 const droneAttackAsset=loadImage(DRONE_ATTACK_URL);
 const rocketAsset=loadImage(ROCKET_URL);
@@ -46,31 +83,6 @@ const ENEMY_BULLET_DISPLAY_H=15;
 const ROCKET_SMOKE_DISPLAY_H=58;
 const ENERGY_CRYSTAL_DISPLAY_H=24;
 const HEALTH_CROSS_DISPLAY_H=24;
-
-const MOVE_FRAMES={
- run:[[6,42,206,306],[194,42,209,307],[402,43,196,304],[583,38,239,309],[808,42,208,306],[1008,39,208,310],[1220,43,211,306],[1436,42,217,307]],
- jump:[[411,436,215,244],[679,358,262,281],[984,421,287,269]],
- fall:[[463,687,326,229],[885,692,334,246]]
-};
-
-
-
-// Corrected guard sheets are 1122x1402 transparent PNGs.
-// Rectangles deliberately keep a little transparent padding so animation frames
-// stay a consistent size and no neighboring sprite leaks into the crop.
-const ENEMY_BASE_W=1122,ENEMY_BASE_H=1402;
-const NEW_GUARD_FRAMES={
- idle:[[0,0,280,280],[280,0,281,280],[561,0,281,280]],
- run:[[0,280,280,281],[280,280,281,281],[561,280,281,281]],
- aim:[[0,561,280,280],[280,561,281,280],[561,561,281,280]],
- hit:[[0,841,280,281],[280,841,281,281]]
-};
-
-
-
-
-
-
 
 function drawSprite(ctx,img,frame,x,y,facing,displayH,alpha=1){
  const [sx,sy,sw,sh]=frame;
@@ -87,8 +99,24 @@ function scaledFrames(frames,img,baseW,baseH){
  const sx=img.naturalWidth/baseW,sy=img.naturalHeight/baseH;
  return frames.map(([x,y,w,h])=>[x*sx,y*sy,w*sx,h*sy]);
 }
-
-
+function drawBoundedImage(ctx,asset,box,x,feetY,facing,displayH,alpha=1){
+ if(!asset?.ready)return false;
+ const [l,t,r,b]=box,sw=r-l,sh=b-t,dw=displayH*(sw/sh);
+ ctx.save();ctx.globalAlpha*=alpha;ctx.translate(x,feetY);ctx.scale(facing,1);
+ ctx.drawImage(asset.img,l,t,sw,sh,-dw/2,-displayH,dw,displayH);
+ ctx.restore();return true;
+}
+function drawFrameSet(ctx,asset,anim,index,x,feetY,facing,displayH,alpha=1){
+ if(!asset?.ready)return false;
+ const box=anim.boxes[Math.max(0,Math.min(anim.boxes.length-1,index))];
+ const [l,t,r,b]=box,sw=r-l,sh=b-t,scale=displayH/anim.refH;
+ ctx.save();ctx.globalAlpha*=alpha;ctx.translate(x,feetY);ctx.scale(facing,1);
+ ctx.drawImage(asset.img,l,t,sw,sh,-sw*scale/2,-sh*scale,sw*scale,sh*scale);
+ ctx.restore();return true;
+}
+function phaseIndex(elapsed,duration,count){
+ return Math.min(count-1,Math.max(0,Math.floor((elapsed/Math.max(.001,duration))*count)));
+}
 
 const bossDeathStart=new WeakMap();
 
@@ -96,32 +124,25 @@ export function createArt(ctx){
  const base=createBaseArt(ctx);
  const baseHero=base.hero;
 
+ function heroMuzzle(p){
+  return {x:p.x+p.w/2+p.facing*39,y:p.y+p.h-59};
+ }
  function hero(p,time){
-  const movement=movementAsset.img;
-  const special=p.invulnerable>1.05||p.dashTime>0||p.shot>.02;
-  if(special){baseHero(p,time);return;}
   ctx.save();
-  ctx.globalAlpha=.24;
-  ctx.fillStyle='#071220';
+  ctx.globalAlpha=.24;ctx.fillStyle='#071220';
   ctx.beginPath();ctx.ellipse(p.x+p.w/2,p.y+p.h+2,22,4,0,0,Math.PI*2);ctx.fill();
   ctx.restore();
-  if(!p.grounded){
-   if(p.vy<60){
-    const frame=p.vy<-260?MOVE_FRAMES.jump[1]:MOVE_FRAMES.jump[2];
-    drawSprite(ctx,movement,frame,p.x+p.w/2,p.y+p.h,p.facing,79);
-   }else{
-    const i=Math.floor(time*7)%MOVE_FRAMES.fall.length;
-    drawSprite(ctx,movement,MOVE_FRAMES.fall[i],p.x+p.w/2,p.y+p.h,p.facing,76);
-   }
-   return;
-  }
-  if(Math.abs(p.vx)>28){
-   const speed=Math.min(15,9+Math.abs(p.vx)/55);
-   const i=Math.floor(time*speed)%MOVE_FRAMES.run.length;
-   drawSprite(ctx,movement,MOVE_FRAMES.run[i],p.x+p.w/2,p.y+p.h,p.facing,82);
-   return;
-  }
-  baseHero(p,time);
+
+  let state='idle',displayH=82;
+  if(p.invulnerable>1.05){state='hurt';displayH=80;}
+  else if(p.dashTime>0){state='dash';displayH=82;}
+  else if(p.shot>.02){state='shoot';displayH=83;}
+  else if(!p.grounded){state=p.vy<60?'jump':'fall';displayH=80;}
+  else if(Math.abs(p.vx)>28){state='run';displayH=82;}
+
+  const asset=heroPoseAssets[state],box=HERO_POSE_BOUNDS[state];
+  if(drawBoundedImage(ctx,asset,box,p.x+p.w/2,p.y+p.h,p.facing,displayH))return;
+  base.hero(p,time);
  }
 
  function drawDrone(e,time){
@@ -150,18 +171,47 @@ export function createArt(ctx){
   }
  }
 
+ function drawNewGuard(e,time){
+  const center=e.x+e.w/2,feet=e.y+e.h,facing=enemyFacing(e),displayH=enemyDisplayHeight(e);
+  let state='idle',index=0;
+  if(e.hp<=0){
+   state='defeat';
+   index=phaseIndex(time-(e.deathAt??time),.90,NEW_GUARD_ANIMS.defeat.boxes.length);
+  }else if(e.shieldFlash>0){
+   state='block';
+   index=phaseIndex(.18-e.shieldFlash,.18,NEW_GUARD_ANIMS.block.boxes.length);
+  }else if(e.hit>0){
+   state='hurt';
+   index=phaseIndex(.12-e.hit,.12,NEW_GUARD_ANIMS.hurt.boxes.length);
+  }else if(e.shotFlash>0){
+   state='fire';
+   index=phaseIndex(.20-e.shotFlash,.20,NEW_GUARD_ANIMS.fire.boxes.length);
+  }else if(e.windup>0){
+   state='aim';
+   const duration=e.windupDuration??.44;
+   index=phaseIndex(duration-e.windup,duration,NEW_GUARD_ANIMS.aim.boxes.length);
+  }else if(Math.abs(e.vx)>5){
+   state='walk';
+   index=Math.floor(time*5.2+e.x*.006)%NEW_GUARD_ANIMS.walk.boxes.length;
+  }else{
+   index=Math.floor(time*3.2+e.x*.006)%NEW_GUARD_ANIMS.idle.boxes.length;
+  }
+
+  ctx.save();ctx.globalAlpha=.24;ctx.fillStyle='#071220';
+  ctx.beginPath();ctx.ellipse(center,feet+2,23,4,0,0,Math.PI*2);ctx.fill();ctx.restore();
+  drawFrameSet(ctx,newGuardAssets[state],NEW_GUARD_ANIMS[state],index,center,feet,facing,displayH);
+ }
+
  function enemy(e,time){
   const type=enemyKind(e);
   if(type==='drone'){drawDrone(e,time);return;}
-  const asset=type==='city'?cityAsset:type==='newguard'?newGuardAsset:type==='sniper'?sniperAsset:heavyAsset;
-  const frames=type==='newguard'?NEW_GUARD_FRAMES:type==='city'?CITY_FRAMES:type==='sniper'?SNIPER_FRAMES:HEAVY_FRAMES;
+  if(type==='newguard'){drawNewGuard(e,time);return;}
+  const asset=type==='city'?cityAsset:type==='sniper'?sniperAsset:heavyAsset;
+  const frames=type==='city'?CITY_FRAMES:type==='sniper'?SNIPER_FRAMES:HEAVY_FRAMES;
   const img=asset.img;
   const attack=enemyAttackPose(e);
   if(attack){
-   // Guard aim/fire atlas rows are cropped around the upper body. Keep a
-   // complete full-body guard sprite for the entire attack sequence and let
-   // the projectile/muzzle effect communicate the shot.
-   const full=scaledFrames(frames.idle,img,ENEMY_BASE_W,ENEMY_BASE_H);
+   const full=scaledFrames(frames.idle,img,1122,1402);
    const fullFrame=full[Math.floor(time*4+e.x*.006)%full.length];
    drawSprite(ctx,img,fullFrame,e.x+e.w/2,e.y+e.h,attack.facing,enemyDisplayHeight(e));
    return;
@@ -169,31 +219,13 @@ export function createArt(ctx){
   let state='idle',rate=4,displayH=enemyDisplayHeight(e);
   if(e.hit>0){state='hit';rate=12;}
   else if(Math.abs(e.vx)>5){state='run';rate=4.5;}
-
   const set=frames[state]||frames.idle;
-  const scaled=scaledFrames(set,img,ENEMY_BASE_W,ENEMY_BASE_H);
+  const scaled=scaledFrames(set,img,1122,1402);
   const i=Math.floor(time*rate+e.x*.006)%scaled.length;
-  const center=e.x+e.w/2;
-  const facing=enemyFacing(e);
-
-  ctx.save();
-  ctx.globalAlpha=.24;
-  ctx.fillStyle='#071220';
-  ctx.beginPath();ctx.ellipse(center,e.y+e.h+2,type==='heavy'?27:21,4,0,0,Math.PI*2);ctx.fill();
-  ctx.restore();
+  const center=e.x+e.w/2,facing=enemyFacing(e);
+  ctx.save();ctx.globalAlpha=.24;ctx.fillStyle='#071220';
+  ctx.beginPath();ctx.ellipse(center,e.y+e.h+2,type==='heavy'?27:21,4,0,0,Math.PI*2);ctx.fill();ctx.restore();
   drawSprite(ctx,img,scaled[i],center,e.y+e.h,facing,displayH);
-  if(type==='newguard'&&e.shieldFlash>0){
-   const pulse=Math.min(1,e.shieldFlash/.18);
-   ctx.save();
-   ctx.globalAlpha=.55*pulse;
-   ctx.strokeStyle='#a9dcff';ctx.lineWidth=3;
-   ctx.shadowColor='#7fc8ff';ctx.shadowBlur=12;
-   const shieldX=center+facing*24;
-   ctx.beginPath();
-   ctx.arc(shieldX,e.y+e.h-displayH*.53,18,Math.PI*.58,Math.PI*1.42);
-   ctx.stroke();
-   ctx.restore();
-  }
  }
 
  function boss(b,time){
@@ -266,6 +298,6 @@ export function createArt(ctx){
   ctx.drawImage(img,x-dw/2,y-dh/2,dw,dh);
   return true;
  }
- return {...base,hero,enemy,boss,enemyMuzzle,rocket,heroBullet,enemyBullet,rocketSmoke,collectible,healthItem};
+ return {...base,hero,heroMuzzle,enemy,boss,enemyMuzzle,rocket,heroBullet,enemyBullet,rocketSmoke,collectible,healthItem};
 }
 
