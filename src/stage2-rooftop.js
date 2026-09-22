@@ -5,53 +5,45 @@ const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
 export const ROOFTOP_LADDER_X=204;
 
 const BG_URL='./assets/stage2/rooftop/E254AA9A-004F-4581-B58B-1FF6F0427114.jpeg';
-const HERO_URL='./assets/stage2/rooftop/B78F8298-AC6E-4984-8171-6060AD95C1AD.png';
-const HERO_WALK_URL='./assets/aboden-hero-movement.png';
-const BOSS_URL='./assets/stage2/rooftop/0D1BD2D4-2C58-41AD-87C6-AF3454DDCD3D.png';
-const BOSS_WALK_URL='./assets/stage2/rooftop/68F8B92C-855E-4303-B55B-4E69B4BDDDE7.png';
 const LADDER_URL='./assets/stage2/rooftop/C73795B9-E427-4AA3-A3DC-B3C990A6B7F4.png';
 const FLOSS_A_URL='./assets/stage2/rooftop/0525AB5D-6007-49F8-8DA2-F7BB8E22D605.png';
 const FLOSS_B_URL='./assets/stage2/rooftop/A3B1ACCB-271B-42D1-9AC7-94E9E4CF491B.png';
 
-const HERO_BASE={w:1536,h:1024};
-const BOSS_BASE={w:1122,h:1402};
-const BOSS_WALK_BASE={w:1112,h:1415};
+const HERO_MELEE_POSES=Object.freeze({
+ climb:['./assets/stage2/rooftop/77A34199-B559-4A99-8683-92889A35586F.png',[0,26,1059,1220]],
+ idle:['./assets/stage2/rooftop/28C8741E-FF4D-4642-9B2D-F77236FFA97F.png',[91,41,1218,1254]],
+ walk:['./assets/stage2/rooftop/FCECFF5E-A6A3-44E3-A913-612E7923F975.png',[97,70,1210,1206]],
+ punch1:['./assets/stage2/rooftop/3E73BF27-069C-4E22-A80D-737550CFA7B9.png',[0,31,1253,1254]],
+ punch2:['./assets/stage2/rooftop/A95ABCE5-11A8-4AA5-8FCE-5F18B016F5E6.png',[0,21,1236,1254]],
+ heavy:['./assets/stage2/rooftop/159DD9FD-ADB2-448C-98FD-CD14991E4FE2.png',[0,9,1208,1244]],
+ block:['./assets/stage2/rooftop/A7CFFEBC-EE18-4086-9F82-9B2840FB5B08.png',[39,21,1234,1238]],
+ dodge:['./assets/stage2/rooftop/452DCE10-755B-4E2E-8D53-7B6C3E5790B8.png',[0,21,1247,1229]],
+ hurt:['./assets/stage2/rooftop/81AF200A-886A-4CA2-A2DF-8F7E0FD7A6CF.png',[73,48,1214,1254]]
+});
+
+const BOSS_URLS=Object.freeze({
+ defeat:'./assets/stage2/rooftop/04C075DB-907D-4B1D-95AF-0DC90C81107A.png',
+ walk:'./assets/stage2/rooftop/091AAB6A-F854-4477-8752-D1B58381AA37.png',
+ idle:'./assets/stage2/rooftop/100882C5-14DA-4017-891C-7CDA8F39F084.png',
+ hurt:'./assets/stage2/rooftop/142AAECF-81A4-4CD9-85F3-8D59EBB3F55B.png',
+ heavy:'./assets/stage2/rooftop/1D5689D4-376E-410B-8596-22D02BC68210.png',
+ attack1:'./assets/stage2/rooftop/A2B6AA2C-3A8F-4CBD-9B30-BDF320327968.png',
+ block:'./assets/stage2/rooftop/C935CA0B-5C44-45C4-A29B-1BBA10D4BDA1.png',
+ attack2:'./assets/stage2/rooftop/EC12F7F5-4E9E-42B5-B806-48372F81AA5C.png'
+});
+const BOSS_ANIMS=Object.freeze({
+ defeat:{refH:693,boxes:[[0,31,362,724],[362,55,724,724],[724,99,1086,724],[1086,181,1448,708],[1448,244,1810,688],[1810,343,2162,700]]},
+ walk:{refH:661,boxes:[[17,17,362,668],[362,25,724,685],[724,19,1086,646],[1086,19,1448,680],[1448,23,1810,646],[1810,39,2172,690]]},
+ idle:{refH:654,boxes:[[27,36,519,690],[563,80,1086,690],[1086,77,1591,690],[1674,77,2115,692]]},
+ hurt:{refH:652,boxes:[[25,38,724,690],[724,79,1442,692],[1471,47,2148,694]]},
+ heavy:{refH:665,boxes:[[13,83,434,633],[434,39,869,704],[869,112,1303,724],[1303,39,1738,647],[1738,101,2158,656]]},
+ attack1:{refH:692,boxes:[[45,32,543,666],[543,55,1084,696],[1100,13,1629,705],[1629,146,2154,704]]},
+ block:{refH:671,boxes:[[25,23,721,694],[733,83,1401,706],[1481,79,2127,694]]},
+ attack2:{refH:667,boxes:[[12,148,543,692],[543,41,1086,706],[1086,45,1629,702],[1629,49,2161,716]]}
+});
+
 const LADDER_BASE={w:1024,h:1536};
 const LADDER_FRAME=[276,0,472,1524];
-
-const HERO_WALK_FRAMES=Object.freeze([
-  [6,42,206,306],[194,42,209,307],[402,43,196,304],[583,38,239,309],
-  [808,42,208,306],[1008,39,208,310],[1220,43,211,306],[1436,42,217,307]
-]);
-
-const BOSS_WALK_FRAMES=Object.freeze([
-  [0,37,371,671],[371,19,370,656],[741,69,371,610],
-  [0,722,371,693],[371,724,370,691],[741,726,371,689]
-]);
-
-const HERO_FRAMES=Object.freeze({
-  climb:[[59,8,264,445],[477,9,171,443],[738,18,305,442],[1132,23,338,409]],
-  idle:[[19,429,234,298]],
-  walk:[[278,433,255,292]],
-  punch1:[[545,432,353,295]],
-  punch2:[[869,420,332,306]],
-  heavy:[[1216,420,297,314]],
-  hurt:[[27,749,258,261]],
-  block:[[342,736,313,274]],
-  dodge:[[691,751,384,258]],
-  win:[[1152,683,362,329]]
-});
-
-const BOSS_FRAMES=Object.freeze({
-  idle:[[0,0,533,350]],
-  walk:[[568,0,508,350]],
-  attack1:[[37,350,494,351]],
-  attack2:[[572,350,502,351]],
-  heavy:[[0,701,561,351]],
-  hurt:[[561,701,547,351]],
-  block:[[75,1052,486,350]],
-  defeat:[[561,1052,555,334]]
-});
 const BOSS_VISUAL_H=232;
 const FLOSS_DURATION=5.8;
 const FLOSS_FRAME_W=543;
@@ -97,10 +89,10 @@ function removeWhiteMatte(img){
 }
 
 const backgroundAsset=loadAsset(BG_URL,false);
-const heroAsset=loadAsset(HERO_URL,true);
-const heroWalkAsset=loadAsset(HERO_WALK_URL,false);
-const bossAsset=loadAsset(BOSS_URL,true);
-const bossWalkAsset=loadAsset(BOSS_WALK_URL,false);
+const heroMeleeAssets=Object.fromEntries(
+  Object.entries(HERO_MELEE_POSES).map(([k,[url,bounds]])=>[k,{asset:loadAsset(url,false),bounds}])
+);
+const bossAssets=Object.fromEntries(Object.entries(BOSS_URLS).map(([k,url])=>[k,loadAsset(url,false)]));
 const ladderAsset=loadAsset(LADDER_URL,false);
 const flossAssets=[
   loadAsset(FLOSS_A_URL,false),
@@ -140,17 +132,23 @@ function drawRawSprite(ctx,asset,frame,x,feetY,facing,displayH,alpha=1){
   return true;
 }
 
-function drawDancePose(ctx,asset,base,frame,x,feetY,{facing=1,displayH=188,rotation=0,bob=0}={}){
-  if(!asset.ready)return false;
-  const [sx,sy,sw,sh]=scaledFrame(frame,asset,base);
-  const dw=displayH*(sw/sh);
-  ctx.save();
-  ctx.translate(x,feetY+bob);
-  ctx.rotate(rotation);
-  ctx.scale(facing,1);
-  ctx.drawImage(asset.source,sx,sy,sw,sh,-dw/2,-displayH,dw,displayH);
-  ctx.restore();
-  return true;
+function drawBoundedAsset(ctx,entry,x,feetY,facing,displayH,alpha=1){
+  if(!entry?.asset?.ready)return false;
+  const [l,t,r,b]=entry.bounds,sw=r-l,sh=b-t,dw=displayH*(sw/sh);
+  ctx.save();ctx.globalAlpha*=alpha;ctx.translate(x,feetY);ctx.scale(facing,1);
+  ctx.drawImage(entry.asset.source,l,t,sw,sh,-dw/2,-displayH,dw,displayH);
+  ctx.restore();return true;
+}
+function drawFrameSet(ctx,asset,anim,index,x,feetY,facing,displayH,alpha=1){
+  if(!asset?.ready)return false;
+  const box=anim.boxes[Math.max(0,Math.min(anim.boxes.length-1,index))];
+  const [l,t,r,b]=box,sw=r-l,sh=b-t,scale=displayH/anim.refH;
+  ctx.save();ctx.globalAlpha*=alpha;ctx.translate(x,feetY);ctx.scale(facing,1);
+  ctx.drawImage(asset.source,l,t,sw,sh,-sw*scale/2,-sh*scale,sw*scale,sh*scale);
+  ctx.restore();return true;
+}
+function phaseIndex(elapsed,duration,count){
+  return Math.min(count-1,Math.max(0,Math.floor(elapsed/Math.max(.001,duration)*count)));
 }
 
 export function drawRooftopLadder(ctx,{x=ROOFTOP_LADDER_X,bottomY,unlocked=false,time=0}){
@@ -173,9 +171,8 @@ export function drawRooftopLadder(ctx,{x=ROOFTOP_LADDER_X,bottomY,unlocked=false
   ctx.restore();
 }
 export function drawRooftopClimber(ctx,{x,feetY,time=0,facing=1}){
-  const frames=HERO_FRAMES.climb;
-  const frame=frames[Math.floor(time*5.5)%frames.length];
-  if(drawSprite(ctx,heroAsset,HERO_BASE,frame,x,feetY,facing,94))return;
+  const bob=Math.sin(time*11)*1.4;
+  if(drawBoundedAsset(ctx,heroMeleeAssets.climb,x,feetY+bob,facing,94))return;
   ctx.save();ctx.fillStyle='#d23b3f';ctx.fillRect(x-13,feetY-72,26,72);ctx.restore();
 }
 
@@ -403,16 +400,6 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
     return events;
   }
 
-  function heroFrame(){
-    if(mode==='intro'&&timer>2.18&&timer<2.72)return HERO_FRAMES.hurt[0];
-    if(mode==='hero-ko'||hero.hit>0)return HERO_FRAMES.hurt[0];
-    if(mode==='dance'||mode==='complete')return HERO_FRAMES.win[0];
-    if(hero.dodge>0)return HERO_FRAMES.dodge[0];
-    if(hero.attack)return HERO_FRAMES[hero.attack][0];
-    if(hero.walk)return HERO_FRAMES.walk[0];
-    return HERO_FRAMES.idle[0];
-  }
-
   function drawVictoryDance(){
     const index=Math.floor(timer*7)%FLOSS_FRAMES.length;
     const pose=FLOSS_FRAMES[index];
@@ -423,28 +410,38 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
 
   function drawHeroSprite(time,facing){
     if(mode==='dance'||mode==='complete')return drawVictoryDance();
-    if(hero.walk&&!hero.attack&&hero.hit<=0&&hero.dodge<=0&&mode!=='hero-ko'){
-      const frame=HERO_WALK_FRAMES[Math.floor(time*7.5)%HERO_WALK_FRAMES.length];
-      if(drawRawSprite(ctx,heroWalkAsset,frame,hero.x,FLOOR_Y,facing,188))return true;
-    }
-    return drawSprite(ctx,heroAsset,HERO_BASE,heroFrame(),hero.x,FLOOR_Y,facing,188);
+    let state='idle',bob=0;
+    if(mode==='intro'&&timer>2.18&&timer<2.72)state='hurt';
+    else if(mode==='hero-ko'||hero.hit>0)state='hurt';
+    else if(hero.dodge>0)state='dodge';
+    else if(hero.attack)state=hero.attack;
+    else if(hero.walk){state='walk';bob=Math.sin(time*14)*1.4;}
+    const entry=heroMeleeAssets[state]??heroMeleeAssets.idle;
+    return drawBoundedAsset(ctx,entry,hero.x,FLOOR_Y+bob,facing,188);
   }
 
   function drawBossSprite(time,facing){
-    if(boss.walk&&!boss.attack&&boss.hit<=0&&boss.block<=0&&mode!=='boss-defeat'&&mode!=='dance'&&mode!=='complete'){
-      const frame=BOSS_WALK_FRAMES[Math.floor(time*6.4)%BOSS_WALK_FRAMES.length];
-      if(drawSprite(ctx,bossWalkAsset,BOSS_WALK_BASE,frame,boss.x,FLOOR_Y,facing,BOSS_VISUAL_H))return true;
+    let state='idle',index=0;
+    if(mode==='boss-defeat'||boss.hp<=0){
+      state='defeat';
+      index=phaseIndex(timer,1.05,BOSS_ANIMS.defeat.boxes.length);
+    }else if(boss.hit>0){
+      state='hurt';
+      index=phaseIndex(.24-boss.hit,.24,BOSS_ANIMS.hurt.boxes.length);
+    }else if(boss.block>0){
+      state='block';
+      index=phaseIndex(.48-boss.block,.48,BOSS_ANIMS.block.boxes.length);
+    }else if(boss.attack){
+      state=boss.attack;
+      const duration=state==='heavy'?.82:.54;
+      index=phaseIndex(boss.attackTime,duration,BOSS_ANIMS[state].boxes.length);
+    }else if(boss.walk){
+      state='walk';
+      index=Math.floor(time*6.4)%BOSS_ANIMS.walk.boxes.length;
+    }else{
+      index=Math.floor(time*3.2)%BOSS_ANIMS.idle.boxes.length;
     }
-    return drawSprite(ctx,bossAsset,BOSS_BASE,bossFrame(),boss.x,FLOOR_Y,facing,BOSS_VISUAL_H);
-  }
-
-  function bossFrame(){
-    if(mode==='boss-defeat'||boss.hp<=0)return BOSS_FRAMES.defeat[0];
-    if(boss.hit>0)return BOSS_FRAMES.hurt[0];
-    if(boss.block>0)return BOSS_FRAMES.block[0];
-    if(boss.attack)return BOSS_FRAMES[boss.attack][0];
-    if(boss.walk)return BOSS_FRAMES.walk[0];
-    return BOSS_FRAMES.idle[0];
+    return drawFrameSet(ctx,bossAssets[state],BOSS_ANIMS[state],index,boss.x,FLOOR_Y,facing,BOSS_VISUAL_H);
   }
 
   function drawSky(){
