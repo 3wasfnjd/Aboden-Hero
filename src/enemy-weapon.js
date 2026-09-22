@@ -99,6 +99,7 @@ export function enemyWeaponMuzzle(e,isBoss=false){
 export function fallbackEnemyMuzzle(e,time,isBoss=false){
  const facing=enemyFacing(e);
  if(!isBoss&&enemyKind(e)==='drone')return {x:e.x+e.w/2+facing*28,y:e.y+e.h/2+5};
+ if(!isBoss&&enemyKind(e)==='newguard')return {x:e.x+e.w/2+facing*38,y:e.y+e.h-58};
  return isBoss?{x:e.x+e.w/2+facing*67,y:e.y+e.h-37}
   :{x:e.x+e.w/2+facing*35,y:e.y+e.h-22.5};
 }
