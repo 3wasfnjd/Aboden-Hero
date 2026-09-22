@@ -85,13 +85,21 @@ test('tower hero uses real multi-frame locomotion and HQ uploaded action poses',
 });
 
 
-test('shield guard uses calibrated per-sheet scale and freezes during combat poses',()=>{
-  assert.match(art,/idle:\{refH:680/);
-  assert.match(art,/walk:\{refH:680/);
-  assert.match(art,/aim:\{refH:680/);
-  assert.match(art,/fire:\{refH:680/);
-  assert.match(art,/hurt:\{refH:680/);
-  assert.match(art,/defeat:\{refH:596/);
+test('shield guard uses alpha-cropped per-sheet scale and freezes during combat poses',()=>{
+  assert.match(art,/idle:\{refH:514/);
+  assert.match(art,/walk:\{refH:520/);
+  assert.match(art,/aim:\{refH:543/);
+  assert.match(art,/fire:\{refH:453/);
+  assert.match(art,/hurt:\{refH:523/);
+  assert.match(art,/defeat:\{refH:330/);
   assert.match(stage2,/const locked=e\.windup>0\|\|e\.shotFlash>0\|\|e\.hit>0\|\|\(e\.shieldFlash\?\?0\)>0/);
   assert.match(stage2,/if\(!locked\)e\.x\+=e\.vx\*dt/);
+});
+
+
+test('tower hero HQ poses use measured alpha crop bounds',()=>{
+  assert.match(art,/\[365,179,911,1119\]/);
+  assert.match(art,/\[234,195,1135,1111\]/);
+  assert.match(art,/\[185,50,1121,1201\]/);
+  assert.match(art,/const frame=frames\[i\],moveScale=82\/307/);
 });
