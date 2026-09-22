@@ -50,10 +50,12 @@ test('boss defeat removes the boss, runs a scripted Floss victory dance, then co
 });
 
 
-test('rooftop ladder stays on the left and climbing uses the new high quality pose',()=>{
+test('rooftop ladder stays on the left and combat walking uses a real multi-frame cycle',()=>{
   assert.match(rooftop,/ROOFTOP_LADDER_X=204/);
   assert.match(rooftop,/77A34199-B559-4A99-8683-92889A35586F\.png/);
-  assert.match(rooftop,/drawBoundedAsset\(ctx,heroMeleeAssets\.climb/);
+  assert.match(rooftop,/HERO_WALK_URL='\.\/assets\/aboden-hero-movement\.png'/);
+  assert.match(rooftop,/HERO_WALK_FRAMES=Object\.freeze/);
+  assert.match(rooftop,/drawRawSprite\(ctx,heroWalkAsset,frame,hero\.x,FLOOR_Y,facing,188\)/);
 });
 
 test('rooftop boss difficulty is reduced and hero melee damage is stronger',()=>{
@@ -118,4 +120,12 @@ test('all eight new rooftop boss actions have dedicated assets and one locked vi
     'EC12F7F5-4E9E-42B5-B806-48372F81AA5C'
   ])assert.match(rooftop,new RegExp(id));
   assert.match(rooftop,/BOSS_VISUAL_H=232/);
+});
+
+
+test('all boss actions share one locked source reference scale',()=>{
+  assert.match(rooftop,/const BOSS_REFERENCE_H=680/);
+  const matches=rooftop.match(/refH:BOSS_REFERENCE_H/g)??[];
+  assert.equal(matches.length,8);
+  assert.doesNotMatch(rooftop,/refH:(?:652|654|661|665|667|671|692|693)/);
 });
