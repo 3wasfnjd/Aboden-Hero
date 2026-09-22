@@ -94,17 +94,15 @@ test('Chapter 2 keeps Stage 1 framed UI assets with new full-body hero rendering
 });
 
 
-test('Floss animation uses the two uploaded four-frame dance sheets and locks controls while dancing',()=>{
+test('Floss uses two complete uploaded poses at the same visual height as the rooftop hero',()=>{
   assert.match(rooftop,/0525AB5D-6007-49F8-8DA2-F7BB8E22D605\.png/);
   assert.match(rooftop,/A3B1ACCB-271B-42D1-9AC7-94E9E4CF491B\.png/);
-  assert.match(rooftop,/FLOSS_FRAME_W=543/);
-  assert.match(rooftop,/FLOSS_FRAME_H=724/);
-  assert.match(rooftop,/FLOSS_FRAMES=Object\.freeze/);
-  assert.match(rooftop,/const index=Math\.floor\(timer\*7\)%FLOSS_FRAMES\.length/);
-  assert.match(rooftop,/drawRawSprite\(ctx,asset,pose\.frame,hero\.x,FLOOR_Y\+bounce,1,205\)/);
-  assert.doesNotMatch(rooftop,/frame:'punch1'|frame:'block'|frame:'heavy'|frame:'dodge'/);
+  assert.match(rooftop,/FLOSS_VISUAL_H=188/);
+  assert.match(rooftop,/bounds:\[176,44,976,1404\]/);
+  assert.match(rooftop,/bounds:\[264,20,1048,1420\]/);
+  assert.match(rooftop,/drawBoundedAsset\(ctx,flossPoses\[index\],hero\.x,FLOOR_Y,1,FLOSS_VISUAL_H\)/);
+  assert.doesNotMatch(rooftop,/FLOSS_FRAME_W|FLOSS_FRAME_H|FLOSS_FRAMES/);
   assert.match(stage2,/scene==='rooftop-dance'/);
-  assert.match(html,/زعيم \+ Floss/);
 });
 
 
@@ -123,9 +121,19 @@ test('all eight new rooftop boss actions have dedicated assets and one locked vi
 });
 
 
-test('all boss actions share one locked source reference scale',()=>{
-  assert.match(rooftop,/const BOSS_REFERENCE_H=680/);
-  const matches=rooftop.match(/refH:BOSS_REFERENCE_H/g)??[];
-  assert.equal(matches.length,8);
-  assert.doesNotMatch(rooftop,/refH:(?:652|654|661|665|667|671|692|693)/);
+test('boss actions use measured alpha crops with per-sheet source calibration',()=>{
+  for(const token of ['defeat:{refH:397','walk:{refH:485','idle:{refH:600','hurt:{refH:639','heavy:{refH:531','attack1:{refH:488','block:{refH:608','attack2:{refH:466']){
+    assert.ok(rooftop.includes(token),token);
+  }
+  assert.match(rooftop,/\[44,83,517,681\]/);
+  assert.match(rooftop,/\[22,161,362,637\]/);
+});
+
+
+test('rooftop hero action crops keep feet anchored and dodge stays crouched',()=>{
+  assert.match(rooftop,/\[226,44,1083,1224\]/);
+  assert.match(rooftop,/\[28,84,1241,1206\]/);
+  assert.match(rooftop,/\[15,291,1244,1026\]/);
+  assert.match(rooftop,/const visualH=state==='dodge'\?118:188/);
+  assert.match(rooftop,/const walkScale=188\/307/);
 });
