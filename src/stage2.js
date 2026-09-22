@@ -3,7 +3,7 @@ import {clamp,overlaps,createPlayer,stepPlayer} from './world.js?v=20260916-acti
 import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260921-stage2-new-enemies-1';
 import {hitsShieldFromFront} from './enemy-weapon.js?v=20260922-hq-sprites-1';
 import {stepCombat} from './combat.js?v=20260921-stage2-new-enemies-1';
-import {createArt} from './art.js?v=20260922-motion-fix-1';
+import {createArt} from './art.js?v=20260922-alpha-normalized-1';
 import {createMusic} from './music.js?v=20260917-music-1';
 import {createMatchingPuzzle} from '../puzzle-kit/matching/matching.js?v=20260920-stage2-embed-1';
 import {createWiringPuzzle} from '../puzzle-kit/wiring/wiring.js?v=20260919-stage2-embed-2';
@@ -19,7 +19,7 @@ import {
 } from './stage2-tower.js?v=20260921-ui-crop-fix-1';
 import {
   ROOFTOP_LADDER_X,createRooftopBattle,drawRooftopLadder,drawRooftopClimber
-} from './stage2-rooftop.js?v=20260922-motion-fix-1';
+} from './stage2-rooftop.js?v=20260922-alpha-normalized-1';
 
 lockSafariZoom();
 const $=id=>document.getElementById(id);
