@@ -50,6 +50,41 @@ jobs:
           test -s assets/stage2/rooftop/152AB8BD-FD1C-44F8-BCBD-D043437BC255.png
           test -s assets/stage2/rooftop/CE321790-436E-4BF6-BF00-23D8E11F8635.png
           test -s assets/stage2/rooftop/712D453B-A752-4A91-BB87-AE9554BBF4FA.png
+          test -s assets/stage2/rooftop/04C075DB-907D-4B1D-95AF-0DC90C81107A.png
+          test -s assets/stage2/rooftop/06266B22-0894-489A-9711-B79239B1A128.png
+          test -s assets/stage2/rooftop/07D8F9F6-4DE1-48F5-A2AB-58E5A204DE56.png
+          test -s assets/stage2/rooftop/091AAB6A-F854-4477-8752-D1B58381AA37.png
+          test -s assets/stage2/rooftop/100882C5-14DA-4017-891C-7CDA8F39F084.png
+          test -s assets/stage2/rooftop/142AAECF-81A4-4CD9-85F3-8D59EBB3F55B.png
+          test -s assets/stage2/rooftop/159DD9FD-ADB2-448C-98FD-CD14991E4FE2.png
+          test -s assets/stage2/rooftop/1CF31F35-DC61-4CA6-B284-9362DDCEE75D.png
+          test -s assets/stage2/rooftop/1D5689D4-376E-410B-8596-22D02BC68210.png
+          test -s assets/stage2/rooftop/28C8741E-FF4D-4642-9B2D-F77236FFA97F.png
+          test -s assets/stage2/rooftop/33329A1A-C050-441E-9D23-C85EEDBCFD88.png
+          test -s assets/stage2/rooftop/3E73BF27-069C-4E22-A80D-737550CFA7B9.png
+          test -s assets/stage2/rooftop/3F996481-7410-40C1-9A5C-66C5374F97CC.png
+          test -s assets/stage2/rooftop/452DCE10-755B-4E2E-8D53-7B6C3E5790B8.png
+          test -s assets/stage2/rooftop/467F9C1F-30BE-4274-953A-E6CF9ADC358B.png
+          test -s assets/stage2/rooftop/50B3B697-BC29-4C39-8278-49C7AE643BC7.png
+          test -s assets/stage2/rooftop/62B88E5B-ECCA-4FB3-9DB8-DE4A70143F91.png
+          test -s assets/stage2/rooftop/77A34199-B559-4A99-8683-92889A35586F.png
+          test -s assets/stage2/rooftop/799F6394-1C8A-431B-9BCD-12EE63BAFE65.png
+          test -s assets/stage2/rooftop/7FDACB48-1789-4A22-9EBC-8BE321E13B4D.png
+          test -s assets/stage2/rooftop/81AF200A-886A-4CA2-A2DF-8F7E0FD7A6CF.png
+          test -s assets/stage2/rooftop/979836E9-6441-4AD5-9AAB-301DEDDA3F08.png
+          test -s assets/stage2/rooftop/9F2B5146-8350-45D9-86C0-A7E3A03FD43F.png
+          test -s assets/stage2/rooftop/A2B6AA2C-3A8F-4CBD-9B30-BDF320327968.png
+          test -s assets/stage2/rooftop/A683D766-579C-4F78-9DF1-425E03CAACED.png
+          test -s assets/stage2/rooftop/A7CFFEBC-EE18-4086-9F82-9B2840FB5B08.png
+          test -s assets/stage2/rooftop/A95ABCE5-11A8-4AA5-8FCE-5F18B016F5E6.png
+          test -s assets/stage2/rooftop/ABC893E7-6718-4006-8568-4B74BABAFDC1.png
+          test -s assets/stage2/rooftop/C935CA0B-5C44-45C4-A29B-1BBA10D4BDA1.png
+          test -s assets/stage2/rooftop/CB6B8417-8564-4F27-BFEB-8DB12889CF23.png
+          test -s assets/stage2/rooftop/D6AF22F9-E5AF-4765-813F-DC4A115B2A2F.png
+          test -s assets/stage2/rooftop/E1490764-AF8C-4DE7-8182-3895BB2E1BDE.png
+          test -s assets/stage2/rooftop/EC12F7F5-4E9E-42B5-B806-48372F81AA5C.png
+          test -s assets/stage2/rooftop/EDFA0F7E-8277-4744-A1D8-83A77E114397.png
+          test -s assets/stage2/rooftop/FCECFF5E-A6A3-44E3-A913-612E7923F975.png
           test -s stage2.html
           test -s puzzle-kit/wiring/assets/original/board.png
           test -s puzzle-kit/wiring/assets/original/pipe-straight.png
