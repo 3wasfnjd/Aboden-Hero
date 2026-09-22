@@ -15,12 +15,20 @@ test('Chapter 2 uses only drones on floors 1 and 5 and two shield guards on floo
   assert.deepEqual(FLOOR_DEFS[5].enemies,['drone','drone']);
 });
 
-test('new Stage 2 guard and both drone poses use the uploaded assets',()=>{
-  assert.match(art,/712D453B-A752-4A91-BB87-AE9554BBF4FA\.png/);
+test('shield guard uses the complete new animation pack while drone assets stay unchanged',()=>{
+  for(const id of [
+    '979836E9-6441-4AD5-9AAB-301DEDDA3F08',
+    '7FDACB48-1789-4A22-9EBC-8BE321E13B4D',
+    '467F9C1F-30BE-4274-953A-E6CF9ADC358B',
+    '06266B22-0894-489A-9711-B79239B1A128',
+    '33329A1A-C050-441E-9D23-C85EEDBCFD88',
+    '9F2B5146-8350-45D9-86C0-A7E3A03FD43F',
+    '799F6394-1C8A-431B-9BCD-12EE63BAFE65'
+  ])assert.match(art,new RegExp(id));
   assert.match(art,/CE321790-436E-4BF6-BF00-23D8E11F8635\.png/);
   assert.match(art,/152AB8BD-FD1C-44F8-BCBD-D043437BC255\.png/);
   assert.match(art,/type==='drone'\)\{drawDrone\(e,time\);return;\}/);
-  assert.match(art,/type==='newguard'\?newGuardAsset/);
+  assert.match(art,/type==='newguard'\)\{drawNewGuard\(e,time\);return;\}/);
 });
 
 test('drones hover, move and have their own shooting rhythm',()=>{
@@ -47,8 +55,28 @@ test('new guard shield blocks frontal bullets and accepts rear hits',()=>{
 });
 
 
-test('new shield guard uses its own full-cell sprite frames instead of legacy city crops',()=>{
-  assert.match(art,/const NEW_GUARD_FRAMES=\{/);
-  assert.match(art,/idle:\[\[0,0,280,280\]/);
-  assert.match(art,/type==='newguard'\?NEW_GUARD_FRAMES/);
+test('new shield guard uses measured per-action frame boxes and a visible defeat animation',()=>{
+  assert.match(art,/NEW_GUARD_ANIMS=Object\.freeze/);
+  assert.match(art,/state='defeat'/);
+  assert.match(art,/drawFrameSet\(ctx,newGuardAssets\[state\]/);
+  assert.match(stage2,/time-e\.deathAt<\.90/);
+});
+
+
+test('tower hero uses every uploaded high quality pose group',()=>{
+  for(const id of [
+    'A683D766-579C-4F78-9DF1-425E03CAACED',
+    '50B3B697-BC29-4C39-8278-49C7AE643BC7',
+    'E1490764-AF8C-4DE7-8182-3895BB2E1BDE',
+    'EDFA0F7E-8277-4744-A1D8-83A77E114397',
+    'FCECFF5E-A6A3-44E3-A913-612E7923F975',
+    '3F996481-7410-40C1-9A5C-66C5374F97CC',
+    'D6AF22F9-E5AF-4765-813F-DC4A115B2A2F',
+    '07D8F9F6-4DE1-48F5-A2AB-58E5A204DE56',
+    'ABC893E7-6718-4006-8568-4B74BABAFDC1',
+    'CB6B8417-8564-4F27-BFEB-8DB12889CF23',
+    '1CF31F35-DC61-4CA6-B284-9362DDCEE75D',
+    '62B88E5B-ECCA-4FB3-9DB8-DE4A70143F91',
+    '81AF200A-886A-4CA2-A2DF-8F7E0FD7A6CF'
+  ])assert.match(art,new RegExp(id));
 });
