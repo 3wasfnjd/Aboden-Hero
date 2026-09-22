@@ -6,6 +6,13 @@ const BOSS_URL='./assets/Gatekeeper.png';
 const CITY_URL='./assets/City_Guard.png';
 const HEAVY_URL='./assets/Heavy_Guard.png';
 const SNIPER_URL='./assets/Sniper_Rooftop_Guard.png';
+const MOVEMENT_URL='./assets/aboden-hero-movement.png';
+
+const MOVE_FRAMES=Object.freeze({
+ run:[[6,42,206,306],[194,42,209,307],[402,43,196,304],[583,38,239,309],[808,42,208,306],[1008,39,208,310],[1220,43,211,306],[1436,42,217,307]],
+ jump:[[411,436,215,244],[679,358,262,281],[984,421,287,269]],
+ fall:[[463,687,326,229],[885,692,334,246]]
+});
 
 const HERO_POSE_SETS=Object.freeze({
  idle:[
@@ -14,17 +21,10 @@ const HERO_POSE_SETS=Object.freeze({
   ['./assets/stage2/rooftop/E1490764-AF8C-4DE7-8182-3895BB2E1BDE.png',[97,57,1210,1254]],
   ['./assets/stage2/rooftop/EDFA0F7E-8277-4744-A1D8-83A77E114397.png',[258,84,1057,1238]]
  ],
- run:[['./assets/stage2/rooftop/FCECFF5E-A6A3-44E3-A913-612E7923F975.png',[97,70,1210,1206]]],
- jump:[['./assets/stage2/rooftop/3F996481-7410-40C1-9A5C-66C5374F97CC.png',[89,0,1210,1254]]],
- fall:[['./assets/stage2/rooftop/D6AF22F9-E5AF-4765-813F-DC4A115B2A2F.png',[69,9,1210,1231]]],
  shoot:[
   ['./assets/stage2/rooftop/07D8F9F6-4DE1-48F5-A2AB-58E5A204DE56.png',[63,21,1214,1234]],
   ['./assets/stage2/rooftop/ABC893E7-6718-4006-8568-4B74BABAFDC1.png',[69,21,1224,1235]],
   ['./assets/stage2/rooftop/CB6B8417-8564-4F27-BFEB-8DB12889CF23.png',[89,53,1224,1222]]
- ],
- dash:[
-  ['./assets/stage2/rooftop/1CF31F35-DC61-4CA6-B284-9362DDCEE75D.png',[0,18,1242,1254]],
-  ['./assets/stage2/rooftop/62B88E5B-ECCA-4FB3-9DB8-DE4A70143F91.png',[89,21,1210,1226]]
  ],
  hurt:[['./assets/stage2/rooftop/81AF200A-886A-4CA2-A2DF-8F7E0FD7A6CF.png',[73,48,1214,1254]]],
  climb:[['./assets/stage2/rooftop/77A34199-B559-4A99-8683-92889A35586F.png',[0,26,1059,1220]]],
@@ -46,13 +46,13 @@ const NEW_GUARD_URLS=Object.freeze({
  defeat:'./assets/stage2/rooftop/799F6394-1C8A-431B-9BCD-12EE63BAFE65.png'
 });
 const NEW_GUARD_ANIMS=Object.freeze({
- idle:{refH:693,boxes:[[0,3,537,690],[546,7,1072,692],[1095,23,1629,706],[1629,15,2120,708]]},
- walk:{refH:661,boxes:[[0,55,724,685],[724,140,1448,724],[1448,41,2132,702]]},
- aim:{refH:661,boxes:[[57,101,676,685],[725,101,1408,706],[1497,47,2120,708]]},
- fire:{refH:688,boxes:[[25,2,543,690],[543,31,1086,692],[1086,23,1628,697],[1629,27,2172,678]]},
+ idle:{refH:680,boxes:[[0,3,537,690],[546,7,1072,692],[1095,23,1629,706],[1629,15,2120,708]]},
+ walk:{refH:680,boxes:[[0,55,724,685],[724,140,1448,724],[1448,41,2132,702]]},
+ aim:{refH:680,boxes:[[57,101,676,685],[725,101,1408,706],[1497,47,2120,708]]},
+ fire:{refH:680,boxes:[[25,2,543,690],[543,31,1086,692],[1086,23,1628,697],[1629,27,2172,678]]},
  block:{refH:820,boxes:[[19,147,887,869],[887,35,1659,855]]},
- hurt:{refH:687,boxes:[[23,21,706,708],[725,55,1400,708],[1463,98,2126,724]]},
- defeat:{refH:596,boxes:[[10,38,272,634],[272,116,543,634],[543,55,814,636],[814,118,1086,668],[1086,223,1358,672],[1358,246,1629,674],[1629,264,1900,680],[1900,287,2171,691]]}
+ hurt:{refH:680,boxes:[[23,21,706,708],[725,55,1400,708],[1463,98,2126,724]]},
+ defeat:{refH:680,boxes:[[10,38,272,634],[272,116,543,634],[543,55,814,636],[814,118,1086,668],[1086,223,1358,672],[1358,246,1629,674],[1629,264,1900,680],[1900,287,2171,691]]}
 });
 
 const DRONE_IDLE_URL='./assets/stage2/rooftop/CE321790-436E-4BF6-BF00-23D8E11F8635.png';
@@ -77,6 +77,7 @@ const bossAsset=loadImage(BOSS_URL);
 const cityAsset=loadImage(CITY_URL);
 const heavyAsset=loadImage(HEAVY_URL);
 const sniperAsset=loadImage(SNIPER_URL);
+const movementAsset=loadImage(MOVEMENT_URL);
 const heroPoseAssets=Object.fromEntries(
  Object.entries(HERO_POSE_SETS).map(([k,entries])=>[
   k,
@@ -148,21 +149,34 @@ export function createArt(ctx){
   ctx.beginPath();ctx.ellipse(p.x+p.w/2,p.y+p.h+2,22,4,0,0,Math.PI*2);ctx.fill();
   ctx.restore();
 
+  // The uploaded Run/Jump/Fall/Dash files are single key poses, not animation
+  // sheets. Using them while the physics body moves causes visible skating.
+  // Keep the HQ uploaded art for matching action poses, but use the repository's
+  // real multi-frame movement sheet for locomotion.
+  if(p.dashTime>0){baseHero(p,time);return;}
+  if(p.shot<=.02&&p.invulnerable<=1.05&&!p.grounded&&movementAsset.ready){
+    const frames=p.vy<60?MOVE_FRAMES.jump:MOVE_FRAMES.fall;
+    const i=p.vy<60?Math.min(frames.length-1,p.vy<-260?1:2):Math.floor(time*7)%frames.length;
+    drawSprite(ctx,movementAsset.img,frames[i],p.x+p.w/2,p.y+p.h,p.facing,p.vy<60?79:76);
+    return;
+  }
+  if(p.shot<=.02&&p.invulnerable<=1.05&&p.grounded&&Math.abs(p.vx)>28&&movementAsset.ready){
+    const speed=Math.min(15,9+Math.abs(p.vx)/55);
+    const i=Math.floor(time*speed)%MOVE_FRAMES.run.length;
+    drawSprite(ctx,movementAsset.img,MOVE_FRAMES.run[i],p.x+p.w/2,p.y+p.h,p.facing,82);
+    return;
+  }
+
   let state='idle',displayH=82;
   if(p.invulnerable>1.05){state='hurt';displayH=80;}
-  else if(p.dashTime>0){state='dash';displayH=82;}
   else if(p.shot>.02){state='shoot';displayH=83;}
-  else if(!p.grounded){state=p.vy<60?'jump':'fall';displayH=80;}
-  else if(Math.abs(p.vx)>28){state='run';displayH=82;}
 
   const set=heroPoseAssets[state]??heroPoseAssets.idle;
-  let index=0;
-  if(state==='idle')index=Math.floor(time*3.2)%set.length;
-  else if(state==='shoot')index=Math.min(set.length-1,Math.floor(Math.max(0,.14-p.shot)/.14*set.length));
-  else if(state==='dash')index=Math.floor(time*10)%set.length;
+  const index=state==='shoot'
+    ?Math.min(set.length-1,Math.floor(Math.max(0,.14-p.shot)/.14*set.length))
+    :Math.floor(time*2.2)%set.length;
   const pose=set[index]??set[0];
-  const bob=state==='run'?Math.sin(time*15)*1.3:0;
-  if(drawBoundedImage(ctx,pose.asset,pose.bounds,p.x+p.w/2,p.y+p.h+bob,p.facing,displayH))return;
+  if(drawBoundedImage(ctx,pose.asset,pose.bounds,p.x+p.w/2,p.y+p.h,p.facing,displayH))return;
   base.hero(p,time);
  }
 
