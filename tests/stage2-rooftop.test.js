@@ -16,14 +16,14 @@ test('floor 6 unlocks a ladder route instead of ending Chapter 2 immediately',()
   assert.match(stage2,/function enterRooftop\(\)/);
 });
 
-test('rooftop battle uses the uploaded background, hero melee sheet and armored boss sheet',()=>{
+test('rooftop battle uses the new high quality hero and boss animation pack',()=>{
   assert.match(rooftop,/E254AA9A-004F-4581-B58B-1FF6F0427114\.jpeg/);
-  assert.match(rooftop,/B78F8298-AC6E-4984-8171-6060AD95C1AD\.png/);
-  assert.match(rooftop,/0D1BD2D4-2C58-41AD-87C6-AF3454DDCD3D\.png/);
-  assert.match(rooftop,/climb:\[\[/);
-  assert.match(rooftop,/punch1:\[\[/);
-  assert.match(rooftop,/heavy:\[\[/);
-  assert.match(rooftop,/defeat:\[\[/);
+  assert.match(rooftop,/28C8741E-FF4D-4642-9B2D-F77236FFA97F\.png/);
+  assert.match(rooftop,/3E73BF27-069C-4E22-A80D-737550CFA7B9\.png/);
+  assert.match(rooftop,/159DD9FD-ADB2-448C-98FD-CD14991E4FE2\.png/);
+  assert.match(rooftop,/100882C5-14DA-4017-891C-7CDA8F39F084\.png/);
+  assert.match(rooftop,/091AAB6A-F854-4477-8752-D1B58381AA37\.png/);
+  assert.match(rooftop,/04C075DB-907D-4B1D-95AF-0DC90C81107A\.png/);
 });
 
 test('the final fight is melee-only and exposes a boss HUD',()=>{
@@ -50,11 +50,10 @@ test('boss defeat removes the boss, runs a scripted Floss victory dance, then co
 });
 
 
-test('rooftop ladder is on the left and hero uses the retained multi-frame movement sheet',()=>{
+test('rooftop ladder stays on the left and climbing uses the new high quality pose',()=>{
   assert.match(rooftop,/ROOFTOP_LADDER_X=204/);
-  assert.match(rooftop,/HERO_WALK_URL='\.\/assets\/aboden-hero-movement\.png'/);
-  assert.match(rooftop,/HERO_WALK_FRAMES=Object\.freeze\(\[/);
-  assert.match(rooftop,/drawRawSprite\(ctx,heroWalkAsset/);
+  assert.match(rooftop,/77A34199-B559-4A99-8683-92889A35586F\.png/);
+  assert.match(rooftop,/drawBoundedAsset\(ctx,heroMeleeAssets\.climb/);
 });
 
 test('rooftop boss difficulty is reduced and hero melee damage is stronger',()=>{
@@ -64,12 +63,11 @@ test('rooftop boss difficulty is reduced and hero melee damage is stronger',()=>
 });
 
 
-test('uploaded ladder and six-frame boss walk sheet are integrated into the rooftop finale',()=>{
+test('uploaded ladder and normalized high quality boss animations are integrated',()=>{
   assert.match(rooftop,/C73795B9-E427-4AA3-A3DC-B3C990A6B7F4\.png/);
-  assert.match(rooftop,/68F8B92C-855E-4303-B55B-4E69B4BDDDE7\.png/);
-  assert.match(rooftop,/BOSS_WALK_FRAMES=Object\.freeze\(\[/);
-  assert.match(rooftop,/drawSprite\(ctx,bossWalkAsset/);
+  assert.match(rooftop,/BOSS_ANIMS=Object\.freeze/);
   assert.match(rooftop,/BOSS_VISUAL_H=232/);
+  assert.match(rooftop,/drawFrameSet\(ctx,bossAssets\[state\]/);
   assert.match(rooftop,/const displayH=184/);
   assert.match(rooftop,/drawSprite\(ctx,ladderAsset/);
 });
@@ -84,8 +82,9 @@ test('rooftop fighters stand higher and rain uses layered natural streaks with s
 });
 
 
-test('hero victory frame keeps the full head and Chapter 2 uses Stage 1 framed UI assets',()=>{
-  assert.match(rooftop,/win:\[\[1152,683,362,329\]\]/);
+test('Chapter 2 keeps Stage 1 framed UI assets with new full-body hero rendering',()=>{
+  assert.match(rooftop,/HERO_MELEE_POSES=Object\.freeze/);
+  assert.match(rooftop,/drawBoundedAsset\(ctx,entry/);
   assert.match(html,/class="health" id="health-panel"/);
   assert.match(css,/assets\/ui\/hud\/health\.png/);
   assert.match(css,/assets\/ui\/hud\/area\.png/);
@@ -104,4 +103,19 @@ test('Floss animation uses the two uploaded four-frame dance sheets and locks co
   assert.doesNotMatch(rooftop,/frame:'punch1'|frame:'block'|frame:'heavy'|frame:'dodge'/);
   assert.match(stage2,/scene==='rooftop-dance'/);
   assert.match(html,/زعيم \+ Floss/);
+});
+
+
+test('all eight new rooftop boss actions have dedicated assets and one locked visual height',()=>{
+  for(const id of [
+    '04C075DB-907D-4B1D-95AF-0DC90C81107A',
+    '091AAB6A-F854-4477-8752-D1B58381AA37',
+    '100882C5-14DA-4017-891C-7CDA8F39F084',
+    '142AAECF-81A4-4CD9-85F3-8D59EBB3F55B',
+    '1D5689D4-376E-410B-8596-22D02BC68210',
+    'A2B6AA2C-3A8F-4CBD-9B30-BDF320327968',
+    'C935CA0B-5C44-45C4-A29B-1BBA10D4BDA1',
+    'EC12F7F5-4E9E-42B5-B806-48372F81AA5C'
+  ])assert.match(rooftop,new RegExp(id));
+  assert.match(rooftop,/BOSS_VISUAL_H=232/);
 });
