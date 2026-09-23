@@ -50,6 +50,10 @@ let scene='tower',rooftopUnlocked=false,climbTime=0,climbStartX=0,climbStartY=0,
 function loadImage(url){const img=new Image();img.decoding='async';if(url)img.src=url;return img;}
 const towerBackground=loadImage('./assets/stage2/tower-background-with-puzzles.png?v=20260921-embedded-puzzles-1');
 const elevatorPlatformImage=loadImage('./assets/ui/level/platform.png?v=20260921-stage2-elevator-1');
+const checkpointImage=loadImage('./assets/ui/level/checkpoint.png?v=20260923-stage2-floor-checkpoints-1');
+const CHECKPOINT_DISPLAY_H=100;
+const CHECKPOINT_LEFT_X=360;
+const CHECKPOINT_RIGHT_X=664;
 const rooftop=createRooftopBattle(ctx,{width:W,height:H});
 
 const floorPlatforms=makeFloorPlatforms();
@@ -62,6 +66,52 @@ const elevatorSolid={
   oneWay:true
 };
 const solids=[...floorPlatforms,elevatorSolid];
+
+function createFloorCheckpoints(){
+  return Array.from({length:FLOOR_COUNT},(_,index)=>{
+    const floor=index+1;
+    return {floor,x:floor%2===1?CHECKPOINT_LEFT_X:CHECKPOINT_RIGHT_X,active:false};
+  });
+}
+let checkpoints=createFloorCheckpoints();
+
+function checkpointForFloor(floor){
+  return checkpoints[floor-1]??null;
+}
+function activateCheckpoint(floor){
+  const cp=checkpointForFloor(floor);
+  if(!cp||cp.active)return false;
+  cp.active=true;
+  player.hp=5;
+  burst(cp.x,groundY(floor)-48,'#61ffa7',12);
+  toast(`تم حفظ التقدم — الطابق ${floor}`);
+  sound(920,.2,'triangle');
+  updateHUD();
+  return true;
+}
+function updateCheckpointActivation(){
+  if(scene!=='tower'||progress.mode!=='floor'||!player.grounded)return;
+  const floor=playerFloor();
+  if(floor!==progress.currentFloor)return;
+  const cp=checkpointForFloor(floor);
+  if(!cp||cp.active)return;
+  const center=player.x+player.w/2;
+  if(Math.abs(center-cp.x)<=42)activateCheckpoint(floor);
+}
+function drawCheckpoint(cp){
+  if(!checkpointImage.complete||!checkpointImage.naturalWidth)return;
+  const dh=CHECKPOINT_DISPLAY_H;
+  const dw=dh*(checkpointImage.naturalWidth/checkpointImage.naturalHeight);
+  ctx.save();
+  if(!cp.active){
+    ctx.filter='grayscale(.85) brightness(.65)';
+    ctx.globalAlpha=.85;
+  }else{
+    ctx.globalAlpha=.92+Math.sin(time*3+cp.x+cp.floor)*.08;
+  }
+  ctx.drawImage(checkpointImage,cp.x-dw/2,groundY(cp.floor)-dh,dw,dh);
+  ctx.restore();
+}
 
 function setElevatorGround(y){
   elevatorSolid.y=y;
@@ -270,6 +320,7 @@ function updateAction(){
 }
 function reset(){
   progress=createProgress();player=createPlayer(arrivalXForFloor(1,30),groundY(1)-44);player.facing=1;state='menu';time=0;elapsed=0;
+  checkpoints=createFloorCheckpoints();
   destroyActivePuzzle();bullets=[];enemyShots=[];particles=[];kills=0;puzzleOpen=false;activePuzzleFloor=null;
   elevatorAuto=null;elevatorDockFloor=null;elevatorPendingFloor=null;
   scene='tower';rooftopUnlocked=false;climbTime=0;climbStartX=0;climbStartY=0;endingTime=0;
@@ -318,11 +369,13 @@ function win(){
 }
 function respawn(){
   const floor=progress.currentFloor;
-  player=createPlayer(arrivalXForFloor(floor,30),groundY(floor)-44);
+  const cp=checkpointForFloor(floor);
+  const spawnX=cp?.active?cp.x-15:arrivalXForFloor(floor,30);
+  player=createPlayer(spawnX,groundY(floor)-44);
   player.facing=floor%2===1?1:-1;player.invulnerable=1.8;
   bullets=[];enemyShots=[];if(FLOOR_DEFS[floor].type==='combat'&&!progress.floors[floor].complete)spawnFloorEnemies(floor);
   elevatorAuto=null;elevatorDockFloor=null;elevatorPendingFloor=null;setElevatorForFloor(floor);
-  toast('عدت إلى بداية الطابق');sound(170,.2,'triangle');updateHUD();
+  toast(cp?.active?'عدت إلى آخر نقطة حفظ':'عدت إلى بداية الطابق');sound(170,.2,'triangle');updateHUD();
 }
 function hurt(){if(player.invulnerable>0||player.dashTime>0)return;player.hp--;player.invulnerable=1.25;burst(player.x+15,player.y+22,'#ff646d',10);sound(150,.16,'sawtooth',.04);if(player.hp<=0)respawn();else updateHUD();}
 function finishChallenge(floor=progress.currentFloor){
@@ -490,6 +543,7 @@ function tick(dt){
   player.x=clamp(player.x,FLOOR_LEFT,FLOOR_RIGHT-player.w);
   if(jumped){burst(player.x+15,player.y+44,'#d9d2b2',5);sound(500,.1,'triangle');}if(landed)burst(player.x+15,player.y+44,'#d9d2b2',4);
   if(player.y>groundY(progress.currentFloor)+150){respawn();return;}
+  updateCheckpointActivation();
   if(controls.shoot&&player.shot<=0){player.shot=SHOT_INTERVAL;bullets.push(makeHeroBullet(art.heroMuzzle(player,time),player.facing));sound(660,.055,'triangle',.035);}
   tickCombat(dt);
   for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=180*dt;p.life-=dt;}particles=particles.filter(p=>p.life>0);
@@ -570,6 +624,7 @@ function drawWorld(){
   drawTowerBackground();
 
   for(let floor=1;floor<=FLOOR_COUNT;floor++)drawFloorNumber(floor);
+  for(const cp of checkpoints)drawCheckpoint(cp);
   drawElevatorPlatform();
   drawRooftopLadder(ctx,{x:ROOFTOP_LADDER_X,bottomY:groundY(FLOOR_COUNT),unlocked:rooftopUnlocked,time});
   drawCollisionDebug();
@@ -780,4 +835,4 @@ $('sound').addEventListener('click',()=>{muted=!muted;unlockAudio();musicCtl?.se
 window.addEventListener('blur',()=>{clearInput();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){clearInput();if(state==='playing'&&!puzzleOpen)pause();}});
 reset();setIntroCopy();requestAnimationFrame(frame);
-if(new URLSearchParams(location.search).has('test'))window.__stage2={get progress(){return progress;},get player(){return player;},get enemies(){return enemySets.get(progress.currentFloor)??[];},get state(){return state;},get scene(){return scene;},get rooftop(){return rooftop.stats();},get elevatorAuto(){return elevatorAuto;},tick,play,reset,finishChallenge,openPuzzle,startClimb};
+if(new URLSearchParams(location.search).has('test'))window.__stage2={get progress(){return progress;},get player(){return player;},get enemies(){return enemySets.get(progress.currentFloor)??[];},get checkpoints(){return checkpoints;},get state(){return state;},get scene(){return scene;},get rooftop(){return rooftop.stats();},get elevatorAuto(){return elevatorAuto;},tick,play,reset,finishChallenge,openPuzzle,startClimb};
