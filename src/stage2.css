@@ -578,6 +578,9 @@ html,body,#app,#stage,#game,#controls,#puzzle{
   box-shadow:0 12px 28px #000a,0 0 20px rgba(239,53,65,.28)!important;
   color:#fff!important;font-size:16px!important;font-weight:900!important;
   filter:none!important;
+  pointer-events:auto!important;
+  touch-action:manipulation!important;
+  z-index:7!important;
 }
 /* Keep the final puzzle slightly smaller on screen; source pixels are untouched. */
 #puzzle[data-type="cubes"] .embedded-puzzle-root{
