@@ -393,9 +393,10 @@ function finishChallenge(floor=progress.currentFloor){
 }
 function arriveNextFloor(){
   const floor=progress.currentFloor;
-  const previousY=elevatorSolid.y;
   const gy=setElevatorGround(groundY(floor));
-  player.y+=gy-previousY;
+  // Snap the hero directly onto the arrived elevator/floor surface.
+  // This removes the small drop/fall that used to happen after every ascent.
+  player.y=gy-player.h;
   player.vy=0;player.grounded=true;player.invulnerable=.45;enemyShots=[];bullets=[];
   elevatorDockFloor=floor;
   sound(740,.18,'triangle');updateHUD();updateAction();
