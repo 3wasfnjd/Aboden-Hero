@@ -2,14 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 
-test('floor arrival keeps the player continuous on the elevator instead of respawning them',()=>{
+test('floor arrival anchors the same player to the destination elevator',()=>{
   const js=readFileSync(new URL('../src/stage2.js',import.meta.url),'utf8');
   const start=js.indexOf('function arriveNextFloor(){');
   const end=js.indexOf('function startClimb',start);
   const arrive=js.slice(start,end);
-  assert.match(arrive,/player\.y\+=gy-previousY/);
+  assert.match(arrive,/elevatorSolid\.x=arrivalElevatorX/);
+  assert.match(arrive,/player\.x=arrivalXForFloor\(floor,player\.w\)/);
+  assert.match(arrive,/player\.y=gy-player\.h/);
   assert.match(arrive,/elevatorDockFloor=floor/);
-  assert.doesNotMatch(arrive,/player\.x=/);
+  assert.doesNotMatch(arrive,/createPlayer\(/);
   assert.doesNotMatch(arrive,/cameraX=target\.x/);
   assert.doesNotMatch(arrive,/toast\(/);
 });

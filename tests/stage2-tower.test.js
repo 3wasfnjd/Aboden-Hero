@@ -5,7 +5,7 @@ import {
   ELEVATOR_LEFT_X,ELEVATOR_RIGHT_X,ELEVATOR_WIDTH,
   FLOOR_LABEL_LEFT_X,FLOOR_LABEL_RIGHT_X,FLOOR_LABEL_Y,
   groundY,makeFloorPlatforms,elevatorGround,isFloorGeometryValid,
-  elevatorXForFloor,floorLabelX,floorLabelY,arrivalXForFloor,puzzleInteraction
+  elevatorXForFloor,floorLabelX,floorLabelY,arrivalElevatorXForFloor,arrivalXForFloor,puzzleInteraction
 } from '../src/stage2-tower.js';
 
 test('tower geometry matches the supplied six-floor background',()=>{
@@ -47,7 +47,10 @@ test('floor numbers alternate opposite the onward elevator and match reference h
   assert.equal(floorLabelY(6),190);
 });
 
-test('arrival side is opposite the next elevator on upper floors',()=>{
+test('arrival side is tied to the elevator from the previous floor',()=>{
+  assert.equal(arrivalElevatorXForFloor(1),null);
+  assert.equal(arrivalElevatorXForFloor(2),ELEVATOR_RIGHT_X);
+  assert.equal(arrivalElevatorXForFloor(3),ELEVATOR_LEFT_X);
   assert.equal(arrivalXForFloor(1,30),FLOOR_LEFT+70);
   assert.equal(arrivalXForFloor(2,30),ELEVATOR_RIGHT_X+ELEVATOR_WIDTH/2-15);
   assert.equal(arrivalXForFloor(3,30),ELEVATOR_LEFT_X+ELEVATOR_WIDTH/2-15);

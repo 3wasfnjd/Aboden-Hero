@@ -74,9 +74,14 @@ export function floorLabelY(floor){
  * Floor 1 starts on the left. Higher floors begin where the previous elevator arrived,
  * which is opposite the elevator that continues upward from that floor.
  */
+export function arrivalElevatorXForFloor(floor){
+  if(floor<=1)return null;
+  return elevatorXForFloor(floor-1);
+}
+
 export function arrivalXForFloor(floor,playerWidth=30){
   if(floor<=1)return FLOOR_LEFT+70;
-  const shaft=elevatorXForFloor(floor-1);
+  const shaft=arrivalElevatorXForFloor(floor);
   return shaft+ELEVATOR_WIDTH/2-playerWidth/2;
 }
 

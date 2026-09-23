@@ -12,11 +12,14 @@ import {
   FLOOR_DEFS,FLOOR_COUNT,createProgress,completeFloor,beginElevator,updateElevator
 } from './stage2-state.js?v=20260921-stage2-new-enemies-1';
 import {
+  loadCheckpointFloor,saveCheckpointFloor,clearCheckpointFloor,restoreProgressFromCheckpoint
+} from './stage2-save.js?v=20260923-stage2-save-elevator-link-1';
+import {
   TOWER_WIDTH,TOWER_HEIGHT,FLOOR_LEFT,FLOOR_RIGHT,
   ELEVATOR_WIDTH,ELEVATOR_PLATFORM_HEIGHT,
   groundY,makeFloorPlatforms,elevatorGround,puzzleInteraction,
-  elevatorXForFloor,floorLabelX,floorLabelY,arrivalXForFloor
-} from './stage2-tower.js?v=20260921-ui-crop-fix-1';
+  elevatorXForFloor,floorLabelX,floorLabelY,arrivalElevatorXForFloor,arrivalXForFloor
+} from './stage2-tower.js?v=20260923-stage2-save-elevator-link-1';
 import {
   ROOFTOP_LADDER_X,createRooftopBattle,drawRooftopLadder,drawRooftopClimber
 } from './stage2-rooftop.js?v=20260922-alpha-normalized-1';
@@ -82,6 +85,7 @@ function activateCheckpoint(floor){
   const cp=checkpointForFloor(floor);
   if(!cp||cp.active)return false;
   cp.active=true;
+  saveCheckpointFloor(floor,FLOOR_COUNT);
   player.hp=5;
   burst(cp.x,groundY(floor)-48,'#61ffa7',12);
   toast(`تم حفظ التقدم — الطابق ${floor}`);
@@ -319,24 +323,37 @@ function updateAction(){
   }
 }
 function reset(){
-  progress=createProgress();player=createPlayer(arrivalXForFloor(1,30),groundY(1)-44);player.facing=1;state='menu';time=0;elapsed=0;
-  checkpoints=createFloorCheckpoints();
+  progress=createProgress();checkpoints=createFloorCheckpoints();
+  const savedFloor=restoreProgressFromCheckpoint(progress,loadCheckpointFloor(FLOOR_COUNT),FLOOR_COUNT);
+  const spawnFloor=savedFloor||1;
+  if(savedFloor)for(const cp of checkpoints)cp.active=cp.floor<=savedFloor;
+  const savedCheckpoint=savedFloor?checkpointForFloor(savedFloor):null;
+  const spawnX=savedCheckpoint?savedCheckpoint.x-15:arrivalXForFloor(1,30);
+  player=createPlayer(spawnX,groundY(spawnFloor)-44);
+  player.facing=spawnFloor%2===1?1:-1;state='menu';time=0;elapsed=0;
   destroyActivePuzzle();bullets=[];enemyShots=[];particles=[];kills=0;puzzleOpen=false;activePuzzleFloor=null;
   elevatorAuto=null;elevatorDockFloor=null;elevatorPendingFloor=null;
   scene='tower';rooftopUnlocked=false;climbTime=0;climbStartX=0;climbStartY=0;endingTime=0;
   rooftop.reset();document.body.classList.remove('rooftop-melee');
   introTime=0;introActive=false;cameraZoom=FIT_ZOOM;
   const full=fullTowerCamera();cameraX=full.x;cameraY=full.y;
-  setElevatorForFloor(1);
+  setElevatorForFloor(spawnFloor);
   $('puzzle').hidden=true;$('boss-hud').hidden=true;
-  resetEnemies();clearInput();updateHUD();updateAction();
+  resetEnemies();
+  if(savedFloor){
+    for(let floor=1;floor<savedFloor;floor++){
+      if(FLOOR_DEFS[floor].type==='combat')enemySets.set(floor,[]);
+    }
+  }
+  clearInput();updateHUD();updateAction();
 }
 function setIntroCopy(){
   $('overlay').querySelector('.chapter-tag').textContent='ABODEN HERO / CHAPTER 02';
   $('overlay').querySelector('.eyebrow').textContent='ROOFTOP ELEVATOR';
   $('overlay').querySelector('h1').innerHTML='اصعد المبنى.<br><em>حتى السطح.</em>';
   $('overlay-description').textContent='أنه تحديات الطوابق الستة، افتح ممر السطح، ثم واجه الحارس الأخير.';
-  $('play').textContent='ابدأ الفصل الثاني ◀';
+  const savedFloor=loadCheckpointFloor(FLOOR_COUNT);
+  $('play').textContent=savedFloor?`متابعة من نقطة حفظ الطابق ${savedFloor} ◀`:'ابدأ الفصل الثاني ◀';
 }
 function play(){
   unlockAudio();
@@ -359,6 +376,7 @@ function pause(){
   }
 }
 function win(){
+  clearCheckpointFloor();
   state='won';clearInput();document.body.classList.remove('rooftop-melee');
   $('overlay').hidden=false;$('controls').hidden=true;$('hud').hidden=true;$('boss-hud').hidden=true;$('action').hidden=true;
   $('overlay').querySelector('.chapter-tag').textContent='ABODEN HERO / CHAPTER 02 COMPLETE';
@@ -370,11 +388,13 @@ function win(){
 function respawn(){
   const floor=progress.currentFloor;
   const cp=checkpointForFloor(floor);
+  const resumeElevator=floor<FLOOR_COUNT&&progress.floors[floor].complete&&progress.elevatorReady;
   const spawnX=cp?.active?cp.x-15:arrivalXForFloor(floor,30);
   player=createPlayer(spawnX,groundY(floor)-44);
   player.facing=floor%2===1?1:-1;player.invulnerable=1.8;
   bullets=[];enemyShots=[];if(FLOOR_DEFS[floor].type==='combat'&&!progress.floors[floor].complete)spawnFloorEnemies(floor);
   elevatorAuto=null;elevatorDockFloor=null;elevatorPendingFloor=null;setElevatorForFloor(floor);
+  if(resumeElevator)activateAutoElevator(floor);
   toast(cp?.active?'عدت إلى آخر نقطة حفظ':'عدت إلى بداية الطابق');sound(170,.2,'triangle');updateHUD();
 }
 function hurt(){if(player.invulnerable>0||player.dashTime>0)return;player.hp--;player.invulnerable=1.25;burst(player.x+15,player.y+22,'#ff646d',10);sound(150,.16,'sawtooth',.04);if(player.hp<=0)respawn();else updateHUD();}
@@ -393,11 +413,13 @@ function finishChallenge(floor=progress.currentFloor){
 }
 function arriveNextFloor(){
   const floor=progress.currentFloor;
+  const arrivalElevatorX=arrivalElevatorXForFloor(floor);
+  if(Number.isFinite(arrivalElevatorX))elevatorSolid.x=arrivalElevatorX;
   const gy=setElevatorGround(groundY(floor));
-  // Snap the hero directly onto the arrived elevator/floor surface.
-  // This removes the small drop/fall that used to happen after every ascent.
+  // Always land on the destination elevator anchor. Do not depend on carry drift.
+  player.x=arrivalXForFloor(floor,player.w);
   player.y=gy-player.h;
-  player.vy=0;player.grounded=true;player.invulnerable=.45;enemyShots=[];bullets=[];
+  player.vx=0;player.vy=0;player.grounded=true;player.invulnerable=.45;enemyShots=[];bullets=[];
   elevatorDockFloor=floor;
   sound(740,.18,'triangle');updateHUD();updateAction();
 }
