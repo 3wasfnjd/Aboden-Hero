@@ -8,7 +8,7 @@ const html=readFileSync(new URL('../stage2.html',import.meta.url),'utf8');
 const css=readFileSync(new URL('../src/stage2.css',import.meta.url),'utf8');
 
 test('floor 6 unlocks a ladder route instead of ending Chapter 2 immediately',()=>{
-  const finish=stage2.slice(stage2.indexOf('function finishChallenge('),stage2.indexOf('function arriveNextFloor'));
+  const finish=stage2.slice(stage2.indexOf('function finishChallenge('),stage2.indexOf('function startClimb'));
   assert.match(finish,/floor===FLOOR_COUNT[\s\S]*rooftopUnlocked=true/);
   assert.match(finish,/تم فتح ممر السطح/);
   assert.doesNotMatch(finish,/floor===FLOOR_COUNT[\s\S]{0,220}win\(\)/);
