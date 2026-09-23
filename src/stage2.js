@@ -54,13 +54,13 @@ const towerBackground=loadImage('./assets/stage2/tower-background-with-puzzles.p
 const elevatorPlatformImage=loadImage('./assets/ui/level/platform.png?v=20260921-stage2-elevator-1');
 const checkpointImage=loadImage('./assets/ui/level/checkpoint.png?v=20260923-stage2-floor-checkpoints-1');
 const CHAPTER_PRELOAD=Object.freeze([
-  './assets/stage2/ui/chapter-bg.png?v=20260923-stage2-menu-art-1',
-  './assets/stage2/ui/hero.png?v=20260923-stage2-menu-art-1',
-  './assets/stage2/ui/logo.png?v=20260923-stage2-menu-art-1',
-  './assets/stage2/ui/stage-title.png?v=20260923-stage2-menu-art-1',
-  './assets/stage2/ui/start-button.png?v=20260923-stage2-menu-art-1',
-  './assets/stage2/ui/loader-bar.png?v=20260923-stage2-menu-art-1',
-  './assets/stage2/ui/mission-info.png?v=20260923-stage2-menu-art-1',
+  './assets/stage2/ui/chapter-bg.png?v=20260923-stage2-menu-art-2',
+  './assets/stage2/ui/hero.png?v=20260923-stage2-menu-art-2',
+  './assets/stage2/ui/logo.png?v=20260923-stage2-menu-art-2',
+  './assets/stage2/ui/stage-title.png?v=20260923-stage2-menu-art-2',
+  './assets/stage2/ui/start-button.png?v=20260923-stage2-menu-art-2',
+  './assets/stage2/ui/loader-bar.png?v=20260923-stage2-menu-art-2',
+  './assets/stage2/ui/mission-info.png?v=20260923-stage2-menu-art-2',
   './assets/stage2/tower-background-with-puzzles.png?v=20260921-embedded-puzzles-1',
   './assets/ui/level/platform.png?v=20260921-stage2-elevator-1',
   './assets/ui/level/checkpoint.png?v=20260923-stage2-floor-checkpoints-1',
@@ -71,7 +71,7 @@ let chapterAssetsReady=false,chapterLoadStarted=false;
 function updateChapterLoader(done,total){
   const percent=total?Math.round(done/total*100):100;
   const fill=$('loader-fill'),label=$('loader-label'),value=$('loader-percent');
-  if(fill)fill.style.clipPath=`inset(0 ${100-percent}% 0 0)`;
+  if(fill)fill.style.width=`${percent}%`;
   if(value)value.textContent=`${percent}%`;
   if(label)label.textContent=percent>=100?'اكتمل تحميل صور المرحلة':'جاري تحميل صور المرحلة…';
 }
