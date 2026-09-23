@@ -1,6 +1,6 @@
 # جرد الصور — 23 سبتمبر 2026
 
-عدد الصور المتبقية: **94**. الحجم الإجمالي: **137,828,899 بايت (137.83 MB)**.
+عدد الصور المتبقية: **95**. الحجم الإجمالي: **139,842,038 بايت (139.84 MB)**.
 
 الأبعاد مقاسة من الملفات الأصلية، والحجم بالميغابايت العشرية: 1 MB = 1,000,000 بايت. قورنت بصمات SHA-256 قبل التنظيف وبعده: لم يتغير محتوى أي صورة متبقية.
 
@@ -10,6 +10,7 @@
 
 | الصورة | العرض × الارتفاع بالبكسل | MB | المرجع |
 | --- | ---: | ---: | --- |
+| [assets/ui/buttons/090C3156-0FE4-4947-8764-D222E59341D4.png](../assets/ui/buttons/090C3156-0FE4-4947-8764-D222E59341D4.png) | 2172 × 724 | 2.013 | [src/stage2-menu.css](../src/stage2-menu.css) |
 | [puzzle-kit/cubes/assets/original/solution.png](../puzzle-kit/cubes/assets/original/solution.png) | 3000 × 3000 | 17.663 | [puzzle-kit/cubes/assets.js](../puzzle-kit/cubes/assets.js) |
 | [assets/stage2/ui/chapter-bg.png](../assets/stage2/ui/chapter-bg.png) | 941 × 1672 | 3.876 | [src/stage2.js](../src/stage2.js) |
 | [assets/stage2/tower-background-with-puzzles.png](../assets/stage2/tower-background-with-puzzles.png) | 1024 × 1536 | 3.613 | [src/stage2.js](../src/stage2.js) |
