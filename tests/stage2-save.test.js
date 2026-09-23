@@ -28,8 +28,8 @@ test('restoring a checkpoint completes only earlier floors and restarts the save
   assert.equal(restoreProgressFromCheckpoint(progress,4,6),4);
   assert.equal(progress.currentFloor,4);
   assert.equal(progress.mode,'floor');
-  assert.equal(progress.elevatorReady,false);
-  assert.equal(progress.elevator,null);
+  assert.equal('elevatorReady' in progress,false);
+  assert.equal('elevator' in progress,false);
   assert.equal(progress.floors[1].complete,true);
   assert.equal(progress.floors[2].complete,true);
   assert.equal(progress.floors[3].complete,true);
