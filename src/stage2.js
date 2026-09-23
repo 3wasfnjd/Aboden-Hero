@@ -53,6 +53,41 @@ function loadImage(url){const img=new Image();img.decoding='async';if(url)img.sr
 const towerBackground=loadImage('./assets/stage2/tower-background-with-puzzles.png?v=20260921-embedded-puzzles-1');
 const elevatorPlatformImage=loadImage('./assets/ui/level/platform.png?v=20260921-stage2-elevator-1');
 const checkpointImage=loadImage('./assets/ui/level/checkpoint.png?v=20260923-stage2-floor-checkpoints-1');
+const CHAPTER_PRELOAD=Object.freeze([
+  './assets/stage2/tower-background-with-puzzles.png?v=20260921-embedded-puzzles-1',
+  './assets/stage2/rooftop/28C8741E-FF4D-4642-9B2D-F77236FFA97F.png',
+  './assets/ui/level/platform.png?v=20260921-stage2-elevator-1',
+  './assets/ui/level/checkpoint.png?v=20260923-stage2-floor-checkpoints-1',
+  './assets/ui/hud/health.png',
+  './assets/ui/hud/area.png',
+  './puzzle-kit/cubes/assets/original/board.png'
+]);
+let chapterAssetsReady=false,chapterLoadStarted=false;
+function updateChapterLoader(done,total){
+  const percent=total?Math.round(done/total*100):100;
+  const fill=$('loader-fill'),label=$('loader-label'),value=$('loader-percent');
+  if(fill)fill.style.width=`${percent}%`;
+  if(value)value.textContent=`${percent}%`;
+  if(label)label.textContent=percent>=100?'اكتمل تحميل صور المرحلة':'جاري تحميل صور المرحلة…';
+}
+function preloadChapterAssets(){
+  if(chapterLoadStarted)return;
+  chapterLoadStarted=true;
+  let done=0;
+  const total=CHAPTER_PRELOAD.length;
+  updateChapterLoader(0,total);
+  Promise.allSettled(CHAPTER_PRELOAD.map(src=>new Promise(resolve=>{
+    const image=new Image();
+    image.decoding='async';
+    const finish=()=>{done++;updateChapterLoader(done,total);resolve();};
+    image.onload=finish;image.onerror=finish;image.src=src;
+    if(image.complete)queueMicrotask(finish);
+  }))).then(()=>{
+    chapterAssetsReady=true;
+    updateChapterLoader(total,total);
+    setIntroCopy();
+  });
+}
 const CHECKPOINT_DISPLAY_H=100;
 const CHECKPOINT_LEFT_X=360;
 const CHECKPOINT_RIGHT_X=664;
@@ -340,12 +375,18 @@ function reset(){
   clearInput();updateHUD();updateAction();
 }
 function setIntroCopy(){
-  $('overlay').querySelector('.chapter-tag').textContent='ABODEN HERO / CHAPTER 02';
-  $('overlay').querySelector('.eyebrow').textContent='ROOFTOP ELEVATOR';
-  $('overlay').querySelector('h1').innerHTML='اصعد المبنى.<br><em>حتى السطح.</em>';
-  $('overlay-description').textContent='أنه تحديات الطوابق الستة، افتح ممر السطح، ثم واجه الحارس الأخير.';
+  const overlay=$('overlay'),playButton=$('play'),loader=$('asset-loader');
+  overlay.dataset.mode='menu';
+  overlay.querySelector('.chapter-tag').textContent='ABODEN HERO / CHAPTER 02';
+  overlay.querySelector('.eyebrow').textContent='الفصل الثاني';
+  overlay.querySelector('h1').innerHTML='<em>البرج</em>';
+  $('overlay-description').textContent='اختبارات أعلى، أعداء أشد، والطريق إلى السطح مفتوح لمن يصل.';
+  if(loader)loader.hidden=false;
   const savedFloor=loadCheckpointFloor(FLOOR_COUNT);
-  $('play').textContent=savedFloor?`متابعة من نقطة حفظ الطابق ${savedFloor} ◀`:'ابدأ الفصل الثاني ◀';
+  playButton.disabled=!chapterAssetsReady;
+  playButton.textContent=chapterAssetsReady
+    ?(savedFloor?`متابعة من نقطة حفظ الطابق ${savedFloor} ◀`:'ابدأ المهمة ◀')
+    :'جاري تحميل صور المرحلة…';
 }
 function play(){
   unlockAudio();
@@ -357,7 +398,7 @@ function play(){
 }
 function pause(){
   if(state==='playing'){
-    state='paused';clearInput();$('overlay').hidden=false;
+    state='paused';clearInput();$('overlay').hidden=false;$('overlay').dataset.mode='pause';$('asset-loader').hidden=true;$('play').disabled=false;
     $('overlay').querySelector('.chapter-tag').textContent='MISSION PAUSED';
     $('overlay').querySelector('.eyebrow').textContent='CHAPTER 02';
     $('overlay').querySelector('h1').innerHTML='المهمة<br><em>متوقفة.</em>';
@@ -370,7 +411,7 @@ function pause(){
 function win(){
   clearCheckpointFloor();
   state='won';clearInput();document.body.classList.remove('rooftop-melee');
-  $('overlay').hidden=false;$('controls').hidden=true;$('hud').hidden=true;$('boss-hud').hidden=true;$('action').hidden=true;
+  $('overlay').hidden=false;$('overlay').dataset.mode='win';$('asset-loader').hidden=true;$('play').disabled=false;$('controls').hidden=true;$('hud').hidden=true;$('boss-hud').hidden=true;$('action').hidden=true;
   $('overlay').querySelector('.chapter-tag').textContent='ABODEN HERO / CHAPTER 02 COMPLETE';
   $('overlay').querySelector('.eyebrow').textContent='VICTORY DANCE COMPLETE';
   $('overlay').querySelector('h1').innerHTML='انتصار.<br><em>عبودين!</em>';
@@ -808,5 +849,5 @@ $('sound').addEventListener('click',()=>{muted=!muted;unlockAudio();musicCtl?.se
 // actually becomes hidden (handled by visibilitychange below).
 window.addEventListener('blur',()=>{clearInput();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){clearInput();if(state==='playing'&&!puzzleOpen)pause();}});
-reset();setIntroCopy();requestAnimationFrame(frame);
+reset();setIntroCopy();preloadChapterAssets();requestAnimationFrame(frame);
 if(new URLSearchParams(location.search).has('test'))window.__stage2={get progress(){return progress;},get player(){return player;},get enemies(){return enemySets.get(progress.currentFloor)??[];},get checkpoints(){return checkpoints;},get elevators(){return elevators;},get state(){return state;},get scene(){return scene;},get rooftop(){return rooftop.stats();},tick,play,reset,finishChallenge,openPuzzle,startClimb};
