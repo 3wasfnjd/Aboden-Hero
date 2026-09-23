@@ -177,6 +177,9 @@ function playerOnElevator(elevator,y=elevator.y){
     && Math.abs(feet-y)<=12
     && player.vy>=-40;
 }
+function playerRidingElevator(){
+  return elevators.some(elevator=>playerOnElevator(elevator,elevator.y));
+}
 function syncPlayerFloor(){
   if(scene!=='tower'||!player.grounded)return;
   const floor=playerFloor(),feet=player.y+player.h;
@@ -567,7 +570,7 @@ function tick(dt){
   syncPlayerFloor();
   player.x=clamp(player.x,FLOOR_LEFT,FLOOR_RIGHT-player.w);
   if(jumped){burst(player.x+15,player.y+44,'#d9d2b2',5);sound(500,.1,'triangle');}if(landed)burst(player.x+15,player.y+44,'#d9d2b2',4);
-  if(player.y>groundY(progress.currentFloor)+150){respawn();return;}
+  if(!playerRidingElevator()&&player.y>groundY(progress.currentFloor)+150){respawn();return;}
   updateCheckpointActivation();
   if(controls.shoot&&player.shot<=0){player.shot=SHOT_INTERVAL;bullets.push(makeHeroBullet(art.heroMuzzle(player,time),player.facing));sound(660,.055,'triangle',.035);}
   tickCombat(dt);
