@@ -1,19 +1,19 @@
 # جرد الصور — 23 سبتمبر 2026
 
-عدد الصور المتبقية: **95**. الحجم الإجمالي: **143,623,799 بايت (143.62 MB)**.
+عدد الصور المتبقية: **94**. الحجم الإجمالي: **137,828,899 بايت (137.83 MB)**.
 
 الأبعاد مقاسة من الملفات الأصلية، والحجم بالميغابايت العشرية: 1 MB = 1,000,000 بايت. قورنت بصمات SHA-256 قبل التنظيف وبعده: لم يتغير محتوى أي صورة متبقية.
 
 عمود المرجع يبيّن ملف التعريف أو الاستخدام، ولا يعني أن جميع الصور تُحمّل في كل فصل. صور الألغاز أصلية ومحمية من إعادة التحجيم أو الضغط حسب تعليمات Puzzle Kit.
+
+تحديث الواجهة: أضيفت أيقونات قتال السطح الثلاث، وأزيلت أربع صور واجهة غير مستخدمة بعد استبدالها بعناصر HTML وCSS، بتوفير 9,977,262 بايت.
 
 | الصورة | العرض × الارتفاع بالبكسل | MB | المرجع |
 | --- | ---: | ---: | --- |
 | [puzzle-kit/cubes/assets/original/solution.png](../puzzle-kit/cubes/assets/original/solution.png) | 3000 × 3000 | 17.663 | [puzzle-kit/cubes/assets.js](../puzzle-kit/cubes/assets.js) |
 | [assets/stage2/ui/chapter-bg.png](../assets/stage2/ui/chapter-bg.png) | 941 × 1672 | 3.876 | [src/stage2.js](../src/stage2.js) |
 | [assets/stage2/tower-background-with-puzzles.png](../assets/stage2/tower-background-with-puzzles.png) | 1024 × 1536 | 3.613 | [src/stage2.js](../src/stage2.js) |
-| [assets/stage2/ui/start-button.png](../assets/stage2/ui/start-button.png) | 2172 × 724 | 3.338 | [src/stage2.css](../src/stage2.css) |
 | [puzzle-kit/wiring/assets/original/board.png](../puzzle-kit/wiring/assets/original/board.png) | 1286 × 1223 | 3.270 | [puzzle-kit/wiring/assets.js](../puzzle-kit/wiring/assets.js) |
-| [assets/stage2/ui/mission-info.png](../assets/stage2/ui/mission-info.png) | 1448 × 1086 | 3.036 | [src/stage2.js](../src/stage2.js) |
 | [puzzle-kit/matching/assets/original/board.png](../puzzle-kit/matching/assets/original/board.png) | 1243 × 1265 | 2.952 | [puzzle-kit/matching/assets.js](../puzzle-kit/matching/assets.js) |
 | [puzzle-kit/cubes/assets/original/start.png](../puzzle-kit/cubes/assets/original/start.png) | 1254 × 1254 | 2.766 | [puzzle-kit/cubes/assets.js](../puzzle-kit/cubes/assets.js) |
 | [puzzle-kit/cubes/assets/original/goal.png](../puzzle-kit/cubes/assets/original/goal.png) | 1254 × 1254 | 2.737 | [puzzle-kit/cubes/assets.js](../puzzle-kit/cubes/assets.js) |
@@ -24,7 +24,6 @@
 | [assets/backgrounds/stage1-portrait.png](../assets/backgrounds/stage1-portrait.png) | 941 × 1672 | 2.500 | [src/art-bg.js](../src/art-bg.js) |
 | [assets/stage2/ui/logo.png](../assets/stage2/ui/logo.png) | 1536 × 1024 | 2.476 | [src/stage2.js](../src/stage2.js) |
 | [puzzle-kit/cubes/assets/original/down.png](../puzzle-kit/cubes/assets/original/down.png) | 1254 × 1254 | 2.474 | [puzzle-kit/cubes/assets.js](../puzzle-kit/cubes/assets.js) |
-| [assets/stage2/ui/stage-title.png](../assets/stage2/ui/stage-title.png) | 1536 × 1024 | 2.328 | [src/stage2.js](../src/stage2.js) |
 | [assets/ui/level/goal.png](../assets/ui/level/goal.png) | 985 × 1371 | 2.273 | [src/art-bg.js](../src/art-bg.js) |
 | [assets/Heavy_Guard.png](../assets/Heavy_Guard.png) | 1122 × 1402 | 2.080 | [src/art.js](../src/art.js) |
 | [assets/ui/hud/area.png](../assets/ui/hud/area.png) | 2172 × 724 | 2.058 | [src/stage2.css](../src/stage2.css) |
@@ -45,10 +44,13 @@
 | [assets/stage2/ui/hero.png](../assets/stage2/ui/hero.png) | 1024 × 1536 | 1.484 | [src/stage2.js](../src/stage2.js) |
 | [assets/ui/hud/health.png](../assets/ui/hud/health.png) | 2172 × 724 | 1.480 | [src/stage2.css](../src/stage2.css) |
 | [assets/City_Guard.png](../assets/City_Guard.png) | 1122 × 1402 | 1.447 | [src/art.js](../src/art.js) |
+| [assets/ui/buttons/rooftop-dodge.webp](../assets/ui/buttons/rooftop-dodge.webp) | 1254 × 1254 | 1.445 | [src/stage2.css](../src/stage2.css) |
 | [assets/stage2/rooftop/EC12F7F5-4E9E-42B5-B806-48372F81AA5C.png](../assets/stage2/rooftop/EC12F7F5-4E9E-42B5-B806-48372F81AA5C.png) | 2172 × 724 | 1.441 | [src/stage2-rooftop.js](../src/stage2-rooftop.js) |
 | [assets/stage2/rooftop/152AB8BD-FD1C-44F8-BCBD-D043437BC255.png](../assets/stage2/rooftop/152AB8BD-FD1C-44F8-BCBD-D043437BC255.png) | 1254 × 1254 | 1.394 | [src/art.js](../src/art.js) |
 | [assets/stage2/rooftop/A3B1ACCB-271B-42D1-9AC7-94E9E4CF491B.png](../assets/stage2/rooftop/A3B1ACCB-271B-42D1-9AC7-94E9E4CF491B.png) | 1086 × 1448 | 1.387 | [src/stage2-rooftop.js](../src/stage2-rooftop.js) |
+| [assets/ui/buttons/rooftop-punch.webp](../assets/ui/buttons/rooftop-punch.webp) | 1254 × 1254 | 1.372 | [src/stage2.css](../src/stage2.css) |
 | [assets/stage2/rooftop/467F9C1F-30BE-4274-953A-E6CF9ADC358B.png](../assets/stage2/rooftop/467F9C1F-30BE-4274-953A-E6CF9ADC358B.png) | 2172 × 724 | 1.366 | [src/art.js](../src/art.js) |
+| [assets/ui/buttons/rooftop-heavy.webp](../assets/ui/buttons/rooftop-heavy.webp) | 1254 × 1254 | 1.366 | [src/stage2.css](../src/stage2.css) |
 | [assets/stage2/rooftop/06266B22-0894-489A-9711-B79239B1A128.png](../assets/stage2/rooftop/06266B22-0894-489A-9711-B79239B1A128.png) | 2172 × 724 | 1.364 | [src/art.js](../src/art.js) |
 | [assets/aboden-hero-movement.png](../assets/aboden-hero-movement.png) | 1672 × 941 | 1.335 | [src/art.js](../src/art.js) |
 | [assets/stage2/rooftop/452DCE10-755B-4E2E-8D53-7B6C3E5790B8.png](../assets/stage2/rooftop/452DCE10-755B-4E2E-8D53-7B6C3E5790B8.png) | 1254 × 1254 | 1.330 | [src/stage2-rooftop.js](../src/stage2-rooftop.js) |
@@ -57,7 +59,6 @@
 | [assets/stage2/rooftop/159DD9FD-ADB2-448C-98FD-CD14991E4FE2.png](../assets/stage2/rooftop/159DD9FD-ADB2-448C-98FD-CD14991E4FE2.png) | 1254 × 1254 | 1.295 | [src/stage2-rooftop.js](../src/stage2-rooftop.js) |
 | [assets/stage2/rooftop/81AF200A-886A-4CA2-A2DF-8F7E0FD7A6CF.png](../assets/stage2/rooftop/81AF200A-886A-4CA2-A2DF-8F7E0FD7A6CF.png) | 1254 × 1254 | 1.287 | [src/art.js](../src/art.js) |
 | [assets/ui/level/checkpoint.png](../assets/ui/level/checkpoint.png) | 571 × 1351 | 1.277 | [src/art-bg.js](../src/art-bg.js) |
-| [assets/stage2/ui/loader-bar.png](../assets/stage2/ui/loader-bar.png) | 2172 × 724 | 1.275 | [src/stage2.js](../src/stage2.js) |
 | [assets/ui/hud/boss.png](../assets/ui/hud/boss.png) | 2172 × 724 | 1.255 | [src/stage2.css](../src/stage2.css) |
 | [assets/ui/projectiles/rocket-smoke.png](../assets/ui/projectiles/rocket-smoke.png) | 2064 × 448 | 1.212 | [src/art.js](../src/art.js) |
 | [assets/stage2/rooftop/A95ABCE5-11A8-4AA5-8FCE-5F18B016F5E6.png](../assets/stage2/rooftop/A95ABCE5-11A8-4AA5-8FCE-5F18B016F5E6.png) | 1254 × 1254 | 1.205 | [src/stage2-rooftop.js](../src/stage2-rooftop.js) |

@@ -8,7 +8,8 @@
 <title>Aboden Hero • الفصل الثاني</title>
 <link rel="stylesheet" href="./puzzle-kit/core/puzzle-host.css?v=20260923-audit-1">
 <link rel="stylesheet" href="./src/controls.css?v=20260923-audit-1">
-<link rel="stylesheet" href="./src/stage2.css?v=20260923-rooftop-icons-1">
+<link rel="stylesheet" href="./src/stage2.css?v=20260923-menu-2">
+<link rel="stylesheet" href="./src/stage2-menu.css?v=20260923-menu-2">
 <link rel="stylesheet" href="./puzzle-kit/wiring/wiring.css?v=20260923-audit-1">
 <link rel="stylesheet" href="./puzzle-kit/matching/matching.css?v=20260923-audit-1">
 <link rel="stylesheet" href="./puzzle-kit/cubes/cubes.css?v=20260923-audit-1">
@@ -38,10 +39,17 @@
       <div class="chapter-menu-art" aria-hidden="true">
         <img class="chapter-bg-art" src="./assets/stage2/ui/chapter-bg.png?v=20260923-stage2-menu-art-3" alt="" draggable="false">
         <div class="chapter-menu-shade"></div>
-        <img class="chapter-logo-art" src="./assets/stage2/ui/logo.png?v=20260923-stage2-menu-art-3" alt="" draggable="false">
-        <img class="chapter-title-art" src="./assets/stage2/ui/stage-title.png?v=20260923-stage2-menu-art-3" alt="" draggable="false">
+      </div>
+      <header class="chapter-menu-heading">
+        <div class="chapter-brand"><img class="chapter-logo-art" src="./assets/stage2/ui/logo.png?v=20260923-stage2-menu-art-3" alt="عبودين هيرو" draggable="false"></div>
+        <p class="chapter-kicker"><span></span> الفصل الثاني <span></span></p>
+        <h2>الطريق إلى السطح</h2>
+        <p class="chapter-lead">اصعد البرج. حلّ الألغاز. واجه حارس السطح.</p>
+      </header>
+      <div class="chapter-menu-scene" aria-hidden="true">
+        <div class="chapter-hero-glow"></div>
         <img class="chapter-hero-art" src="./assets/stage2/ui/hero.png?v=20260923-stage2-menu-art-3" alt="" draggable="false">
-        <img class="chapter-info-art" src="./assets/stage2/ui/mission-info.png?v=20260923-stage2-menu-art-3" alt="" draggable="false">
+        <div class="chapter-scene-caption"><span>المواجهة الأخيرة</span><strong>في الأعلى،<br>ينتظرك الحارس.</strong><i></i></div>
       </div>
       <div class="overlay-copy">
         <div class="chapter-tag">ABODEN HERO / CHAPTER 02</div>
@@ -50,14 +58,18 @@
         <p id="overlay-description">اختبارات أعلى، أعداء أشد، والطريق إلى السطح مفتوح لمن يصل.</p>
       </div>
       <div class="overlay-action-zone">
-        <div id="asset-loader" class="asset-loader" aria-live="polite">
-          <div class="loader-copy"><span id="loader-label">جاري تحميل صور المرحلة…</span><b id="loader-percent">0%</b></div>
-          <div class="loader-art" aria-hidden="true">
-            <img class="loader-art-frame" src="./assets/stage2/ui/loader-bar.png?v=20260923-stage2-menu-art-3" alt="">
-            <span class="loader-track-progress"><i id="loader-fill"></i></span>
-          </div>
+        <dl class="chapter-mission-facts" aria-label="معلومات المهمة">
+          <div><dt>طوابق</dt><dd>06</dd></div>
+          <div><dt>ألغاز</dt><dd>03</dd></div>
+          <div><dt>مواجهة أخيرة</dt><dd>01</dd></div>
+        </dl>
+        <div id="asset-loader" class="asset-loader" data-state="loading">
+          <div class="loader-copy"><span id="loader-label" role="status">جاري تجهيز المرحلة…</span><b id="loader-percent" aria-hidden="true">0%</b></div>
+          <div id="loader-track" class="loader-track-progress" role="progressbar" aria-label="تحميل المرحلة" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="loader-fill"></i></div>
+          <p id="loader-hint">لحظات وتبدأ المهمة</p>
         </div>
         <button id="play" class="primary" disabled>جاري التحميل…</button>
+        <p class="chapter-save-note">يُحفظ تقدمك عند نقاط الحفظ</p>
       </div>
     </div>
     <div id="puzzle" hidden>
@@ -82,6 +94,6 @@
   </nav>
 </main>
 <noscript>فعّل JavaScript لتشغيل اللعبة.</noscript>
-<script type="module" src="./src/stage2.js?v=20260923-rooftop-icons-1"></script>
+<script type="module" src="./src/stage2.js?v=20260923-menu-2"></script>
 </body>
 </html>
