@@ -9,8 +9,8 @@ import {createMatchingPuzzle} from '../puzzle-kit/matching/matching.js?v=2026092
 import {createWiringPuzzle} from '../puzzle-kit/wiring/wiring.js?v=20260919-stage2-embed-2';
 import {createCubesPuzzle} from '../puzzle-kit/cubes/cubes.js?v=20260920-stage2-embed-1';
 import {
-  FLOOR_DEFS,FLOOR_COUNT,createProgress,completeFloor,beginElevator,updateElevator
-} from './stage2-state.js?v=20260921-stage2-new-enemies-1';
+  FLOOR_DEFS,FLOOR_COUNT,createProgress,completeFloor,reachFloor
+} from './stage2-state.js?v=20260923-always-on-elevators-1';
 import {
   loadCheckpointFloor,saveCheckpointFloor,clearCheckpointFloor,restoreProgressFromCheckpoint
 } from './stage2-save.js?v=20260923-stage2-save-elevator-link-1';
@@ -18,8 +18,8 @@ import {
   TOWER_WIDTH,TOWER_HEIGHT,FLOOR_LEFT,FLOOR_RIGHT,
   ELEVATOR_WIDTH,ELEVATOR_PLATFORM_HEIGHT,
   groundY,makeFloorPlatforms,elevatorGround,puzzleInteraction,
-  elevatorXForFloor,floorLabelX,floorLabelY,arrivalElevatorXForFloor,arrivalXForFloor
-} from './stage2-tower.js?v=20260923-stage2-save-elevator-link-1';
+  elevatorXForFloor,floorLabelX,floorLabelY,arrivalXForFloor
+} from './stage2-tower.js?v=20260923-always-on-elevators-1';
 import {
   ROOFTOP_LADDER_X,createRooftopBattle,drawRooftopLadder,drawRooftopClimber
 } from './stage2-rooftop.js?v=20260922-alpha-normalized-1';
@@ -44,7 +44,6 @@ let progress=createProgress(),player=createPlayer(arrivalXForFloor(1,30),groundY
 let cameraX=0,cameraY=0,cameraZoom=FIT_ZOOM,introTime=0,introActive=false;
 let bullets=[],enemyShots=[],particles=[],enemySets=new Map();
 let kills=0,toastTime=0,accumulator=0,last=0,puzzleOpen=false;
-let elevatorAuto=null,elevatorDockFloor=null,elevatorPendingFloor=null;
 let activePuzzleModule=null,puzzleSession=0,activePuzzleFloor=null;
 let muted=false,audio=null,musicCtl=null;
 let scene='tower',rooftopUnlocked=false,climbTime=0,climbStartX=0,climbStartY=0,endingTime=0;
@@ -60,15 +59,20 @@ const CHECKPOINT_RIGHT_X=664;
 const rooftop=createRooftopBattle(ctx,{width:W,height:H});
 
 const floorPlatforms=makeFloorPlatforms();
-const elevatorSolid={
-  x:elevatorXForFloor(1),
-  y:groundY(1),
-  w:ELEVATOR_WIDTH,
-  h:ELEVATOR_PLATFORM_HEIGHT,
-  ground:true,
-  oneWay:true
-};
-const solids=[...floorPlatforms,elevatorSolid];
+function createElevators(){
+  return Array.from({length:FLOOR_COUNT-1},(_,index)=>{
+    const from=index+1;
+    return {
+      from,to:from+1,
+      x:elevatorXForFloor(from),
+      y:groundY(from),
+      w:ELEVATOR_WIDTH,h:ELEVATOR_PLATFORM_HEIGHT,
+      ground:true,oneWay:true,phase:0
+    };
+  });
+}
+const elevators=createElevators();
+const solids=[...floorPlatforms,...elevators];
 
 function createFloorCheckpoints(){
   return Array.from({length:FLOOR_COUNT},(_,index)=>{
@@ -117,36 +121,25 @@ function drawCheckpoint(cp){
   ctx.restore();
 }
 
-function setElevatorGround(y){
-  elevatorSolid.y=y;
-  return y;
+function elevatorForFloor(floor){
+  return floor>=1&&floor<FLOOR_COUNT?elevators[floor-1]??null:null;
 }
-function setElevatorForFloor(floor){
-  elevatorSolid.x=elevatorXForFloor(floor);
-  elevatorSolid.y=groundY(floor);
-  return elevatorSolid;
+function elevatorCenterForFloor(floor){
+  const elevator=elevatorForFloor(floor);
+  return elevator?elevator.x+ELEVATOR_WIDTH/2:ROOFTOP_LADDER_X;
 }
-function currentElevatorCenter(){
-  return elevatorSolid.x+ELEVATOR_WIDTH/2;
-}
-function activateAutoElevator(floor=progress.currentFloor){
-  if(floor>=FLOOR_COUNT)return false;
-  if(elevatorDockFloor===floor&&playerOnElevator(elevatorSolid.y)){
-    elevatorPendingFloor=floor;
-    return true;
-  }
-  elevatorDockFloor=null;elevatorPendingFloor=null;
-  elevatorSolid.x=elevatorXForFloor(floor);
-  elevatorSolid.y=groundY(floor);
-  elevatorAuto={from:floor,to:floor+1,phase:0};
-  return true;
-}
-function playerOnElevator(y=elevatorSolid.y){
+function playerOnElevator(elevator,y=elevator.y){
   const feet=player.y+player.h;
-  return player.x+player.w>elevatorSolid.x+6
-    && player.x<elevatorSolid.x+elevatorSolid.w-6
+  return player.x+player.w>elevator.x+6
+    && player.x<elevator.x+elevator.w-6
     && Math.abs(feet-y)<=12
     && player.vy>=-40;
+}
+function syncPlayerFloor(){
+  if(scene!=='tower'||!player.grounded)return;
+  const floor=playerFloor(),feet=player.y+player.h;
+  if(Math.abs(feet-groundY(floor))>16)return;
+  if(floor!==progress.currentFloor)reachFloor(progress,floor);
 }
 function fullTowerCamera(){
   const vw=viewW(FIT_ZOOM),vh=viewH(FIT_ZOOM);
@@ -268,7 +261,7 @@ function challengeLabel(){
   if(scene==='rooftop-victory')return 'سقط الزعيم';
   if(scene==='rooftop-dance')return 'رقصة النصر — FLOSS';
   const floor=progress.currentFloor,def=FLOOR_DEFS[floor],done=progress.floors[floor].complete;
-  if(done)return floor===FLOOR_COUNT?'ممر السطح مفتوح':'المصعد جاهز';
+  if(done)return floor===FLOOR_COUNT?'ممر السطح مفتوح':'اكتمل تحدي الطابق — تابع الصعود';
   if(def.type==='combat')return 'اقضِ على جميع الأعداء';
   return def.puzzle==='match'?'صل الرموز المتطابقة':def.puzzle==='wiring'?'أكمل دائرة الطاقة':'رتّب المكعبات';
 }
@@ -332,12 +325,11 @@ function reset(){
   player=createPlayer(spawnX,groundY(spawnFloor)-44);
   player.facing=spawnFloor%2===1?1:-1;state='menu';time=0;elapsed=0;
   destroyActivePuzzle();bullets=[];enemyShots=[];particles=[];kills=0;puzzleOpen=false;activePuzzleFloor=null;
-  elevatorAuto=null;elevatorDockFloor=null;elevatorPendingFloor=null;
+  for(const elevator of elevators){elevator.phase=0;elevator.x=elevatorXForFloor(elevator.from);elevator.y=groundY(elevator.from);}
   scene='tower';rooftopUnlocked=false;climbTime=0;climbStartX=0;climbStartY=0;endingTime=0;
   rooftop.reset();document.body.classList.remove('rooftop-melee');
   introTime=0;introActive=false;cameraZoom=FIT_ZOOM;
   const full=fullTowerCamera();cameraX=full.x;cameraY=full.y;
-  setElevatorForFloor(spawnFloor);
   $('puzzle').hidden=true;$('boss-hud').hidden=true;
   resetEnemies();
   if(savedFloor){
@@ -388,13 +380,10 @@ function win(){
 function respawn(){
   const floor=progress.currentFloor;
   const cp=checkpointForFloor(floor);
-  const resumeElevator=floor<FLOOR_COUNT&&progress.floors[floor].complete&&progress.elevatorReady;
   const spawnX=cp?.active?cp.x-15:arrivalXForFloor(floor,30);
   player=createPlayer(spawnX,groundY(floor)-44);
   player.facing=floor%2===1?1:-1;player.invulnerable=1.8;
   bullets=[];enemyShots=[];if(FLOOR_DEFS[floor].type==='combat'&&!progress.floors[floor].complete)spawnFloorEnemies(floor);
-  elevatorAuto=null;elevatorDockFloor=null;elevatorPendingFloor=null;setElevatorForFloor(floor);
-  if(resumeElevator)activateAutoElevator(floor);
   toast(cp?.active?'عدت إلى آخر نقطة حفظ':'عدت إلى بداية الطابق');sound(170,.2,'triangle');updateHUD();
 }
 function hurt(){if(player.invulnerable>0||player.dashTime>0)return;player.hp--;player.invulnerable=1.25;burst(player.x+15,player.y+22,'#ff646d',10);sound(150,.16,'sawtooth',.04);if(player.hp<=0)respawn();else updateHUD();}
@@ -406,24 +395,10 @@ function finishChallenge(floor=progress.currentFloor){
     burst(ROOFTOP_LADDER_X,groundY(floor)-72,'#61ffa7',24);
     toast('تم فتح ممر السطح');
   }else{
-    burst(currentElevatorCenter(),groundY(floor)-36,'#61ffa7',24);
-    if(floor===progress.currentFloor)activateAutoElevator(floor);
+    burst(elevatorCenterForFloor(floor),groundY(floor)-36,'#61ffa7',24);
   }
   updateHUD();updateAction();
 }
-function arriveNextFloor(){
-  const floor=progress.currentFloor;
-  const arrivalElevatorX=arrivalElevatorXForFloor(floor);
-  if(Number.isFinite(arrivalElevatorX))elevatorSolid.x=arrivalElevatorX;
-  const gy=setElevatorGround(groundY(floor));
-  // Always land on the destination elevator anchor. Do not depend on carry drift.
-  player.x=arrivalXForFloor(floor,player.w);
-  player.y=gy-player.h;
-  player.vx=0;player.vy=0;player.grounded=true;player.invulnerable=.45;enemyShots=[];bullets=[];
-  elevatorDockFloor=floor;
-  sound(740,.18,'triangle');updateHUD();updateAction();
-}
-
 function startClimb(){
   if(scene!=='tower'||!rooftopUnlocked||progress.currentFloor!==FLOOR_COUNT)return;
   scene='climbing';climbTime=0;climbStartX=player.x;climbStartY=player.y;
@@ -489,34 +464,22 @@ function tickCombat(dt){
     if(def.type==='combat'&&!progress.floors[f].complete&&set.length&&set.every(e=>e.hp<=0))finishChallenge(f);
   }
 }
-function tickAutoElevator(dt){
-  if(!elevatorAuto)return false;
-  const auto=elevatorAuto;
-  const previousY=elevatorSolid.y;
-  const rider=playerOnElevator(previousY);
-  auto.phase=(auto.phase+dt/ELEVATOR_DURATION)%2;
-  const ascending=auto.phase<=1;
-  const move=ascending?ease(auto.phase):ease(2-auto.phase);
-  elevatorSolid.x=elevatorXForFloor(auto.from);
-  const gy=setElevatorGround(elevatorGround(auto.from,auto.to,move));
-  const dy=gy-previousY;
-
-  if(rider){
-    player.y+=dy;
-    player.grounded=true;
-    if(player.vy>0)player.vy=0;
-  }
-
-  if(rider&&ascending&&auto.phase>=.985){
-    // Reuse the state-machine transition only when the rider reaches the next floor.
-    if(beginElevator(progress)){
-      updateElevator(progress,1);
-      elevatorAuto=null;
-      arriveNextFloor();
-      return true;
+function tickElevators(dt){
+  for(const elevator of elevators){
+    const previousY=elevator.y;
+    const rider=playerOnElevator(elevator,previousY);
+    elevator.phase=(elevator.phase+dt/ELEVATOR_DURATION)%2;
+    const ascending=elevator.phase<=1;
+    const move=ascending?ease(elevator.phase):ease(2-elevator.phase);
+    elevator.x=elevatorXForFloor(elevator.from);
+    elevator.y=elevatorGround(elevator.from,elevator.to,move);
+    const dy=elevator.y-previousY;
+    if(rider){
+      player.y+=dy;
+      player.grounded=true;
+      if(player.vy>0)player.vy=0;
     }
   }
-  return false;
 }
 
 function tick(dt){
@@ -535,6 +498,7 @@ function tick(dt){
   if(isRooftopScene()){tickRooftop(dt);return;}
 
   tickEnemyPatrol(dt);
+  tickElevators(dt);
 
   if(introActive){
     introTime+=dt;
@@ -551,18 +515,8 @@ function tick(dt){
   }
 
   elapsed+=dt;
-  if(elevatorAuto){
-    if(tickAutoElevator(dt))return;
-  }else if(elevatorDockFloor===null){
-    setElevatorForFloor(progress.currentFloor);
-  }
   const controls=input(),{jumped,landed}=stepPlayer(player,controls,solids,dt);
-  if(elevatorDockFloor!==null&&!playerOnElevator(elevatorSolid.y)&&player.grounded){
-    const pending=elevatorPendingFloor;
-    elevatorDockFloor=null;elevatorPendingFloor=null;
-    if(pending===progress.currentFloor)activateAutoElevator(progress.currentFloor);
-    else setElevatorForFloor(progress.currentFloor);
-  }
+  syncPlayerFloor();
   player.x=clamp(player.x,FLOOR_LEFT,FLOOR_RIGHT-player.w);
   if(jumped){burst(player.x+15,player.y+44,'#d9d2b2',5);sound(500,.1,'triangle');}if(landed)burst(player.x+15,player.y+44,'#d9d2b2',4);
   if(player.y>groundY(progress.currentFloor)+150){respawn();return;}
@@ -601,23 +555,20 @@ function drawFloorNumber(floor){
   ctx.restore();
 }
 
-function drawElevatorPlatform(){
-  const gy=elevatorSolid.y;
-  const active=!!elevatorAuto||progress.floors[progress.currentFloor]?.complete;
-  const color=active?'#61ffa7':'#ff3d49';
+function drawElevatorPlatform(elevator){
+  const gy=elevator.y,color='#61ffa7';
   ctx.save();
-  ctx.shadowColor=color;ctx.shadowBlur=active?20:8;
+  ctx.shadowColor=color;ctx.shadowBlur=20;
   if(elevatorPlatformImage.complete&&elevatorPlatformImage.naturalWidth){
     const dw=ELEVATOR_WIDTH;
     const dh=elevatorPlatformImage.naturalHeight*(dw/elevatorPlatformImage.naturalWidth);
-    ctx.drawImage(elevatorPlatformImage,elevatorSolid.x,gy-14,dw,dh);
+    ctx.drawImage(elevatorPlatformImage,elevator.x,gy-14,dw,dh);
   }else{
     ctx.fillStyle='rgba(14,22,31,.92)';
-    ctx.fillRect(elevatorSolid.x,gy-10,ELEVATOR_WIDTH,14);
+    ctx.fillRect(elevator.x,gy-10,ELEVATOR_WIDTH,14);
   }
-  ctx.globalAlpha=active ? .88 : .62;
-  ctx.fillStyle=color;
-  ctx.fillRect(elevatorSolid.x+12,gy-4,ELEVATOR_WIDTH-24,3);
+  ctx.globalAlpha=.88;ctx.fillStyle=color;
+  ctx.fillRect(elevator.x+12,gy-4,ELEVATOR_WIDTH-24,3);
   ctx.restore();
 }
 
@@ -626,7 +577,7 @@ function drawCollisionDebug(){
   if(!DEBUG_PLATFORMS)return;
   ctx.save();ctx.globalAlpha=.45;ctx.fillStyle='#00ff9d';
   for(const solid of floorPlatforms)ctx.fillRect(solid.x,solid.y-2,solid.w,4);
-  ctx.fillStyle='#00d9ff';ctx.fillRect(elevatorSolid.x,elevatorSolid.y-3,elevatorSolid.w,6);
+  ctx.fillStyle='#00d9ff';for(const elevator of elevators)ctx.fillRect(elevator.x,elevator.y-3,elevator.w,6);
   ctx.restore();
 }
 
@@ -648,7 +599,7 @@ function drawWorld(){
 
   for(let floor=1;floor<=FLOOR_COUNT;floor++)drawFloorNumber(floor);
   for(const cp of checkpoints)drawCheckpoint(cp);
-  drawElevatorPlatform();
+  for(const elevator of elevators)drawElevatorPlatform(elevator);
   drawRooftopLadder(ctx,{x:ROOFTOP_LADDER_X,bottomY:groundY(FLOOR_COUNT),unlocked:rooftopUnlocked,time});
   drawCollisionDebug();
 
@@ -858,4 +809,4 @@ $('sound').addEventListener('click',()=>{muted=!muted;unlockAudio();musicCtl?.se
 window.addEventListener('blur',()=>{clearInput();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){clearInput();if(state==='playing'&&!puzzleOpen)pause();}});
 reset();setIntroCopy();requestAnimationFrame(frame);
-if(new URLSearchParams(location.search).has('test'))window.__stage2={get progress(){return progress;},get player(){return player;},get enemies(){return enemySets.get(progress.currentFloor)??[];},get checkpoints(){return checkpoints;},get state(){return state;},get scene(){return scene;},get rooftop(){return rooftop.stats();},get elevatorAuto(){return elevatorAuto;},tick,play,reset,finishChallenge,openPuzzle,startClimb};
+if(new URLSearchParams(location.search).has('test'))window.__stage2={get progress(){return progress;},get player(){return player;},get enemies(){return enemySets.get(progress.currentFloor)??[];},get checkpoints(){return checkpoints;},get elevators(){return elevators;},get state(){return state;},get scene(){return scene;},get rooftop(){return rooftop.stats();},tick,play,reset,finishChallenge,openPuzzle,startClimb};
