@@ -79,7 +79,14 @@ function preloadChapterAssets(){
   Promise.allSettled(CHAPTER_PRELOAD.map(src=>new Promise(resolve=>{
     const image=new Image();
     image.decoding='async';
-    const finish=()=>{done++;updateChapterLoader(done,total);resolve();};
+    let settled=false;
+    const finish=()=>{
+      if(settled)return;
+      settled=true;
+      done++;
+      updateChapterLoader(done,total);
+      resolve();
+    };
     image.onload=finish;image.onerror=finish;image.src=src;
     if(image.complete)queueMicrotask(finish);
   }))).then(()=>{
