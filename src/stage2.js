@@ -68,6 +68,9 @@ const CHAPTER_PRELOAD=Object.freeze([...new Set([
   './assets/ui/hud/area.png',
   './assets/ui/hud/boss.png',
   './assets/ui/toast-frame.png',
+  './assets/ui/buttons/rooftop-dodge.webp',
+  './assets/ui/buttons/rooftop-punch.webp',
+  './assets/ui/buttons/rooftop-heavy.webp',
   ...art.assetUrls,
   ...ROOFTOP_ASSET_URLS
 ])]);
