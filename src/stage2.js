@@ -60,7 +60,7 @@ const CHAPTER_PRELOAD=Object.freeze([
   './assets/ui/level/checkpoint.png?v=20260923-stage2-floor-checkpoints-1',
   './assets/ui/hud/health.png',
   './assets/ui/hud/area.png',
-  './puzzle-kit/cubes/assets/original/board.png'
+  './puzzle-kit/cubes/assets/original/board.jpg'
 ]);
 let chapterAssetsReady=false,chapterLoadStarted=false;
 function updateChapterLoader(done,total){
