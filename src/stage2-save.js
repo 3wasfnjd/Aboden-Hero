@@ -43,8 +43,6 @@ export function restoreProgressFromCheckpoint(progress,floor,floorCount=6){
   if(!safeFloor||!progress)return 0;
   progress.currentFloor=safeFloor;
   progress.mode='floor';
-  progress.elevatorReady=false;
-  progress.elevator=null;
   for(let index=1;index<=floorCount;index++){
     const state=progress.floors?.[index];
     if(!state)continue;
