@@ -2,7 +2,7 @@ const here=import.meta.url;
 const asset=name=>new URL(`./assets/original/${name}`,here).href;
 
 export const cubeAssets=Object.freeze({
-  base:asset('board.jpg'),
+  base:asset('board.png'),
   solved:asset('solution.png'),
   pieces:Object.freeze({
     start:asset('start.png'),
