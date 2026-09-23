@@ -21,7 +21,6 @@ const HERO_MELEE_POSES=Object.freeze({
  punch1:['./assets/stage2/rooftop/3E73BF27-069C-4E22-A80D-737550CFA7B9.png',[28,84,1241,1206]],
  punch2:['./assets/stage2/rooftop/A95ABCE5-11A8-4AA5-8FCE-5F18B016F5E6.png',[54,98,1232,1185]],
  heavy:['./assets/stage2/rooftop/159DD9FD-ADB2-448C-98FD-CD14991E4FE2.png',[123,12,1191,1241]],
- block:['./assets/stage2/rooftop/A7CFFEBC-EE18-4086-9F82-9B2840FB5B08.png',[165,27,1133,1233]],
  dodge:['./assets/stage2/rooftop/452DCE10-755B-4E2E-8D53-7B6C3E5790B8.png',[15,291,1244,1026]],
  hurt:['./assets/stage2/rooftop/81AF200A-886A-4CA2-A2DF-8F7E0FD7A6CF.png',[185,50,1121,1201]]
 });
@@ -57,45 +56,29 @@ const FLOSS_POSES=Object.freeze([
   Object.freeze({sheet:1,bounds:[264,20,1048,1420]})
 ]);
 
-function loadAsset(url,chroma=false){
+function loadAsset(url){
   const img=new Image();
   img.decoding='async';
   const state={img,source:img,ready:false};
   img.addEventListener('load',()=>{
-    state.source=chroma?removeWhiteMatte(img):img;
     state.ready=true;
   });
   img.src=url;
   return state;
 }
 
-function removeWhiteMatte(img){
-  const canvas=document.createElement('canvas');
-  canvas.width=img.naturalWidth;
-  canvas.height=img.naturalHeight;
-  const c=canvas.getContext('2d',{willReadFrequently:true});
-  c.drawImage(img,0,0);
-  const data=c.getImageData(0,0,canvas.width,canvas.height);
-  for(let i=0;i<data.data.length;i+=4){
-    const r=data.data[i],g=data.data[i+1],b=data.data[i+2];
-    const min=Math.min(r,g,b),max=Math.max(r,g,b),spread=max-min;
-    if(min>=246&&spread<=12)data.data[i+3]=0;
-    else if(min>224&&spread<=18)data.data[i+3]=Math.round(clamp((246-min)/22,0,1)*255);
-  }
-  c.putImageData(data,0,0);
-  return canvas;
-}
+export const ROOFTOP_ASSET_URLS=Object.freeze([BG_URL,HERO_WALK_URL,LADDER_URL,FLOSS_A_URL,FLOSS_B_URL,...Object.values(HERO_MELEE_POSES).map(([url])=>url),...Object.values(BOSS_URLS)]);
 
-const backgroundAsset=loadAsset(BG_URL,false);
-const heroWalkAsset=loadAsset(HERO_WALK_URL,false);
+const backgroundAsset=loadAsset(BG_URL);
+const heroWalkAsset=loadAsset(HERO_WALK_URL);
 const heroMeleeAssets=Object.fromEntries(
-  Object.entries(HERO_MELEE_POSES).map(([k,[url,bounds]])=>[k,{asset:loadAsset(url,false),bounds}])
+  Object.entries(HERO_MELEE_POSES).map(([k,[url,bounds]])=>[k,{asset:loadAsset(url),bounds}])
 );
-const bossAssets=Object.fromEntries(Object.entries(BOSS_URLS).map(([k,url])=>[k,loadAsset(url,false)]));
-const ladderAsset=loadAsset(LADDER_URL,false);
+const bossAssets=Object.fromEntries(Object.entries(BOSS_URLS).map(([k,url])=>[k,loadAsset(url)]));
+const ladderAsset=loadAsset(LADDER_URL);
 const flossAssets=[
-  loadAsset(FLOSS_A_URL,false),
-  loadAsset(FLOSS_B_URL,false)
+  loadAsset(FLOSS_A_URL),
+  loadAsset(FLOSS_B_URL)
 ];
 const flossPoses=FLOSS_POSES.map(p=>({asset:flossAssets[p.sheet],bounds:p.bounds}));
 
@@ -246,7 +229,7 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
     if(hero.invulnerable>0||hero.dodge>0||mode!=='fight')return;
     hero.hp=Math.max(0,hero.hp-damage);
     hero.hit=.34;hero.invulnerable=.72;hero.attack=null;
-    hero.x=clamp(hero.x-boss.facing*(damage===2?54:32),ARENA_LEFT,ARENA_RIGHT);
+    hero.x=clamp(hero.x+boss.facing*(damage===2?54:32),ARENA_LEFT,ARENA_RIGHT);
     events.push('hero-hit');
     if(hero.hp<=0){
       mode='hero-ko';timer=0;
@@ -587,13 +570,9 @@ export function createRooftopBattle(ctx,{width=720,height=1280}={}){
     }
   }
 
-  function finish(){
-    mode='complete';timer=0;
-  }
-
   function stats(){
     return {mode,heroHp:hero.hp,heroMax:hero.maxHp,bossHp:boss.hp,bossMax:boss.maxHp,cameraX,heroX:hero.x,bossX:boss.x};
   }
 
-  return {reset,start,tick,draw,finish,stats,get mode(){return mode;}};
+  return {reset,start,tick,draw,stats,get mode(){return mode;}};
 }

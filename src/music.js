@@ -49,7 +49,7 @@ export function createMusic(audioContext){
   src.connect(hp);hp.connect(g);g.connect(master);src.start(time);
  }
 
- let stepIndex=0,nextStepTime=0,timerId=null,running=false;
+ let stepIndex=0,nextStepTime=0,running=false;
  function scheduleStep(time,i){
   const note=BASS[i];if(note)bass(time,note);
   if(KICK_STEPS.has(i))kick(time);
@@ -61,7 +61,7 @@ export function createMusic(audioContext){
    scheduleStep(nextStepTime,stepIndex%STEPS);
    stepIndex++;nextStepTime+=STEP;
   }
-  timerId=setTimeout(scheduler,50);
+  setTimeout(scheduler,50);
  }
  return {
   start(){

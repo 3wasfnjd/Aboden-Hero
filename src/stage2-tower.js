@@ -102,6 +102,12 @@ export function elevatorGround(fromFloor,toFloor,progress){
   return groundY(fromFloor)+(groundY(toFloor)-groundY(fromFloor))*t;
 }
 
+// A rider must pass through the upper landing on the way back down. Otherwise
+// its one-way floor catches the player while the elevator keeps descending.
+export function solidsForElevatorRide(solids,elevator){
+  return elevator?solids.filter(solid=>solid.floor!==elevator.to):solids;
+}
+
 export function isFloorGeometryValid(){
   for(let floor=1;floor<=6;floor++){
     if(!Number.isFinite(FLOOR_GROUNDS[floor]))return false;

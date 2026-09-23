@@ -52,3 +52,19 @@ html,body{
   min-height:100%;
   overflow:hidden;
 }
+
+/* The desktop game frame is portrait too, so use the portrait menu composition. */
+#overlay .poster{z-index:-2}
+#overlay::before{
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(0deg,#07111ff5 0%,#07111fea 27%,#07111f70 49%,transparent 72%);
+}
+@media(min-width:1025px){
+  #overlay{align-items:flex-end;background:linear-gradient(0deg,#111a29fc 5%,#111a29ee 42%,#111a2944 100%);padding:6%}
+  .poster{width:100%;height:100%;object-fit:cover;object-position:center 25%;opacity:.65}
+  .panel{width:100%;max-width:none;padding:0}
+  h1{font-size:38px;margin:10px 0}
+  .panel>p{font-size:12px;max-width:100%}
+  .pills{margin:12px 0}
+  .panel .instructions{font-size:9px;margin-top:10px}
+}
