@@ -57,6 +57,7 @@ const CHAPTER_PRELOAD=Object.freeze([...new Set([
   './assets/stage2/ui/chapter-bg.png?v=20260923-stage2-menu-art-3',
   './assets/stage2/ui/hero.png?v=20260923-stage2-menu-art-3',
   './assets/stage2/ui/logo.png?v=20260923-stage2-menu-art-3',
+  './assets/ui/buttons/090C3156-0FE4-4947-8764-D222E59341D4.png',
   './assets/stage2/tower-background-with-puzzles.png?v=20260921-embedded-puzzles-1',
   './assets/ui/level/platform.png?v=20260921-stage2-elevator-1',
   './assets/ui/level/checkpoint.png?v=20260923-stage2-floor-checkpoints-1',
@@ -423,6 +424,8 @@ function setIntroCopy(){
   $('overlay-description').textContent='اختبارات أعلى، أعداء أشد، والطريق إلى السطح مفتوح لمن يصل.';
   if(loader)loader.hidden=false;
   const savedFloor=loadCheckpointFloor(FLOOR_COUNT);
+  overlay.querySelector('.chapter-save-note').textContent=savedFloor
+    ?`متابعة من نقطة حفظ الطابق ${savedFloor}`:'يُحفظ تقدمك عند نقاط الحفظ';
   playButton.disabled=!chapterAssetsReady;
   playButton.textContent=chapterAssetsReady
     ?(savedFloor?`متابعة من نقطة حفظ الطابق ${savedFloor} ◀`:'ابدأ المهمة ◀')
