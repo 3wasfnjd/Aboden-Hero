@@ -2,19 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 
-test('floor arrival anchors the same player to the destination elevator',()=>{
+test('all five floor elevators exist and run without challenge gates',()=>{
   const js=readFileSync(new URL('../src/stage2.js',import.meta.url),'utf8');
-  const start=js.indexOf('function arriveNextFloor(){');
-  const end=js.indexOf('function startClimb',start);
-  const arrive=js.slice(start,end);
-  assert.match(arrive,/elevatorSolid\.x=arrivalElevatorX/);
-  assert.match(arrive,/player\.x=arrivalXForFloor\(floor,player\.w\)/);
-  assert.match(arrive,/player\.y=gy-player\.h/);
-  assert.match(arrive,/elevatorDockFloor=floor/);
-  assert.doesNotMatch(arrive,/createPlayer\(/);
-  assert.doesNotMatch(arrive,/cameraX=target\.x/);
-  assert.doesNotMatch(arrive,/toast\(/);
+  assert.match(js,/Array\.from\(\{length:FLOOR_COUNT-1\}/);
+  assert.match(js,/function tickElevators\(dt\)/);
+  assert.match(js,/for\(const elevator of elevators\)\{/);
+  assert.doesNotMatch(js,/beginElevator|canUseElevator|elevatorReady|activateAutoElevator/);
 });
+
 
 test('Chapter 2 uses a persistent Stage 1-style area strip and no puzzle-device overlays are drawn',()=>{
   const html=readFileSync(new URL('../stage2.html',import.meta.url),'utf8');
