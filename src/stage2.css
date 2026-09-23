@@ -421,190 +421,162 @@ html,body,#app,#stage,#game,#controls,#puzzle{
 }
 
 
-/* Chapter 2 — game-art start/loading screen. Uses the real tower and hero assets. */
+/* Chapter 2 — image-asset start/loading screen. Visual design lives in supplied artwork. */
 #overlay{
   isolation:isolate;
-  align-items:flex-end;
-  justify-content:center;
-  padding:max(20px,env(safe-area-inset-top)) 18px max(28px,calc(env(safe-area-inset-bottom) + 18px));
-  background:#04070b;
+  display:block;
+  padding:0;
+  background:#030609;
   overflow:hidden;
 }
-#overlay::before{
-  content:"";
-  position:absolute;
-  inset:-5%;
-  z-index:-4;
-  background:url('../assets/stage2/tower-background-with-puzzles.png?v=20260921-embedded-puzzles-1') center/cover no-repeat;
-  filter:blur(18px) brightness(.34) saturate(.82);
-  transform:scale(1.08);
+#overlay[hidden]{display:none}
+.chapter-menu-art{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.chapter-bg-art{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:center top;
+  user-select:none;-webkit-user-drag:none;
 }
-.chapter-cover-tower{
-  position:absolute;
-  inset:0;
-  z-index:-3;
+.chapter-menu-shade{
+  position:absolute;inset:0;
   background:
-    linear-gradient(180deg,rgba(3,7,12,.08) 0%,rgba(3,7,12,.18) 45%,rgba(3,7,12,.90) 87%,#030609 100%),
-    url('../assets/stage2/tower-background-with-puzzles.png?v=20260921-embedded-puzzles-1') center top/auto 100% no-repeat;
+    linear-gradient(180deg,rgba(2,5,9,.04) 0%,rgba(2,5,9,.02) 45%,rgba(2,5,9,.52) 72%,rgba(2,5,9,.94) 100%),
+    linear-gradient(90deg,rgba(0,0,0,.22),transparent 44%,rgba(0,0,0,.08));
 }
-.chapter-cover-hero{
-  position:absolute;
-  z-index:-2;
-  left:-12%;
-  bottom:12%;
-  width:min(69vw,500px);
-  max-height:75%;
-  object-fit:contain;
+.chapter-logo-art,.chapter-title-art,.chapter-hero-art,.chapter-info-art{
+  position:absolute;display:block;object-fit:contain;
+  user-select:none;-webkit-user-drag:none;
+  filter:drop-shadow(0 10px 18px rgba(0,0,0,.48));
+}
+.chapter-logo-art{
+  top:max(22px,calc(env(safe-area-inset-top) + 8px));
+  left:50%;transform:translateX(-50%);
+  width:min(72vw,430px);max-height:16.5%;
+}
+.chapter-title-art{
+  top:17.5%;left:50%;transform:translateX(-50%);
+  width:min(69vw,405px);max-height:13.5%;
+}
+.chapter-hero-art{
+  left:-5%;bottom:18.5%;
+  width:min(52vw,340px);max-height:59%;
   object-position:left bottom;
-  filter:drop-shadow(18px 18px 24px rgba(0,0,0,.72));
-  pointer-events:none;
-  user-select:none;
+  filter:drop-shadow(14px 18px 22px rgba(0,0,0,.68));
 }
-#overlay::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  z-index:-1;
-  background:
-    linear-gradient(90deg,rgba(0,0,0,.28),transparent 42%),
-    linear-gradient(180deg,transparent 42%,rgba(1,4,8,.42) 61%,rgba(1,4,8,.96) 100%);
-  pointer-events:none;
+.chapter-info-art{
+  right:2.5%;bottom:22.5%;
+  width:min(61vw,350px);max-height:29%;
+  object-position:right bottom;
 }
-#overlay .chapter-tag{
-  top:max(18px,calc(env(safe-area-inset-top) + 8px));
-  left:18px;
-  z-index:3;
-  padding:7px 10px;
-  border-left:3px solid #f03b46;
-  background:rgba(4,9,14,.58);
-  backdrop-filter:blur(5px);
-}
-#overlay .overlay-panel{
-  position:relative;
-  z-index:2;
-  width:min(520px,100%);
-  padding:14px 14px 10px;
-  border:1px solid rgba(107,132,155,.46);
-  border-radius:18px;
-  background:linear-gradient(180deg,rgba(5,12,20,.35),rgba(4,10,17,.91));
-  box-shadow:0 22px 60px rgba(0,0,0,.55),inset 0 0 0 1px rgba(255,255,255,.035);
-  backdrop-filter:blur(8px);
-}
-#overlay .overlay-panel .eyebrow{
-  margin:0 0 2px;
-  color:#ff5963;
-  font-size:12px;
-  letter-spacing:.08em;
-}
-#overlay .overlay-panel h1{
-  margin:0 0 6px;
-  font-size:clamp(45px,13vw,78px);
-  line-height:.92;
-}
-#overlay .overlay-panel h1 em{
-  color:#f2f3f4;
-  text-shadow:0 3px 0 #67141b,0 10px 28px #000;
-}
-#overlay .overlay-panel>p{
-  margin:4px 0 10px;
-  color:#e0e7ed;
-  font-size:12px;
-  line-height:1.55;
-}
-#overlay .mission-grid{
-  margin:9px 0;
-  gap:6px;
-}
-#overlay .mission-grid span{
-  padding:7px 4px;
-  border-color:#3b5268;
-  border-radius:7px;
-  background:rgba(5,14,24,.80);
-  font-size:10px;
-}
-#overlay .mission-grid b{color:#ff6a72;font-size:13px}
-.chapter-puzzle-preview{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  margin:9px 0 10px;
-  padding:7px;
-  border:1px solid #405c70;
-  border-radius:10px;
-  background:rgba(4,11,18,.82);
+.overlay-copy{
+  position:absolute;z-index:4;
+  left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(520px,calc(100% - 36px));
+  padding:20px;
+  border:1px solid #52687d;
+  border-radius:14px;
+  background:rgba(5,12,20,.92);
+  box-shadow:0 24px 70px #000d;
   text-align:right;
 }
-.chapter-puzzle-thumb{
-  flex:0 0 82px;
-  width:82px;
-  height:48px;
-  border:1px solid #5e7689;
-  border-radius:6px;
-  background:#08111b url('../puzzle-kit/cubes/assets/original/board.jpg') center/contain no-repeat;
-  box-shadow:inset 0 0 16px rgba(0,0,0,.7);
+#overlay[data-mode="menu"] .overlay-copy{display:none}
+.overlay-copy .chapter-tag{
+  position:static;
+  display:inline-block;
+  margin-bottom:12px;
+  padding:0 10px 0 0;
+  border-left:0;border-right:3px solid #ef3541;
+  background:transparent;
+  color:#cbd7e1;font-size:11px;font-weight:900;letter-spacing:1.5px;
 }
-.chapter-puzzle-preview b,.chapter-puzzle-preview small{display:block}
-.chapter-puzzle-preview b{font-size:11px;color:#eef6fb}
-.chapter-puzzle-preview small{margin-top:3px;font-size:9px;color:#9fb1c0}
+.overlay-copy .eyebrow{margin:0 0 4px;color:#ff5963;font-size:12px;font-weight:900}
+.overlay-copy h1{margin:0 0 10px;font-size:clamp(42px,11vw,70px);line-height:.95}
+.overlay-copy h1 em{font-style:normal;color:#f2f3f4}
+.overlay-copy>p{margin:0;color:#cbd6df;line-height:1.65}
+.overlay-action-zone{
+  position:absolute;z-index:5;
+  left:50%;bottom:max(16px,calc(env(safe-area-inset-bottom) + 10px));
+  transform:translateX(-50%);
+  width:min(88vw,440px);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+}
 .asset-loader{
-  margin-top:9px;
-  padding:8px 9px;
-  border:1px solid rgba(57,213,240,.45);
-  border-radius:9px;
-  background:rgba(3,13,20,.82);
+  width:min(80vw,380px);
+  padding:0;
+  border:0;border-radius:0;
+  background:transparent;
 }
 .asset-loader[hidden]{display:none}
-.loader-copy{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:10px;color:#c9d6df}
-#loader-percent{color:#55efff;font-size:12px}
-.loader-track{
-  height:8px;
-  margin-top:6px;
-  overflow:hidden;
-  border:1px solid #28647a;
-  border-radius:999px;
-  background:#031018;
-  box-shadow:inset 0 0 8px #000;
+.loader-copy{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;margin:0 5% 2px;
+  color:#dbe4eb;font-size:9px;font-weight:800;text-shadow:0 2px 5px #000;
 }
-#loader-fill{
-  display:block;
-  width:0;
-  height:100%;
-  border-radius:inherit;
-  background:linear-gradient(90deg,#00a9c8,#37f1ff);
-  box-shadow:0 0 12px #22dfffb0;
-  transition:width .18s ease;
+#loader-percent{color:#ff7a82;font-size:11px}
+.loader-art{position:relative;width:100%;line-height:0}
+.loader-art img{display:block;width:100%;height:auto}
+.loader-art-dim{opacity:.28;filter:grayscale(.35) brightness(.65)}
+.loader-art-fill{
+  position:absolute;inset:0;
+  clip-path:inset(0 100% 0 0);
+  transition:clip-path .18s ease;
 }
-#overlay .primary{
-  margin-top:10px;
-  padding:14px 18px;
-  border-color:#5cffaa;
-  background:linear-gradient(180deg,#16a95e,#08753d);
-  box-shadow:0 10px 28px #000a,0 0 22px rgba(45,255,145,.28),inset 0 0 0 1px rgba(255,255,255,.16);
-  font-size:17px;
+#overlay[data-mode="menu"] .primary{
+  width:min(76vw,350px)!important;
+  height:auto!important;
+  aspect-ratio:2172/724;
+  margin:0!important;padding:0!important;
+  border:0!important;border-radius:0!important;
+  background:transparent url('../assets/stage2/ui/start-button.png?v=20260923-stage2-menu-art-1') center/contain no-repeat!important;
+  box-shadow:none!important;
+  color:transparent!important;font-size:0!important;
+  filter:drop-shadow(0 8px 16px rgba(0,0,0,.58));
 }
-#overlay .primary:disabled{
-  cursor:default;
-  opacity:.62;
-  filter:saturate(.45);
-  box-shadow:0 10px 28px #000a;
+#overlay[data-mode="menu"] .primary:disabled{
+  cursor:default;opacity:.48;filter:grayscale(.28) brightness(.72) drop-shadow(0 8px 16px rgba(0,0,0,.58));
 }
-#overlay[data-mode="pause"] .chapter-puzzle-preview,
-#overlay[data-mode="pause"] .mission-grid,
-#overlay[data-mode="win"] .chapter-puzzle-preview,
-#overlay[data-mode="win"] .mission-grid{display:none}
-#overlay[data-mode="pause"] .overlay-panel,
-#overlay[data-mode="win"] .overlay-panel{margin-bottom:18vh}
-
-/* Slightly reduce the final puzzle's on-screen footprint; source pixels remain untouched. */
+#overlay[data-mode="menu"] .primary:not(:disabled){opacity:1}
+#overlay[data-mode="pause"] .chapter-menu-art,
+#overlay[data-mode="win"] .chapter-menu-art{display:none}
+#overlay[data-mode="pause"],
+#overlay[data-mode="win"]{
+  background:radial-gradient(circle at 50% 28%,#182b45 0,#081321 38%,#030609 78%);
+}
+#overlay[data-mode="pause"] .overlay-action-zone,
+#overlay[data-mode="win"] .overlay-action-zone{
+  bottom:max(12vh,calc(env(safe-area-inset-bottom) + 42px));
+}
+#overlay[data-mode="pause"] .primary,
+#overlay[data-mode="win"] .primary{
+  width:min(320px,82vw)!important;height:auto!important;aspect-ratio:auto!important;
+  padding:14px 20px!important;
+  border:1px solid #ff6972!important;border-radius:8px!important;
+  background:linear-gradient(180deg,#b92732,#68131a)!important;
+  box-shadow:0 12px 28px #000a,0 0 20px rgba(239,53,65,.28)!important;
+  color:#fff!important;font-size:16px!important;font-weight:900!important;
+  filter:none!important;
+}
+/* Keep the final puzzle slightly smaller on screen; source pixels are untouched. */
 #puzzle[data-type="cubes"] .embedded-puzzle-root{
   width:94%;
   height:94%;
   margin:auto;
 }
 @media(max-width:600px){
-  .chapter-cover-hero{left:-18%;bottom:15%;width:min(77vw,430px);max-height:68%}
-  #overlay .overlay-panel{padding:12px 11px 9px;border-radius:15px}
-  #overlay .overlay-panel h1{font-size:50px}
-  .chapter-puzzle-thumb{flex-basis:72px;width:72px;height:42px}
+  .chapter-logo-art{width:min(76vw,390px);max-height:15.5%}
+  .chapter-title-art{top:17%;width:min(74vw,360px)}
+  .chapter-hero-art{left:-8%;bottom:19%;width:min(55vw,290px);max-height:55%}
+  .chapter-info-art{right:1%;bottom:23%;width:min(65vw,305px);max-height:27%}
+  .overlay-action-zone{width:94vw}
+  .asset-loader{width:min(82vw,350px)}
+  #overlay[data-mode="menu"] .primary{width:min(78vw,330px)!important}
   #puzzle[data-type="cubes"] .embedded-puzzle-root{width:91%;height:91%}
+}
+@media(max-height:760px) and (orientation:portrait){
+  .chapter-logo-art{top:max(12px,calc(env(safe-area-inset-top) + 3px));max-height:14%}
+  .chapter-title-art{top:15.5%;max-height:12%}
+  .chapter-hero-art{bottom:19%;max-height:51%}
+  .chapter-info-art{bottom:23.5%;max-height:25%}
+  .overlay-action-zone{bottom:max(8px,calc(env(safe-area-inset-bottom) + 4px));gap:4px}
+  .asset-loader{width:min(76vw,315px)}
+  #overlay[data-mode="menu"] .primary{width:min(70vw,290px)!important}
 }
