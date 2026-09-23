@@ -1,6 +1,6 @@
-import {BOSS_FRAMES,CITY_FRAMES,HEAVY_FRAMES,SNIPER_FRAMES,enemyKind,enemyFacing,enemyAttackPose,fallbackEnemyMuzzle} from './enemy-weapon.js?v=20260922-hq-sprites-1';
-import {enemyDisplayHeight} from './hero-weapon.js?v=20260921-stage2-new-enemies-1';
-import {createArt as createBaseArt} from './art-base.js?v=20260921-cleanup-1';
+import {BOSS_FRAMES,CITY_FRAMES,HEAVY_FRAMES,SNIPER_FRAMES,enemyKind,enemyFacing,enemyAttackPose,fallbackEnemyMuzzle} from './enemy-weapon.js?v=20260923-audit-1';
+import {enemyDisplayHeight} from './hero-weapon.js?v=20260923-audit-1';
+import {createArt as createBaseArt} from './art-base.js?v=20260923-audit-1';
 
 const BOSS_URL='./assets/Gatekeeper.png';
 const CITY_URL='./assets/City_Guard.png';
@@ -30,14 +30,7 @@ const HERO_POSE_SETS=Object.freeze({
  dash:[
   ['./assets/stage2/rooftop/1CF31F35-DC61-4CA6-B284-9362DDCEE75D.png',[183,150,1174,1109]],
   ['./assets/stage2/rooftop/62B88E5B-ECCA-4FB3-9DB8-DE4A70143F91.png',[239,239,1053,1085]]
- ],
- climb:[['./assets/stage2/rooftop/77A34199-B559-4A99-8683-92889A35586F.png',[303,29,1026,1218]]],
- meleeIdle:[['./assets/stage2/rooftop/28C8741E-FF4D-4642-9B2D-F77236FFA97F.png',[226,44,1083,1224]]],
- punch1:[['./assets/stage2/rooftop/3E73BF27-069C-4E22-A80D-737550CFA7B9.png',[28,84,1241,1206]]],
- punch2:[['./assets/stage2/rooftop/A95ABCE5-11A8-4AA5-8FCE-5F18B016F5E6.png',[54,98,1232,1185]]],
- heavy:[['./assets/stage2/rooftop/159DD9FD-ADB2-448C-98FD-CD14991E4FE2.png',[123,12,1191,1241]]],
- block:[['./assets/stage2/rooftop/A7CFFEBC-EE18-4086-9F82-9B2840FB5B08.png',[165,27,1133,1233]]],
- dodge:[['./assets/stage2/rooftop/452DCE10-755B-4E2E-8D53-7B6C3E5790B8.png',[15,291,1244,1026]]]
+ ]
 });
 
 const NEW_GUARD_URLS=Object.freeze({
@@ -68,35 +61,15 @@ const ROCKET_SMOKE_URL='./assets/ui/projectiles/rocket-smoke.png';
 const ENERGY_CRYSTAL_URL='./assets/ui/items/energy-crystal.png';
 const HEALTH_CROSS_URL='./assets/ui/items/health-cross.png';
 
-function loadImage(url){
+function loadImage(url,enabled=true){
  const img=new Image();
  img.decoding='async';
  const state={img,ready:false};
  img.addEventListener('load',()=>{state.ready=true;});
- img.src=url;
+ if(enabled)img.src=url;
  return state;
 }
 
-const bossAsset=loadImage(BOSS_URL);
-const cityAsset=loadImage(CITY_URL);
-const heavyAsset=loadImage(HEAVY_URL);
-const sniperAsset=loadImage(SNIPER_URL);
-const movementAsset=loadImage(MOVEMENT_URL);
-const heroPoseAssets=Object.fromEntries(
- Object.entries(HERO_POSE_SETS).map(([k,entries])=>[
-  k,
-  entries.map(([url,bounds])=>({asset:loadImage(url),bounds}))
- ])
-);
-const newGuardAssets=Object.fromEntries(Object.entries(NEW_GUARD_URLS).map(([k,url])=>[k,loadImage(url)]));
-const droneIdleAsset=loadImage(DRONE_IDLE_URL);
-const droneAttackAsset=loadImage(DRONE_ATTACK_URL);
-const rocketAsset=loadImage(ROCKET_URL);
-const heroBulletAsset=loadImage(HERO_BULLET_URL);
-const enemyBulletAsset=loadImage(ENEMY_BULLET_URL);
-const rocketSmokeAsset=loadImage(ROCKET_SMOKE_URL);
-const energyCrystalAsset=loadImage(ENERGY_CRYSTAL_URL);
-const healthCrossAsset=loadImage(HEALTH_CROSS_URL);
 const ROCKET_DISPLAY_H=34;
 const HERO_BULLET_DISPLAY_H=17;
 const ENEMY_BULLET_DISPLAY_H=15;
@@ -140,8 +113,34 @@ function phaseIndex(elapsed,duration,count){
 
 const bossDeathStart=new WeakMap();
 
-export function createArt(ctx){
+export function createArt(ctx,{chapter=1}={}){
  const base=createBaseArt(ctx);
+ const assetUrls=[...base.assetUrls];
+ function loadAsset(url,enabled=true){
+  if(enabled)assetUrls.push(url);
+  return loadImage(url,enabled);
+ }
+ const bossAsset=loadAsset(BOSS_URL,chapter===1);
+ const cityAsset=loadAsset(CITY_URL,chapter===1);
+ const heavyAsset=loadAsset(HEAVY_URL,chapter===1);
+ const sniperAsset=loadAsset(SNIPER_URL,chapter===1);
+ const movementAsset=loadAsset(MOVEMENT_URL);
+ const heroPoseAssets=Object.fromEntries(
+  Object.entries(HERO_POSE_SETS).map(([k,entries])=>[
+   k,
+   entries.map(([url,bounds])=>({asset:loadAsset(url),bounds}))
+  ])
+ );
+ const newGuardAssets=Object.fromEntries(Object.entries(NEW_GUARD_URLS).map(([k,url])=>[k,loadAsset(url,chapter===2)]));
+ const droneIdleAsset=loadAsset(DRONE_IDLE_URL,chapter===2);
+ const droneAttackAsset=loadAsset(DRONE_ATTACK_URL,chapter===2);
+ const rocketAsset=loadAsset(ROCKET_URL,chapter===1);
+ const heroBulletAsset=loadAsset(HERO_BULLET_URL);
+ const enemyBulletAsset=loadAsset(ENEMY_BULLET_URL);
+ const rocketSmokeAsset=loadAsset(ROCKET_SMOKE_URL,chapter===1);
+ const energyCrystalAsset=loadAsset(ENERGY_CRYSTAL_URL,chapter===1);
+ const healthCrossAsset=loadAsset(HEALTH_CROSS_URL,chapter===1);
+
  const baseHero=base.hero;
 
  function heroMuzzle(p){
@@ -343,6 +342,6 @@ export function createArt(ctx){
   ctx.drawImage(img,x-dw/2,y-dh/2,dw,dh);
   return true;
  }
- return {...base,hero,heroMuzzle,enemy,boss,enemyMuzzle,rocket,heroBullet,enemyBullet,rocketSmoke,collectible,healthItem};
+ return {...base,assetUrls,hero,heroMuzzle,enemy,boss,enemyMuzzle,rocket,heroBullet,enemyBullet,rocketSmoke,collectible,healthItem};
 }
 

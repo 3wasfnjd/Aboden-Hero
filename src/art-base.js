@@ -1,6 +1,6 @@
-import {heroFirePose,FIRE_POSE_END} from './hero-weapon.js?v=20260921-cleanup-1';
+import {heroFirePose,FIRE_POSE_END} from './hero-weapon.js?v=20260923-audit-1';
 // Original comic-action art: ink contours, steel-blue shadows and copper light.
-// The final Aboden hero is rendered from assets/aboden-hero-spritesheet.png.
+// The original hero sheet remains a fallback while the current action poses load.
 const INK='#0a121e';
 const HERO_SHEET_URL='./assets/aboden-hero-spritesheet.png';
 const HERO_BASE_W=1254;
@@ -45,5 +45,5 @@ export function createArt(ctx){
  function hero(p,time){if(!heroAtlas)return;if(p.shot>FIRE_POSE_END){const pose=heroFirePose(p);drawHeroFrame(pose.frame,p,pose.height);return;}ellipse(p.x+p.w/2,p.y+p.h+2,22,4,'#07122055',null);let frames=HERO_FRAMES.idle,rate=3.2,displayH=82,bob=0,lean=0;const justHit=p.invulnerable>1.05;if(justHit){frames=HERO_FRAMES.hit;rate=10;displayH=78;}else if(p.dashTime>0){frames=HERO_FRAMES.charge;rate=14;displayH=80;lean=-.10;}else if(!p.grounded){frames=[HERO_FRAMES.charge[0]];rate=1;displayH=78;lean=p.vy<0?-.08:.05;bob=-2;}else if(Math.abs(p.vx)>28){frames=[HERO_FRAMES.aim[0],HERO_FRAMES.aim[1],HERO_FRAMES.aim[0],HERO_FRAMES.idle[1]];rate=9.5;displayH=80;lean=-.08;bob=Math.sin(time*19)*1.2;}const index=Math.floor(time*rate)%frames.length;drawHeroFrame(frames[index],p,displayH,bob,lean);}
  function sign(x,text){line(x,440,x,393,'#4a5e70',4);round(x-72,370,145,32,3,'#1b3045','#6b7d89',1);c.fillStyle='#d7c4a1';c.font='bold 12px Tahoma';c.textAlign='center';c.fillText(text,x,391);}
  function flower(x,y){line(x,y,x+12,y-4,'#778082',1);}
- return {hero,heroMuzzle,flower,star,ellipse,round,path,line,sign};
+ return {assetUrls:[HERO_SHEET_URL],hero,heroMuzzle,flower,star,ellipse,round,path,line,sign};
 }

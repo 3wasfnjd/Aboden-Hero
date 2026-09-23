@@ -1,9 +1,9 @@
-import {lockSafariZoom} from './gesture-lock.js?v=20260921-safari-lock-1';
-import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260921-cleanup-1';
-import {stepCombat} from './combat.js?v=20260921-cleanup-1';
-import {WORLD_WIDTH,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260916-action-1';
-import {createArt} from './art-bg.js?v=20260921-cleanup-1';
-import {createMusic} from './music.js?v=20260917-music-1';
+import {lockSafariZoom} from './gesture-lock.js?v=20260923-audit-1';
+import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260923-audit-1';
+import {stepCombat} from './combat.js?v=20260923-audit-1';
+import {WORLD_WIDTH,clamp,overlaps,createLevel,createPlayer,stepPlayer} from './world.js?v=20260923-audit-1';
+import {createArt} from './art-bg.js?v=20260923-audit-1';
+import {createMusic} from './music.js?v=20260923-audit-1';
 lockSafariZoom();
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx);
 // Portrait canvas for mobile: the original 960x540 landscape frame is preserved
@@ -27,7 +27,7 @@ function toast(message){$('toast').textContent=message;$('toast').classList.add(
 function burst(x,y,color='#efd598',count=8){for(let i=0;i<count;i++){const a=i*Math.PI*2/count;particles.push({x,y,vx:Math.cos(a)*(35+i*9),vy:Math.sin(a)*80-35,life:.45,max:.45,color});}}
 function updateHUD(){$('health').textContent='♥'.repeat(player.hp)+'♡'.repeat(5-player.hp);$('health').setAttribute('aria-label',`الصحة ${player.hp} من 5`);$('health-panel').setAttribute('data-hp',player.hp);$('coins').textContent=collected;$('area').textContent=player.x<1540?'أطراف المدينة':player.x<2990?'الحي الصناعي':player.x<4490?'الطريق المحاصر':player.x<5650?'المستودعات':'المواجهة الأخيرة';$('progress').style.width=`${clamp(player.x/6410*100,0,100)}%`;}
 function updateCombatHUD(){ $('combat-hud').hidden=state!=='playing';$('kill-count').textContent=`${kills} إسقاط`;$('dash-status').textContent=player.dashCooldown>0?`اندفاع ${player.dashCooldown.toFixed(1)}ث`:'الاندفاع جاهز';$('boss-hud').hidden=!(state==='playing'&&level.boss.active&&level.boss.hp>0);$('boss-health').style.width=`${Math.max(0,level.boss.hp)/level.boss.maxHP*100}%`; }
-function showOverlay(kind){state=kind;clearInput();$('overlay').hidden=false;$('pills').hidden=kind!=='menu';
+function showOverlay(kind){state=kind;clearInput();$('overlay').hidden=false;$('overlay').dataset.mode=kind;$('pills').hidden=kind!=='menu';
  $('hud').hidden=true;$('controls').hidden=true;
  const poster=$('poster');
  if(kind==='won'){poster.src='./assets/victory-poster.jpeg';poster.alt='البطل واقف منتصرًا فوق حارس البوابة المحطم';}
@@ -99,4 +99,3 @@ $('sound').addEventListener('click',()=>{muted=!muted;unlockAudio();musicCtl?.se
 reset();updateCombatHUD();requestAnimationFrame(frame);
 // Opt-in local test harness; absent from normal game sessions.
 if(new URLSearchParams(location.search).has('test'))window.__game={get player(){return player;},get level(){return level;},get state(){return state;},get checkpoint(){return checkpoint;},get enemyShots(){return enemyShots;},get bullets(){return bullets;},get input(){return input();},get stats(){return {collected,kills,deaths,elapsed};},tick,play,pause,reset,respawn,draw};
-

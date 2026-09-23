@@ -1,32 +1,32 @@
-import {lockSafariZoom} from './gesture-lock.js?v=20260921-safari-lock-1';
-import {clamp,overlaps,createPlayer,stepPlayer} from './world.js?v=20260916-action-1';
-import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260921-stage2-new-enemies-1';
-import {hitsShieldFromFront} from './enemy-weapon.js?v=20260922-hq-sprites-1';
-import {stepCombat} from './combat.js?v=20260921-stage2-new-enemies-1';
-import {createArt} from './art.js?v=20260922-final-scale-1';
-import {createMusic} from './music.js?v=20260917-music-1';
-import {createMatchingPuzzle} from '../puzzle-kit/matching/matching.js?v=20260920-stage2-embed-1';
-import {createWiringPuzzle} from '../puzzle-kit/wiring/wiring.js?v=20260919-stage2-embed-2';
-import {createCubesPuzzle} from '../puzzle-kit/cubes/cubes.js?v=20260920-stage2-embed-1';
+import {lockSafariZoom} from './gesture-lock.js?v=20260923-audit-1';
+import {clamp,overlaps,createPlayer,stepPlayer} from './world.js?v=20260923-audit-1';
+import {SHOT_INTERVAL,makeHeroBullet,bulletTargetBounds} from './hero-weapon.js?v=20260923-audit-1';
+import {hitsShieldFromFront} from './enemy-weapon.js?v=20260923-audit-1';
+import {stepCombat} from './combat.js?v=20260923-audit-1';
+import {createArt} from './art.js?v=20260923-audit-1';
+import {createMusic} from './music.js?v=20260923-audit-1';
+import {createMatchingPuzzle} from '../puzzle-kit/matching/matching.js?v=20260923-audit-1';
+import {createWiringPuzzle} from '../puzzle-kit/wiring/wiring.js?v=20260923-audit-1';
+import {createCubesPuzzle} from '../puzzle-kit/cubes/cubes.js?v=20260923-audit-1';
 import {
   FLOOR_DEFS,FLOOR_COUNT,createProgress,completeFloor,reachFloor
-} from './stage2-state.js?v=20260923-always-on-elevators-1';
+} from './stage2-state.js?v=20260923-audit-1';
 import {
   loadCheckpointFloor,saveCheckpointFloor,clearCheckpointFloor,restoreProgressFromCheckpoint
-} from './stage2-save.js?v=20260923-stage2-save-elevator-link-1';
+} from './stage2-save.js?v=20260923-audit-1';
 import {
   TOWER_WIDTH,TOWER_HEIGHT,FLOOR_LEFT,FLOOR_RIGHT,
   ELEVATOR_WIDTH,ELEVATOR_PLATFORM_HEIGHT,
-  groundY,makeFloorPlatforms,elevatorGround,puzzleInteraction,
+  groundY,makeFloorPlatforms,elevatorGround,puzzleInteraction,solidsForElevatorRide,
   elevatorXForFloor,floorLabelX,floorLabelY,arrivalXForFloor
-} from './stage2-tower.js?v=20260923-always-on-elevators-1';
+} from './stage2-tower.js?v=20260923-audit-1';
 import {
-  ROOFTOP_LADDER_X,createRooftopBattle,drawRooftopLadder,drawRooftopClimber
-} from './stage2-rooftop.js?v=20260922-alpha-normalized-1';
+  ROOFTOP_ASSET_URLS,ROOFTOP_LADDER_X,createRooftopBattle,drawRooftopLadder,drawRooftopClimber
+} from './stage2-rooftop.js?v=20260923-audit-1';
 
 lockSafariZoom();
 const $=id=>document.getElementById(id);
-const canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx);
+const canvas=$('game'),ctx=canvas.getContext('2d'),art=createArt(ctx,{chapter:2});
 const W=720,H=1280,STEP=1/120;
 const WORLD_W=TOWER_WIDTH,WORLD_H=TOWER_HEIGHT;
 const FIT_ZOOM=Math.min(W/WORLD_W,H/WORLD_H);
@@ -46,14 +46,14 @@ let bullets=[],enemyShots=[],particles=[],enemySets=new Map();
 let kills=0,toastTime=0,accumulator=0,last=0,puzzleOpen=false;
 let activePuzzleModule=null,puzzleSession=0,activePuzzleFloor=null;
 let muted=false,audio=null,musicCtl=null;
-let scene='tower',rooftopUnlocked=false,climbTime=0,climbStartX=0,climbStartY=0,endingTime=0;
+let scene='tower',rooftopUnlocked=false,climbTime=0,climbStartX=0,climbStartY=0;
 
 
 function loadImage(url){const img=new Image();img.decoding='async';if(url)img.src=url;return img;}
 const towerBackground=loadImage('./assets/stage2/tower-background-with-puzzles.png?v=20260921-embedded-puzzles-1');
 const elevatorPlatformImage=loadImage('./assets/ui/level/platform.png?v=20260921-stage2-elevator-1');
 const checkpointImage=loadImage('./assets/ui/level/checkpoint.png?v=20260923-stage2-floor-checkpoints-1');
-const CHAPTER_PRELOAD=Object.freeze([
+const CHAPTER_PRELOAD=Object.freeze([...new Set([
   './assets/stage2/ui/chapter-bg.png?v=20260923-stage2-menu-art-3',
   './assets/stage2/ui/hero.png?v=20260923-stage2-menu-art-3',
   './assets/stage2/ui/logo.png?v=20260923-stage2-menu-art-3',
@@ -65,8 +65,12 @@ const CHAPTER_PRELOAD=Object.freeze([
   './assets/ui/level/platform.png?v=20260921-stage2-elevator-1',
   './assets/ui/level/checkpoint.png?v=20260923-stage2-floor-checkpoints-1',
   './assets/ui/hud/health.png',
-  './assets/ui/hud/area.png'
-]);
+  './assets/ui/hud/area.png',
+  './assets/ui/hud/boss.png',
+  './assets/ui/toast-frame.png',
+  ...art.assetUrls,
+  ...ROOFTOP_ASSET_URLS
+])]);
 let chapterAssetsReady=false,chapterLoadStarted=false;
 function updateChapterLoader(done,total){
   const percent=total?Math.round(done/total*100):100;
@@ -78,25 +82,33 @@ function updateChapterLoader(done,total){
 function preloadChapterAssets(){
   if(chapterLoadStarted)return;
   chapterLoadStarted=true;
-  let done=0;
+  let done=0,failed=0;
   const total=CHAPTER_PRELOAD.length;
   updateChapterLoader(0,total);
-  Promise.allSettled(CHAPTER_PRELOAD.map(src=>new Promise(resolve=>{
+  Promise.all(CHAPTER_PRELOAD.map(src=>new Promise(resolve=>{
     const image=new Image();
     image.decoding='async';
     let settled=false;
-    const finish=()=>{
+    const timeout=setTimeout(()=>finish(false),30000);
+    const finish=success=>{
       if(settled)return;
       settled=true;
-      done++;
+      clearTimeout(timeout);
+      if(success)done++;else failed++;
       updateChapterLoader(done,total);
       resolve();
     };
-    image.onload=finish;image.onerror=finish;image.src=src;
-    if(image.complete)queueMicrotask(finish);
+    image.onload=()=>finish(true);image.onerror=()=>finish(false);image.src=src;
+    if(image.complete)queueMicrotask(()=>finish(image.naturalWidth>0));
   }))).then(()=>{
-    chapterAssetsReady=true;
-    updateChapterLoader(total,total);
+    chapterAssetsReady=failed===0;
+    if(failed){
+      $('loader-label').textContent='تعذر تحميل بعض الصور — أعد المحاولة';
+      $('play').disabled=false;
+      $('play').textContent='إعادة التحميل ↻';
+      $('overlay').classList.add('load-error');
+      return;
+    }
     setIntroCopy();
   });
 }
@@ -304,7 +316,7 @@ function destroyActivePuzzle(){
 function burst(x,y,color='#6de0ff',count=8){for(let i=0;i<count;i++){const a=i*Math.PI*2/count;particles.push({x,y,vx:Math.cos(a)*(30+i*5),vy:Math.sin(a)*55-25,life:.45,max:.45,color});}}
 
 function isRooftopScene(){
-  return scene.startsWith('rooftop')||scene==='ending';
+  return scene.startsWith('rooftop');
 }
 function challengeLabel(){
   if(scene==='rooftop-fight')return 'اهزم حارس السطح';
@@ -316,9 +328,17 @@ function challengeLabel(){
   return def.puzzle==='match'?'صل الرموز المتطابقة':def.puzzle==='wiring'?'أكمل دائرة الطاقة':'رتّب المكعبات';
 }
 function syncControls(){
-  const scripted=introActive||scene==='climbing'||scene==='rooftop-intro'||scene==='rooftop-victory'||scene==='rooftop-dance'||scene==='ending'||rooftop.mode==='hero-ko';
+  const scripted=introActive||scene==='climbing'||scene==='rooftop-intro'||scene==='rooftop-victory'||scene==='rooftop-dance'||rooftop.mode==='hero-ko';
   $('controls').hidden=state!=='playing'||puzzleOpen||scripted;
-  document.body.classList.toggle('rooftop-melee',scene==='rooftop-fight'&&rooftop.mode==='fight'&&state==='playing');
+  const melee=scene==='rooftop-fight'&&rooftop.mode==='fight'&&state==='playing';
+  document.body.classList.toggle('rooftop-melee',melee);
+  for(const button of buttons){
+    const label=(melee?{shoot:'لكمة',jump:'ضربة قوية',dash:'مراوغة'}:{shoot:'إطلاق',jump:'قفز',dash:'اندفاع'})[button.dataset.action];
+    if(label&&button.getAttribute('aria-label')!==label){
+      button.setAttribute('aria-label',label);
+      button.textContent=melee?label:'';
+    }
+  }
 }
 function updateHUD(){
   const bossHud=$('boss-hud');
@@ -331,7 +351,7 @@ function updateHUD(){
     $('challenge').textContent=challengeLabel();
     $('boss-health-fill').style.width=`${clamp(stats.bossHp/stats.bossMax*100,0,100)}%`;
     bossHud.hidden=state!=='playing'||!(scene==='rooftop-fight'||scene==='rooftop-victory');
-    $('hud').hidden=state!=='playing'||scene==='rooftop-intro'||scene==='rooftop-dance'||scene==='ending';
+    $('hud').hidden=state!=='playing'||scene==='rooftop-intro'||scene==='rooftop-dance';
     syncControls();
     return;
   }
@@ -376,7 +396,7 @@ function reset(){
   player.facing=spawnFloor%2===1?1:-1;state='menu';time=0;elapsed=0;
   destroyActivePuzzle();bullets=[];enemyShots=[];particles=[];kills=0;puzzleOpen=false;activePuzzleFloor=null;
   for(const elevator of elevators){elevator.phase=0;elevator.x=elevatorXForFloor(elevator.from);elevator.y=groundY(elevator.from);}
-  scene='tower';rooftopUnlocked=false;climbTime=0;climbStartX=0;climbStartY=0;endingTime=0;
+  scene='tower';rooftopUnlocked=false;climbTime=0;climbStartX=0;climbStartY=0;
   rooftop.reset();document.body.classList.remove('rooftop-melee');
   introTime=0;introActive=false;cameraZoom=FIT_ZOOM;
   const full=fullTowerCamera();cameraX=full.x;cameraY=full.y;
@@ -466,11 +486,6 @@ function enterRooftop(){
 }
 function tickRooftop(dt){
   elapsed+=dt;
-  if(scene==='ending'){
-    endingTime+=dt;
-    if(endingTime>=1.35){win();return;}
-    updateHUD();return;
-  }
   const events=rooftop.tick(dt,input());
   for(const ev of events){
     if(ev==='fight-start'){scene='rooftop-fight';toast('قتال بالأيدي فقط');sound(310,.2,'sawtooth',.04);}
@@ -521,6 +536,7 @@ function tickCombat(dt){
   }
 }
 function tickElevators(dt){
+  let carriedBy=null;
   for(const elevator of elevators){
     const previousY=elevator.y;
     const rider=playerOnElevator(elevator,previousY);
@@ -531,11 +547,13 @@ function tickElevators(dt){
     elevator.y=elevatorGround(elevator.from,elevator.to,move);
     const dy=elevator.y-previousY;
     if(rider){
+      carriedBy=elevator;
       player.y+=dy;
       player.grounded=true;
       if(player.vy>0)player.vy=0;
     }
   }
+  return carriedBy;
 }
 
 function tick(dt){
@@ -554,7 +572,7 @@ function tick(dt){
   if(isRooftopScene()){tickRooftop(dt);return;}
 
   tickEnemyPatrol(dt);
-  tickElevators(dt);
+  const riddenElevator=tickElevators(dt);
 
   if(introActive){
     introTime+=dt;
@@ -571,7 +589,7 @@ function tick(dt){
   }
 
   elapsed+=dt;
-  const controls=input(),{jumped,landed}=stepPlayer(player,controls,solids,dt);
+  const controls=input(),{jumped,landed}=stepPlayer(player,controls,solidsForElevatorRide(solids,riddenElevator),dt);
   syncPlayerFloor();
   player.x=clamp(player.x,FLOOR_LEFT,FLOOR_RIGHT-player.w);
   if(jumped){burst(player.x+15,player.y+44,'#d9d2b2',5);sound(500,.1,'triangle');}if(landed)burst(player.x+15,player.y+44,'#d9d2b2',4);
@@ -689,9 +707,6 @@ function draw(){
     const v=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.16,W/2,H/2,Math.max(W,H)*.68);
     v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.38)');
     ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
-    if(scene==='ending'){
-      ctx.fillStyle=`rgba(0,0,0,${clamp(endingTime/1.35,0,1)})`;ctx.fillRect(0,0,W,H);
-    }
     return;
   }
   drawBackdrop();drawWorld();
@@ -828,15 +843,15 @@ function openPuzzle(floor=playerFloor()){
   activePuzzleFloor=floor;
   puzzleOpen=true;clearInput();$('puzzle').hidden=false;$('action').hidden=true;$('puzzle-status').textContent='SYSTEM OFFLINE';
   $('puzzle').dataset.type=def.puzzle;
+  syncControls();
   if(def.puzzle==='match')mountMatchingPuzzle();else if(def.puzzle==='wiring')mountWiringPuzzle();else if(def.puzzle==='cubes')mountCubesPuzzle();
 }
 function closePuzzle(){
   puzzleOpen=false;activePuzzleFloor=null;destroyActivePuzzle();$('puzzle').hidden=true;clearInput();
-  updateAction();
+  syncControls();updateAction();
 }
 function doAction(){
   if(state!=='playing'||puzzleOpen)return;
-  if(scene!=='tower'||progress.mode!=='floor')return;
   if(scene!=='tower'||progress.mode!=='floor')return;
   if(rooftopUnlocked&&progress.currentFloor===FLOOR_COUNT&&playerFloor()===FLOOR_COUNT&&near(ROOFTOP_LADDER_X,100)){
     startClimb();return;
@@ -851,12 +866,12 @@ const mapped=new Set(['ArrowLeft','ArrowRight','ArrowUp','KeyA','KeyD','KeyK','K
 window.addEventListener('keydown',e=>{if(mapped.has(e.code)){if(e.target instanceof HTMLButtonElement&&e.code==='Space')return;e.preventDefault();if(state==='playing'&&!puzzleOpen&&progress.mode==='floor')keys.add(e.code);}if(e.code==='KeyE'&&!e.repeat){e.preventDefault();doAction();}if(e.code==='Escape'&&!e.repeat){if(puzzleOpen)closePuzzle();else pause();}});
 window.addEventListener('keyup',e=>keys.delete(e.code));
 for(const button of buttons){
-  button.addEventListener('pointerdown',e=>{e.preventDefault();if(state!=='playing'||puzzleOpen||progress.mode==='elevator')return;unlockAudio();button.setPointerCapture(e.pointerId);touch.set(e.pointerId,button.dataset.action);button.classList.add('held');});
+  button.addEventListener('pointerdown',e=>{e.preventDefault();if(state!=='playing'||puzzleOpen||scene!=='tower'&&scene!=='rooftop-fight')return;unlockAudio();button.setPointerCapture(e.pointerId);touch.set(e.pointerId,button.dataset.action);button.classList.add('held');});
   const release=e=>{touch.delete(e.pointerId);if(![...touch.values()].includes(button.dataset.action))button.classList.remove('held');};
   button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);button.addEventListener('lostpointercapture',release);
 }
 $('action').addEventListener('click',doAction);$('puzzle-close').addEventListener('click',closePuzzle);
-$('play').addEventListener('click',()=>{if(state==='paused'){pause();return;}play();setIntroCopy();});
+$('play').addEventListener('click',()=>{if(!chapterAssetsReady){location.reload();return;}if(state==='paused'){pause();return;}play();setIntroCopy();});
 $('pause').addEventListener('click',pause);
 $('sound').addEventListener('click',()=>{muted=!muted;unlockAudio();musicCtl?.setMuted(muted);$('sound').textContent=muted?'♪':'♫';$('sound').setAttribute('aria-pressed',String(!muted));if(!muted)sound(660,.12);});
 // iOS/Safari can emit transient window blur events while the player is dragging
