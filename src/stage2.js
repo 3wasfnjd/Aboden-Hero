@@ -57,10 +57,6 @@ const CHAPTER_PRELOAD=Object.freeze([...new Set([
   './assets/stage2/ui/chapter-bg.png?v=20260923-stage2-menu-art-3',
   './assets/stage2/ui/hero.png?v=20260923-stage2-menu-art-3',
   './assets/stage2/ui/logo.png?v=20260923-stage2-menu-art-3',
-  './assets/stage2/ui/stage-title.png?v=20260923-stage2-menu-art-3',
-  './assets/stage2/ui/start-button.png?v=20260923-stage2-menu-art-3',
-  './assets/stage2/ui/loader-bar.png?v=20260923-stage2-menu-art-3',
-  './assets/stage2/ui/mission-info.png?v=20260923-stage2-menu-art-3',
   './assets/stage2/tower-background-with-puzzles.png?v=20260921-embedded-puzzles-1',
   './assets/ui/level/platform.png?v=20260921-stage2-elevator-1',
   './assets/ui/level/checkpoint.png?v=20260923-stage2-floor-checkpoints-1',
@@ -76,11 +72,15 @@ const CHAPTER_PRELOAD=Object.freeze([...new Set([
 ])]);
 let chapterAssetsReady=false,chapterLoadStarted=false;
 function updateChapterLoader(done,total){
-  const percent=total?Math.round(done/total*100):100;
-  const fill=$('loader-fill'),label=$('loader-label'),value=$('loader-percent');
-  if(fill)fill.style.width=percent>=100?'100.6%':`${percent}%`;
+  const percent=total?Math.min(100,Math.floor(done/total*100)):100;
+  const fill=$('loader-fill'),label=$('loader-label'),value=$('loader-percent'),track=$('loader-track');
+  if(fill)fill.style.width=`${percent}%`;
   if(value)value.textContent=`${percent}%`;
-  if(label)label.textContent=percent>=100?'اكتمل تحميل صور المرحلة':'جاري تحميل صور المرحلة…';
+  if(track)track.setAttribute('aria-valuenow',String(percent));
+  $('asset-loader').dataset.state=percent===100?'ready':'loading';
+  const message=percent===100?'جاهز للانطلاق':'جاري تجهيز المرحلة…';
+  if(label&&label.textContent!==message)label.textContent=message;
+  $('loader-hint').textContent=percent===100?'اكتمل التحميل — ابدأ مغامرتك':'لحظات وتبدأ المهمة';
 }
 function preloadChapterAssets(){
   if(chapterLoadStarted)return;
@@ -106,7 +106,9 @@ function preloadChapterAssets(){
   }))).then(()=>{
     chapterAssetsReady=failed===0;
     if(failed){
-      $('loader-label').textContent='تعذر تحميل بعض الصور — أعد المحاولة';
+      $('asset-loader').dataset.state='error';
+      $('loader-label').textContent='تعذر تجهيز المرحلة';
+      $('loader-hint').textContent='تحقق من الاتصال، ثم أعد المحاولة';
       $('play').disabled=false;
       $('play').textContent='إعادة التحميل ↻';
       $('overlay').classList.add('load-error');
