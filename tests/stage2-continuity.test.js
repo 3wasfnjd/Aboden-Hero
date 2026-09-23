@@ -30,3 +30,11 @@ test('guard attack rendering always uses a full-body idle frame',()=>{
   assert.match(enemy,/if\(attack\)[\s\S]*scaledFrames\(frames\.idle/);
   assert.doesNotMatch(enemy,/scaledFrames\(\[attack\.frame\]/);
 });
+
+
+test('riding an elevator is exempt from the floor fall-respawn guard',()=>{
+  const js=readFileSync(new URL('../src/stage2.js',import.meta.url),'utf8');
+  assert.match(js,/function playerRidingElevator\(\)/);
+  assert.match(js,/elevators\.some\(elevator=>playerOnElevator\(elevator,elevator\.y\)\)/);
+  assert.match(js,/if\(!playerRidingElevator\(\)&&player\.y>groundY\(progress\.currentFloor\)\+150\)/);
+});
