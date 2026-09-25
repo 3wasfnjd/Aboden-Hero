@@ -15,6 +15,7 @@ User-supplied artwork is treated as immutable source material.
 
 ## Modules
 
+- `/puzzle-kit/box/` — standalone 3D puzzle box with five sequential mechanisms, touch controls, progressive hints and optional local save. Its procedural prototype is separate from the immutable supplied artwork used by the modules below. See `box/README.md`.
 - `/puzzle-kit/wiring/`
 - `/puzzle-kit/matching/`
 - `/puzzle-kit/cubes/`
